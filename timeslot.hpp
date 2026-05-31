@@ -11,9 +11,9 @@ struct ClockTime{
 };
 class TimeSlot{
     private:
-    Day c_day;
-    ClockTime start_time;
-    ClockTime end_time;
+    Day m_day;
+    ClockTime m_start_time;
+    ClockTime m_end_time;
 public:
 TimeSlot(Day day,ClockTime startTime,ClockTime endTime);
 Day getDay() const;
