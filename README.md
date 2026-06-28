@@ -2,9 +2,9 @@
 
 
 ## Key Features
-Add and manage Instructors, Courses,Classrooms (Rooms), and Student Batches.
-*   **Automatic Workload Checks:** The application automatically tracks weekly teaching hours for each
-*   **Comprehensive Entity Management:** nstructor and rejects scheduling slots that exceed their hourly threshold.
+
+*   **Comprehensive Entity Management:** Add and manage Instructors, Courses, Classrooms (Rooms), and Student Batches.
+*   **Automatic Workload Checks:** The application automatically tracks weekly teaching hours for each instructor and rejects scheduling slots that exceed their hourly threshold.
 *   **Interactive Scheduling:** Schedule class sessions by assigning a timeslot (day of week, start time, end time), an instructor, a course, a classroom, and a target student batch.
 *   **Modular Architecture:** Written with a clean separation of concerns, decoupling model code (`AppManager`, `Instructor`, etc.) from the GUI code (`MainWindow`).
 
