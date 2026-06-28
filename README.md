@@ -1,14 +1,14 @@
 # University Routine Generator & Timetable Scheduler
 
-An elegant C++17 and Qt 6 desktop application designed to manage, track, and schedule university course routines, instructors, classrooms, and student batches with automatic workload constraint validations.
-
----
 
 ## Key Features
 
-*   **Comprehensive Entity Management:** Add and manage *Instructors*, *Courses*, *Classrooms (Rooms)*, and *Student Batches*.
+*   **Comprehensive Entity Management:** Add and manage Instructors, Courses, Classrooms (Rooms), and Student Batches.
 *   **Automatic Workload Checks:** The application automatically tracks weekly teaching hours for each instructor and rejects scheduling slots that exceed their hourly threshold.
 *   **Interactive Scheduling:** Schedule class sessions by assigning a timeslot (day of week, start time, end time), an instructor, a course, a classroom, and a target student batch.
+*   **Aesthetic Desktop Interface:** A beautiful, responsive dark-themed Qt GUI styled with custom Catppuccin Mocha-inspired aesthetics.
+*   **Persistent Storage:** Auto-saves and auto-loads your configurations and schedules using JSON database storage (`timetable_data.json`) in the executable directory.
+*   **Modular Architecture:** Written with a clean separation of concerns, decoupling model code (`AppManager`, `Instructor`, etc.) from the GUI code (`MainWindow`).
 
 
 ## Directory Structure
@@ -26,12 +26,12 @@ An elegant C++17 and Qt 6 desktop application designed to manage, track, and sch
 └── qt/
     └── qt/
         ├── main.cpp           # Entry point for the Qt GUI application
+        ├── mainwindow.cpp     # Controls UI forms, tables, styling, and JSON persistence
         ├── mainwindow.h       # UI definitions and signal/slot bindings
         ├── mainwindow.ui      # Default XML UI layout file (configured dynamically)
         └── qt.pro             # Qt project configuration file
 ```
 
----
 
 ## Prerequisites
 
@@ -51,8 +51,6 @@ g++ main.cpp AppManager.cpp Course.cpp Instructor.cpp Student_batch.cpp classSes
 # Run the executable
 ./generator.exe
 ```
-
----
 
 ### 2. Build and Run the Qt GUI Desktop Version
 
@@ -82,3 +80,13 @@ windeployqt release/qt.exe
 # Run the application
 ./release/qt.exe
 ```
+
+---
+
+## JSON Data Persistence
+
+Timetable routines and master lists are persisted inside a file named `timetable_data.json` located next to your `qt.exe` binary. 
+
+*   On first launch, if no file is found, the system seeds default mockup entries automatically.
+*   All additions (Instructors, Courses, Rooms, Student Batches, or Scheduled Slots) are saved immediately.
+*   You can copy or share this JSON file to move schedules between workspaces.
