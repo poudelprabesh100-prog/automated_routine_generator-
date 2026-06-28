@@ -6,6 +6,8 @@
 *   **Comprehensive Entity Management:** Add and manage Instructors, Courses, Classrooms (Rooms), and Student Batches.
 *   **Automatic Workload Checks:** The application automatically tracks weekly teaching hours for each instructor and rejects scheduling slots that exceed their hourly threshold.
 *   **Interactive Scheduling:** Schedule class sessions by assigning a timeslot (day of week, start time, end time), an instructor, a course, a classroom, and a target student batch.
+*   **Aesthetic Desktop Interface:** A beautiful, responsive dark-themed Qt GUI styled with custom Catppuccin Mocha-inspired aesthetics.
+*   **Persistent Storage:** Auto-saves and auto-loads your configurations and schedules using JSON database storage (`timetable_data.json`) in the executable directory.
 *   **Modular Architecture:** Written with a clean separation of concerns, decoupling model code (`AppManager`, `Instructor`, etc.) from the GUI code (`MainWindow`).
 
 
@@ -24,7 +26,7 @@
 └── qt/
     └── qt/
         ├── main.cpp           # Entry point for the Qt GUI application
-        ├── mainwindow.cpp     # Controls UI forms, tables, styling
+        ├── mainwindow.cpp     # Controls UI forms, tables, styling, and JSON persistence
         ├── mainwindow.h       # UI definitions and signal/slot bindings
         ├── mainwindow.ui      # Default XML UI layout file (configured dynamically)
         └── qt.pro             # Qt project configuration file
@@ -35,8 +37,6 @@
 
 *   **C++ Compiler:** A compiler supporting C++17 (e.g., GCC 13+ or MinGW-w64).
 *   **Qt SDK:** Qt 6.0 or higher with the **Widgets** module.
-
----
 
 ## Build & Run Instructions
 
@@ -80,3 +80,13 @@ windeployqt release/qt.exe
 # Run the application
 ./release/qt.exe
 ```
+
+---
+
+## JSON Data Persistence
+
+Timetable routines and master lists are persisted inside a file named `timetable_data.json` located next to your `qt.exe` binary. 
+
+*   On first launch, if no file is found, the system seeds default mockup entries automatically.
+*   All additions (Instructors, Courses, Rooms, Student Batches, or Scheduled Slots) are saved immediately.
+*   You can copy or share this JSON file to move schedules between workspaces.
