@@ -1,7 +1,7 @@
 #include "Student_batch.hpp"
 
-StudentBatch::StudentBatch(std::string batchId, int strength, ProgramType program)
-    : m_batchId(batchId), m_strength(strength), m_program(program) {}
+StudentBatch::StudentBatch(std::string batchId, int strength, ProgramType program, std::string department)
+    : m_batchId(batchId), m_strength(strength), m_program(program), m_department(department) {}
 
 std::string StudentBatch::getProgramAsString() const {
     switch (m_program) {
@@ -11,3 +11,7 @@ std::string StudentBatch::getProgramAsString() const {
         default:               return "Unknown";
     }
 }
+
+std::string StudentBatch::getDepartment() const {
+    return m_department;
+}

@@ -14,6 +14,8 @@
 #include <QJsonObject>
 #include <QJsonArray>
 #include <QCoreApplication>
+#include <QRegularExpression>
+
 
 // Helper to convert Day enum to QString
 static QString dayToString(Day d) {
@@ -142,29 +144,44 @@ void MainWindow::setupUI()
     QWidget *instTab = new QWidget();
     QHBoxLayout *instLayout = new QHBoxLayout(instTab);
     
-    // Left Form
     QWidget *instLeft = new QWidget();
     QVBoxLayout *instFormLayout = new QVBoxLayout(instLeft);
     QFormLayout *instForm = new QFormLayout();
     
+    m_instIdEdit = new QLineEdit();
     m_instNameEdit = new QLineEdit();
+    m_instDeptEdit = new QLineEdit();
+    m_instEmailEdit = new QLineEdit();
+    m_instPhoneEdit = new QLineEdit();
     m_instHoursSpin = new QSpinBox();
     m_instHoursSpin->setRange(1, 100);
     m_instHoursSpin->setValue(20);
     
+    instForm->addRow(new QLabel("Instructor ID:"), m_instIdEdit);
     instForm->addRow(new QLabel("Instructor Name:"), m_instNameEdit);
+    instForm->addRow(new QLabel("Department:"), m_instDeptEdit);
+    instForm->addRow(new QLabel("Email:"), m_instEmailEdit);
+    instForm->addRow(new QLabel("Phone:"), m_instPhoneEdit);
     instForm->addRow(new QLabel("Max Weekly Hours:"), m_instHoursSpin);
     
     QPushButton *btnInstAdd = new QPushButton("Add Instructor");
+    QPushButton *btnInstEdit = new QPushButton("Edit Instructor");
+    QPushButton *btnInstDelete = new QPushButton("Delete Instructor");
+    
     connect(btnInstAdd, &QPushButton::clicked, this, &MainWindow::onAddInstructor);
+    connect(btnInstEdit, &QPushButton::clicked, this, &MainWindow::onEditInstructor);
+    connect(btnInstDelete, &QPushButton::clicked, this, &MainWindow::onDeleteInstructor);
+    
+    QHBoxLayout *instBtnLayout = new QHBoxLayout();
+    instBtnLayout->addWidget(btnInstAdd);
+    instBtnLayout->addWidget(btnInstEdit);
+    instBtnLayout->addWidget(btnInstDelete);
     
     instFormLayout->addLayout(instForm);
-    instFormLayout->addWidget(btnInstAdd);
+    instFormLayout->addLayout(instBtnLayout);
     instFormLayout->addStretch();
     
-    // Right List
     m_instList = new QListWidget();
-    
     instLayout->addWidget(instLeft, 1);
     instLayout->addWidget(m_instList, 2);
     m_tabWidget->addTab(instTab, "Instructors");
@@ -175,29 +192,44 @@ void MainWindow::setupUI()
     QWidget *courseTab = new QWidget();
     QHBoxLayout *courseLayout = new QHBoxLayout(courseTab);
     
-    // Left Form
     QWidget *courseLeft = new QWidget();
     QVBoxLayout *courseFormLayout = new QVBoxLayout(courseLeft);
     QFormLayout *courseForm = new QFormLayout();
     
     m_courseCodeEdit = new QLineEdit();
+    m_courseNameEdit = new QLineEdit();
     m_courseHoursSpin = new QSpinBox();
     m_courseHoursSpin->setRange(1, 20);
     m_courseHoursSpin->setValue(3);
+    m_courseSemesterSpin = new QSpinBox();
+    m_courseSemesterSpin->setRange(1, 12);
+    m_courseSemesterSpin->setValue(1);
+    m_courseDeptEdit = new QLineEdit();
     
     courseForm->addRow(new QLabel("Course Code:"), m_courseCodeEdit);
-    courseForm->addRow(new QLabel("Allocated Hours:"), m_courseHoursSpin);
+    courseForm->addRow(new QLabel("Course Name:"), m_courseNameEdit);
+    courseForm->addRow(new QLabel("Credit Hours:"), m_courseHoursSpin);
+    courseForm->addRow(new QLabel("Semester:"), m_courseSemesterSpin);
+    courseForm->addRow(new QLabel("Department:"), m_courseDeptEdit);
     
     QPushButton *btnCourseAdd = new QPushButton("Add Course");
+    QPushButton *btnCourseEdit = new QPushButton("Edit Course");
+    QPushButton *btnCourseDelete = new QPushButton("Delete Course");
+    
     connect(btnCourseAdd, &QPushButton::clicked, this, &MainWindow::onAddCourse);
+    connect(btnCourseEdit, &QPushButton::clicked, this, &MainWindow::onEditCourse);
+    connect(btnCourseDelete, &QPushButton::clicked, this, &MainWindow::onDeleteCourse);
+    
+    QHBoxLayout *courseBtnLayout = new QHBoxLayout();
+    courseBtnLayout->addWidget(btnCourseAdd);
+    courseBtnLayout->addWidget(btnCourseEdit);
+    courseBtnLayout->addWidget(btnCourseDelete);
     
     courseFormLayout->addLayout(courseForm);
-    courseFormLayout->addWidget(btnCourseAdd);
+    courseFormLayout->addLayout(courseBtnLayout);
     courseFormLayout->addStretch();
     
-    // Right List
     m_courseList = new QListWidget();
-    
     courseLayout->addWidget(courseLeft, 1);
     courseLayout->addWidget(m_courseList, 2);
     m_tabWidget->addTab(courseTab, "Courses");
@@ -208,32 +240,41 @@ void MainWindow::setupUI()
     QWidget *roomTab = new QWidget();
     QHBoxLayout *roomLayout = new QHBoxLayout(roomTab);
     
-    // Left Form
     QWidget *roomLeft = new QWidget();
     QVBoxLayout *roomFormLayout = new QVBoxLayout(roomLeft);
     QFormLayout *roomForm = new QFormLayout();
     
     m_roomIdEdit = new QLineEdit();
+    m_roomBuildingEdit = new QLineEdit();
     m_roomCapSpin = new QSpinBox();
     m_roomCapSpin->setRange(1, 500);
     m_roomCapSpin->setValue(60);
     m_roomTypeCombo = new QComboBox();
     m_roomTypeCombo->addItems({"Theory", "Lab", "Auditorium"});
     
-    roomForm->addRow(new QLabel("Room ID/Name:"), m_roomIdEdit);
+    roomForm->addRow(new QLabel("Room Number:"), m_roomIdEdit);
+    roomForm->addRow(new QLabel("Building:"), m_roomBuildingEdit);
     roomForm->addRow(new QLabel("Capacity:"), m_roomCapSpin);
     roomForm->addRow(new QLabel("Room Type:"), m_roomTypeCombo);
     
     QPushButton *btnRoomAdd = new QPushButton("Add Room");
+    QPushButton *btnRoomEdit = new QPushButton("Edit Room");
+    QPushButton *btnRoomDelete = new QPushButton("Delete Room");
+    
     connect(btnRoomAdd, &QPushButton::clicked, this, &MainWindow::onAddRoom);
+    connect(btnRoomEdit, &QPushButton::clicked, this, &MainWindow::onEditRoom);
+    connect(btnRoomDelete, &QPushButton::clicked, this, &MainWindow::onDeleteRoom);
+    
+    QHBoxLayout *roomBtnLayout = new QHBoxLayout();
+    roomBtnLayout->addWidget(btnRoomAdd);
+    roomBtnLayout->addWidget(btnRoomEdit);
+    roomBtnLayout->addWidget(btnRoomDelete);
     
     roomFormLayout->addLayout(roomForm);
-    roomFormLayout->addWidget(btnRoomAdd);
+    roomFormLayout->addLayout(roomBtnLayout);
     roomFormLayout->addStretch();
     
-    // Right List
     m_roomList = new QListWidget();
-    
     roomLayout->addWidget(roomLeft, 1);
     roomLayout->addWidget(m_roomList, 2);
     m_tabWidget->addTab(roomTab, "Rooms");
@@ -244,7 +285,6 @@ void MainWindow::setupUI()
     QWidget *batchTab = new QWidget();
     QHBoxLayout *batchLayout = new QHBoxLayout(batchTab);
     
-    // Left Form
     QWidget *batchLeft = new QWidget();
     QVBoxLayout *batchFormLayout = new QVBoxLayout(batchLeft);
     QFormLayout *batchForm = new QFormLayout();
@@ -255,21 +295,31 @@ void MainWindow::setupUI()
     m_batchStrengthSpin->setValue(45);
     m_batchProgCombo = new QComboBox();
     m_batchProgCombo->addItems({"BIT", "BCE", "BCS"});
+    m_batchDeptEdit = new QLineEdit();
     
-    batchForm->addRow(new QLabel("Batch ID/Name:"), m_batchIdEdit);
+    batchForm->addRow(new QLabel("Batch Name:"), m_batchIdEdit);
+    batchForm->addRow(new QLabel("Department:"), m_batchDeptEdit);
     batchForm->addRow(new QLabel("Strength:"), m_batchStrengthSpin);
     batchForm->addRow(new QLabel("Program:"), m_batchProgCombo);
     
     QPushButton *btnBatchAdd = new QPushButton("Add Batch");
+    QPushButton *btnBatchEdit = new QPushButton("Edit Batch");
+    QPushButton *btnBatchDelete = new QPushButton("Delete Batch");
+    
     connect(btnBatchAdd, &QPushButton::clicked, this, &MainWindow::onAddBatch);
+    connect(btnBatchEdit, &QPushButton::clicked, this, &MainWindow::onEditBatch);
+    connect(btnBatchDelete, &QPushButton::clicked, this, &MainWindow::onDeleteBatch);
+    
+    QHBoxLayout *batchBtnLayout = new QHBoxLayout();
+    batchBtnLayout->addWidget(btnBatchAdd);
+    batchBtnLayout->addWidget(btnBatchEdit);
+    batchBtnLayout->addWidget(btnBatchDelete);
     
     batchFormLayout->addLayout(batchForm);
-    batchFormLayout->addWidget(btnBatchAdd);
+    batchFormLayout->addLayout(batchBtnLayout);
     batchFormLayout->addStretch();
     
-    // Right List
     m_batchList = new QListWidget();
-    
     batchLayout->addWidget(batchLeft, 1);
     batchLayout->addWidget(m_batchList, 2);
     m_tabWidget->addTab(batchTab, "Student Batches");
@@ -280,7 +330,6 @@ void MainWindow::setupUI()
     QWidget *timetableTab = new QWidget();
     QHBoxLayout *timetableLayout = new QHBoxLayout(timetableTab);
     
-    // Left Form
     QWidget *timetableLeft = new QWidget();
     QVBoxLayout *timetableFormLayout = new QVBoxLayout(timetableLeft);
     QFormLayout *sessionForm = new QFormLayout();
@@ -311,7 +360,6 @@ void MainWindow::setupUI()
     timetableFormLayout->addWidget(btnSessionAdd);
     timetableFormLayout->addStretch();
     
-    // Right Table
     m_timetableTable = new QTableWidget();
     m_timetableTable->setColumnCount(7);
     m_timetableTable->setHorizontalHeaderLabels({"Day", "Time", "Course", "Instructor", "Room", "Batch", "Duration"});
@@ -322,6 +370,7 @@ void MainWindow::setupUI()
     timetableLayout->addWidget(m_timetableTable, 2);
     m_tabWidget->addTab(timetableTab, "Generate & View Timetable");
 }
+
 
 void MainWindow::populateInitialData()
 {
@@ -366,7 +415,11 @@ void MainWindow::saveToFile()
     QJsonArray instArray;
     for (const auto& inst : m_appManager.getInstructors()) {
         QJsonObject instObj;
+        instObj["id"] = QString::fromStdString(inst.getId());
         instObj["name"] = QString::fromStdString(inst.getName());
+        instObj["department"] = QString::fromStdString(inst.getDepartment());
+        instObj["email"] = QString::fromStdString(inst.getEmail());
+        instObj["phone"] = QString::fromStdString(inst.getPhone());
         instObj["maxLimitHours"] = inst.getMaxLimitHours();
         
         QJsonArray assignedArray;
@@ -382,6 +435,11 @@ void MainWindow::saveToFile()
     QJsonArray courseArray;
     for (const auto& crs : m_appManager.getCourses()) {
         QJsonObject crsObj;
+        crsObj["code"] = QString::fromStdString(crs.getCode());
+        crsObj["name"] = QString::fromStdString(crs.getName());
+        crsObj["creditHours"] = crs.getCreditHours();
+        crsObj["semester"] = crs.getSemester();
+        crsObj["department"] = QString::fromStdString(crs.getDepartment());
         crsObj["courseCode"] = QString::fromStdString(crs.getCourseCode());
         crsObj["allocatedHours"] = crs.getAllocatedHours();
         courseArray.append(crsObj);
@@ -395,6 +453,7 @@ void MainWindow::saveToFile()
         rmObj["roomId"] = QString::fromStdString(rm.getRoomId());
         rmObj["capacity"] = rm.getCapacity();
         rmObj["type"] = static_cast<int>(rm.getType());
+        rmObj["building"] = QString::fromStdString(rm.getBuilding());
         roomArray.append(rmObj);
     }
     rootObj["rooms"] = roomArray;
@@ -406,6 +465,7 @@ void MainWindow::saveToFile()
         bObj["batchId"] = QString::fromStdString(b.getBatchId());
         bObj["strength"] = b.getStrength();
         bObj["program"] = static_cast<int>(b.getProgram());
+        bObj["department"] = QString::fromStdString(b.getDepartment());
         batchArray.append(bObj);
     }
     rootObj["batches"] = batchArray;
@@ -420,7 +480,7 @@ void MainWindow::saveToFile()
         sObj["startM"] = ts.getStartTime().minutes;
         sObj["endH"] = ts.getEndTime().hours;
         sObj["endM"] = ts.getEndTime().minutes;
-        sObj["instructor"] = QString::fromStdString(s.getTeacherId()->getName());
+        sObj["instructor"] = QString::fromStdString(s.getTeacherId()->getId()); // Use unique ID
         sObj["course"] = QString::fromStdString(s.getSubjectId()->getCourseCode());
         sObj["room"] = QString::fromStdString(s.getRoomId()->getRoomId());
         sObj["batch"] = QString::fromStdString(s.getBatchId()->getBatchId());
@@ -461,14 +521,17 @@ void MainWindow::loadFromFile()
 
     QJsonObject rootObj = doc.object();
 
-    // 1. Courses (Load first as they are needed by Instructors and Class Sessions)
+    // 1. Courses
     if (rootObj.contains("courses") && rootObj["courses"].isArray()) {
         QJsonArray courseArray = rootObj["courses"].toArray();
         for (const auto& val : courseArray) {
             QJsonObject crsObj = val.toObject();
-            std::string code = crsObj["courseCode"].toString().toStdString();
-            int hours = crsObj["allocatedHours"].toInt();
-            m_appManager.addCourse(Course(code, hours));
+            std::string code = crsObj.contains("code") ? crsObj["code"].toString().toStdString() : crsObj["courseCode"].toString().toStdString();
+            std::string name = crsObj.contains("name") ? crsObj["name"].toString().toStdString() : code;
+            int creditHours = crsObj.contains("creditHours") ? crsObj["creditHours"].toInt() : crsObj["allocatedHours"].toInt();
+            int semester = crsObj.contains("semester") ? crsObj["semester"].toInt() : 1;
+            std::string department = crsObj.contains("department") ? crsObj["department"].toString().toStdString() : "CS";
+            m_appManager.addCourse(Course(code, name, creditHours, semester, department));
         }
     }
 
@@ -477,9 +540,14 @@ void MainWindow::loadFromFile()
         QJsonArray instArray = rootObj["instructors"].toArray();
         for (const auto& val : instArray) {
             QJsonObject instObj = val.toObject();
+            std::string id = instObj.contains("id") ? instObj["id"].toString().toStdString() : instObj["name"].toString().toStdString();
             std::string name = instObj["name"].toString().toStdString();
+            std::string department = instObj.contains("department") ? instObj["department"].toString().toStdString() : "CS";
+            std::string email = instObj.contains("email") ? instObj["email"].toString().toStdString() : "";
+            std::string phone = instObj.contains("phone") ? instObj["phone"].toString().toStdString() : "";
             int maxHours = instObj["maxLimitHours"].toInt();
-            Instructor inst(name, maxHours);
+            
+            Instructor inst(id, name, department, email, phone, maxHours);
             
             // Re-assign courses
             if (instObj.contains("assignedCourses") && instObj["assignedCourses"].isArray()) {
@@ -504,7 +572,8 @@ void MainWindow::loadFromFile()
             std::string id = rmObj["roomId"].toString().toStdString();
             int cap = rmObj["capacity"].toInt();
             RoomType type = static_cast<RoomType>(rmObj["type"].toInt());
-            m_appManager.addRoom(Room(id, cap, type));
+            std::string building = rmObj.contains("building") ? rmObj["building"].toString().toStdString() : "Main";
+            m_appManager.addRoom(Room(id, cap, type, building));
         }
     }
 
@@ -516,7 +585,8 @@ void MainWindow::loadFromFile()
             std::string id = bObj["batchId"].toString().toStdString();
             int strength = bObj["strength"].toInt();
             ProgramType prog = static_cast<ProgramType>(bObj["program"].toInt());
-            m_appManager.addBatch(StudentBatch(id, strength, prog));
+            std::string department = bObj.contains("department") ? bObj["department"].toString().toStdString() : "CS";
+            m_appManager.addBatch(StudentBatch(id, strength, prog, department));
         }
     }
 
@@ -530,12 +600,15 @@ void MainWindow::loadFromFile()
             ClockTime ctEnd{ sObj["endH"].toInt(), sObj["endM"].toInt() };
             TimeSlot slot(day, ctStart, ctEnd);
 
-            std::string instName = sObj["instructor"].toString().toStdString();
+            std::string instKey = sObj["instructor"].toString().toStdString();
             std::string courseCode = sObj["course"].toString().toStdString();
             std::string roomId = sObj["room"].toString().toStdString();
             std::string batchId = sObj["batch"].toString().toStdString();
 
-            Instructor* inst = m_appManager.findInstructorByName(instName);
+            // Try resolving instructor by ID first, then by name for compatibility
+            Instructor* inst = m_appManager.findInstructorById(instKey);
+            if (!inst) inst = m_appManager.findInstructorByName(instKey);
+            
             Course* crs = m_appManager.findCourseByCode(courseCode);
             Room* rm = m_appManager.findRoomById(roomId);
             StudentBatch* btch = m_appManager.findBatchById(batchId);
@@ -549,7 +622,7 @@ void MainWindow::loadFromFile()
     // Populate list widgets based on loaded data
     for (const auto& inst : m_appManager.getInstructors()) {
         m_instList->addItem(QString("%1 (Max Hours: %2)")
-            .arg(QString::fromStdString(inst.getName()))
+            .arg(QString::fromStdString(inst.getId()))
             .arg(inst.getMaxLimitHours()));
     }
     for (const auto& crs : m_appManager.getCourses()) {
@@ -570,6 +643,7 @@ void MainWindow::loadFromFile()
             .arg(QString::fromStdString(b.getProgramAsString())));
     }
 }
+
 
 void MainWindow::populateCombos()
 {
@@ -635,80 +709,489 @@ void MainWindow::refreshListsAndTables()
 
 void MainWindow::onAddInstructor()
 {
-    QString name = m_instNameEdit->text().trimmed();
-    if (name.isEmpty()) {
-        QMessageBox::warning(this, "Input Error", "Instructor name cannot be empty.");
+    std::string id = m_instIdEdit->text().trimmed().toStdString();
+    std::string name = m_instNameEdit->text().trimmed().toStdString();
+    std::string department = m_instDeptEdit->text().trimmed().toStdString();
+    std::string email = m_instEmailEdit->text().trimmed().toStdString();
+    std::string phone = m_instPhoneEdit->text().trimmed().toStdString();
+    int maxHours = m_instHoursSpin->value();
+
+    if (id.empty()) {
+        QMessageBox::warning(this, "Validation Error", "Instructor ID cannot be empty.");
         return;
     }
-    
-    int hours = m_instHoursSpin->value();
-    m_appManager.addInstructor(Instructor(name.toStdString(), hours));
-    
-    m_instList->addItem(QString("%1 (Max Hours: %2)").arg(name).arg(hours));
+
+    if (m_editingInstId.empty() || m_editingInstId != id) {
+        if (m_appManager.findInstructorById(id) != nullptr) {
+            QMessageBox::warning(this, "Validation Error", "Instructor ID must be unique.");
+            return;
+        }
+    }
+
+    if (name.empty()) {
+        QMessageBox::warning(this, "Validation Error", "Instructor Name cannot be empty.");
+        return;
+    }
+
+    if (department.empty()) {
+        QMessageBox::warning(this, "Validation Error", "Department cannot be empty.");
+        return;
+    }
+
+    if (!email.empty()) {
+        QRegularExpression emailRegex("^[\\w\\.\\-\\+]+@[\\w\\.\\-]+\\.[a-zA-Z]{2,}$");
+        if (!emailRegex.match(QString::fromStdString(email)).hasMatch()) {
+            QMessageBox::warning(this, "Validation Error", "Email format must be name@domain.com.");
+            return;
+        }
+    }
+
+    if (!phone.empty()) {
+        QRegularExpression phoneRegex("^[0-9\\s\\+\\-]+$");
+        if (!phoneRegex.match(QString::fromStdString(phone)).hasMatch()) {
+            QMessageBox::warning(this, "Validation Error", "Phone may only contain digits, spaces, +, or -.");
+            return;
+        }
+    }
+
+    Instructor inst(id, name, department, email, phone, maxHours);
+
+    if (!m_editingInstId.empty()) {
+        m_appManager.updateInstructor(inst);
+        m_editingInstId = "";
+        m_instIdEdit->setEnabled(true);
+    } else {
+        m_appManager.addInstructor(inst);
+    }
+
+    m_instIdEdit->clear();
     m_instNameEdit->clear();
-    
+    m_instDeptEdit->clear();
+    m_instEmailEdit->clear();
+    m_instPhoneEdit->clear();
+    m_instHoursSpin->setValue(20);
+
+    m_instList->clear();
+    for (const auto& i : m_appManager.getInstructors()) {
+        m_instList->addItem(QString("%1 (Max Hours: %2)").arg(QString::fromStdString(i.getId())).arg(i.getMaxLimitHours()));
+    }
+
     saveToFile();
     populateCombos();
+}
+
+void MainWindow::onEditInstructor()
+{
+    QListWidgetItem *item = m_instList->currentItem();
+    if (!item) {
+        QMessageBox::warning(this, "Selection Error", "No instructor selected to edit.");
+        return;
+    }
+
+    QString text = item->text();
+    int idx = text.indexOf(" (Max Hours:");
+    std::string id = (idx != -1) ? text.left(idx).toStdString() : text.toStdString();
+
+    Instructor* inst = m_appManager.findInstructorById(id);
+    if (!inst) {
+        QMessageBox::warning(this, "Error", "Selected instructor not found.");
+        return;
+    }
+
+    m_instIdEdit->setText(QString::fromStdString(inst->getId()));
+    m_instNameEdit->setText(QString::fromStdString(inst->getName()));
+    m_instDeptEdit->setText(QString::fromStdString(inst->getDepartment()));
+    m_instEmailEdit->setText(QString::fromStdString(inst->getEmail()));
+    m_instPhoneEdit->setText(QString::fromStdString(inst->getPhone()));
+    m_instHoursSpin->setValue(inst->getMaxLimitHours());
+
+    m_editingInstId = inst->getId();
+    m_instIdEdit->setEnabled(false);
+}
+
+void MainWindow::onDeleteInstructor()
+{
+    QListWidgetItem *item = m_instList->currentItem();
+    if (!item) {
+        QMessageBox::warning(this, "Selection Error", "No instructor selected to delete.");
+        return;
+    }
+
+    QString text = item->text();
+    int idx = text.indexOf(" (Max Hours:");
+    std::string id = (idx != -1) ? text.left(idx).toStdString() : text.toStdString();
+
+    if (m_appManager.isInstructorUsed(id)) {
+        QMessageBox::critical(this, "Cannot Delete",
+                              "This item is currently used in one or more scheduled classes and cannot be deleted.");
+        return;
+    }
+
+    QMessageBox::StandardButton reply = QMessageBox::question(this, "Confirm Delete",
+                                                              "Are you sure you want to delete this instructor?",
+                                                              QMessageBox::Yes | QMessageBox::No);
+    if (reply == QMessageBox::No) {
+        return;
+    }
+
+    if (m_appManager.removeInstructor(id)) {
+        delete item;
+        saveToFile();
+        populateCombos();
+    } else {
+        QMessageBox::warning(this, "Delete Failed", "Unable to delete instructor.");
+    }
 }
 
 void MainWindow::onAddCourse()
 {
-    QString code = m_courseCodeEdit->text().trimmed();
-    if (code.isEmpty()) {
-        QMessageBox::warning(this, "Input Error", "Course code cannot be empty.");
+    std::string code = m_courseCodeEdit->text().trimmed().toStdString();
+    std::string name = m_courseNameEdit->text().trimmed().toStdString();
+    int hours = m_courseHoursSpin->value();
+    int semester = m_courseSemesterSpin->value();
+    std::string dept = m_courseDeptEdit->text().trimmed().toStdString();
+
+    if (code.empty()) {
+        QMessageBox::warning(this, "Validation Error", "Course Code cannot be empty.");
         return;
     }
-    
-    int hours = m_courseHoursSpin->value();
-    m_appManager.addCourse(Course(code.toStdString(), hours));
-    
-    m_courseList->addItem(QString("%1 (Allocated Hours: %2)").arg(code).arg(hours));
+
+    if (m_editingCourseCode.empty() || m_editingCourseCode != code) {
+        if (m_appManager.findCourseByCode(code) != nullptr) {
+            QMessageBox::warning(this, "Validation Error", "Course Code must be unique.");
+            return;
+        }
+    }
+
+    if (name.empty()) {
+        QMessageBox::warning(this, "Validation Error", "Course Name cannot be empty.");
+        return;
+    }
+
+    if (hours <= 0) {
+        QMessageBox::warning(this, "Validation Error", "Credit Hours must be a positive integer.");
+        return;
+    }
+
+    if (semester <= 0) {
+        QMessageBox::warning(this, "Validation Error", "Semester must be a positive integer.");
+        return;
+    }
+
+    Course crs(code, name, hours, semester, dept);
+
+    if (!m_editingCourseCode.empty()) {
+        m_appManager.updateCourse(crs);
+        m_editingCourseCode = "";
+        m_courseCodeEdit->setEnabled(true);
+    } else {
+        m_appManager.addCourse(crs);
+    }
+
     m_courseCodeEdit->clear();
-    
+    m_courseNameEdit->clear();
+    m_courseHoursSpin->setValue(3);
+    m_courseSemesterSpin->setValue(1);
+    m_courseDeptEdit->clear();
+
+    m_courseList->clear();
+    for (const auto& c : m_appManager.getCourses()) {
+        m_courseList->addItem(QString("%1 (Allocated Hours: %2)").arg(QString::fromStdString(c.getCourseCode())).arg(c.getAllocatedHours()));
+    }
+
     saveToFile();
     populateCombos();
+}
+
+void MainWindow::onEditCourse()
+{
+    QListWidgetItem *item = m_courseList->currentItem();
+    if (!item) {
+        QMessageBox::warning(this, "Selection Error", "No course selected to edit.");
+        return;
+    }
+
+    QString text = item->text();
+    int idx = text.indexOf(" (Allocated Hours:");
+    std::string code = (idx != -1) ? text.left(idx).toStdString() : text.toStdString();
+
+    Course* crs = m_appManager.findCourseByCode(code);
+    if (!crs) {
+        QMessageBox::warning(this, "Error", "Selected course not found.");
+        return;
+    }
+
+    m_courseCodeEdit->setText(QString::fromStdString(crs->getCourseCode()));
+    m_courseNameEdit->setText(QString::fromStdString(crs->getName()));
+    m_courseHoursSpin->setValue(crs->getAllocatedHours());
+    m_courseSemesterSpin->setValue(crs->getSemester());
+    m_courseDeptEdit->setText(QString::fromStdString(crs->getDepartment()));
+
+    m_editingCourseCode = crs->getCourseCode();
+    m_courseCodeEdit->setEnabled(false);
+}
+
+void MainWindow::onDeleteCourse()
+{
+    QListWidgetItem *item = m_courseList->currentItem();
+    if (!item) {
+        QMessageBox::warning(this, "Selection Error", "No course selected to delete.");
+        return;
+    }
+
+    QString text = item->text();
+    int idx = text.indexOf(" (Allocated Hours:");
+    std::string code = (idx != -1) ? text.left(idx).toStdString() : text.toStdString();
+
+    if (m_appManager.isCourseUsed(code)) {
+        QMessageBox::critical(this, "Cannot Delete",
+                              "This item is currently used in one or more scheduled classes and cannot be deleted.");
+        return;
+    }
+
+    QMessageBox::StandardButton reply = QMessageBox::question(this, "Confirm Delete",
+                                                              "Are you sure you want to delete this course?",
+                                                              QMessageBox::Yes | QMessageBox::No);
+    if (reply == QMessageBox::No) {
+        return;
+    }
+
+    if (m_appManager.removeCourse(code)) {
+        delete item;
+        saveToFile();
+        populateCombos();
+    } else {
+        QMessageBox::warning(this, "Delete Failed", "Unable to delete course.");
+    }
 }
 
 void MainWindow::onAddRoom()
 {
-    QString id = m_roomIdEdit->text().trimmed();
-    if (id.isEmpty()) {
-        QMessageBox::warning(this, "Input Error", "Room ID cannot be empty.");
+    std::string number = m_roomIdEdit->text().trimmed().toStdString();
+    std::string building = m_roomBuildingEdit->text().trimmed().toStdString();
+    int capacity = m_roomCapSpin->value();
+    RoomType type = static_cast<RoomType>(m_roomTypeCombo->currentIndex());
+
+    if (number.empty()) {
+        QMessageBox::warning(this, "Validation Error", "Room Number cannot be empty.");
         return;
     }
-    
-    int cap = m_roomCapSpin->value();
-    RoomType type = static_cast<RoomType>(m_roomTypeCombo->currentIndex());
-    QString typeStr = m_roomTypeCombo->currentText();
-    
-    m_appManager.addRoom(Room(id.toStdString(), cap, type));
-    
-    m_roomList->addItem(QString("%1 (Capacity: %2, Type: %3)").arg(id).arg(cap).arg(typeStr));
+
+    if (m_editingRoomId.empty() || m_editingRoomId != number) {
+        if (m_appManager.findRoomById(number) != nullptr) {
+            QMessageBox::warning(this, "Validation Error", "Room Number must be unique.");
+            return;
+        }
+    }
+
+    if (building.empty()) {
+        QMessageBox::warning(this, "Validation Error", "Building cannot be empty.");
+        return;
+    }
+
+    if (capacity <= 0) {
+        QMessageBox::warning(this, "Validation Error", "Capacity must be a positive integer.");
+        return;
+    }
+
+    Room rm(number, capacity, type, building);
+
+    if (!m_editingRoomId.empty()) {
+        m_appManager.updateRoom(rm);
+        m_editingRoomId = "";
+        m_roomIdEdit->setEnabled(true);
+    } else {
+        m_appManager.addRoom(rm);
+    }
+
     m_roomIdEdit->clear();
-    
+    m_roomBuildingEdit->clear();
+    m_roomCapSpin->setValue(60);
+    m_roomTypeCombo->setCurrentIndex(0);
+
+    m_roomList->clear();
+    for (const auto& r : m_appManager.getRooms()) {
+        m_roomList->addItem(QString("%1 (Capacity: %2, Type: %3)")
+            .arg(QString::fromStdString(r.getRoomId()))
+            .arg(r.getCapacity())
+            .arg(QString::fromStdString(r.getTypeAsString())));
+    }
+
     saveToFile();
     populateCombos();
 }
 
-void MainWindow::onAddBatch()
+void MainWindow::onEditRoom()
 {
-    QString id = m_batchIdEdit->text().trimmed();
-    if (id.isEmpty()) {
-        QMessageBox::warning(this, "Input Error", "Batch ID cannot be empty.");
+    QListWidgetItem *item = m_roomList->currentItem();
+    if (!item) {
+        QMessageBox::warning(this, "Selection Error", "No room selected to edit.");
         return;
     }
-    
+
+    QString text = item->text();
+    int idx = text.indexOf(" (Capacity:");
+    std::string number = (idx != -1) ? text.left(idx).toStdString() : text.toStdString();
+
+    Room* rm = m_appManager.findRoomById(number);
+    if (!rm) {
+        QMessageBox::warning(this, "Error", "Selected room not found.");
+        return;
+    }
+
+    m_roomIdEdit->setText(QString::fromStdString(rm->getRoomId()));
+    m_roomBuildingEdit->setText(QString::fromStdString(rm->getBuilding()));
+    m_roomCapSpin->setValue(rm->getCapacity());
+    m_roomTypeCombo->setCurrentIndex(static_cast<int>(rm->getType()));
+
+    m_editingRoomId = rm->getRoomId();
+    m_roomIdEdit->setEnabled(false);
+}
+
+void MainWindow::onDeleteRoom()
+{
+    QListWidgetItem *item = m_roomList->currentItem();
+    if (!item) {
+        QMessageBox::warning(this, "Selection Error", "No room selected to delete.");
+        return;
+    }
+
+    QString text = item->text();
+    int idx = text.indexOf(" (Capacity:");
+    std::string number = (idx != -1) ? text.left(idx).toStdString() : text.toStdString();
+
+    if (m_appManager.isRoomUsed(number)) {
+        QMessageBox::critical(this, "Cannot Delete",
+                              "This item is currently used in one or more scheduled classes and cannot be deleted.");
+        return;
+    }
+
+    QMessageBox::StandardButton reply = QMessageBox::question(this, "Confirm Delete",
+                                                              "Are you sure you want to delete this room?",
+                                                              QMessageBox::Yes | QMessageBox::No);
+    if (reply == QMessageBox::No) {
+        return;
+    }
+
+    if (m_appManager.removeRoom(number)) {
+        delete item;
+        saveToFile();
+        populateCombos();
+    } else {
+        QMessageBox::warning(this, "Delete Failed", "Unable to delete room.");
+    }
+}
+
+void MainWindow::onAddBatch()
+{
+    std::string name = m_batchIdEdit->text().trimmed().toStdString();
+    std::string dept = m_batchDeptEdit->text().trimmed().toStdString();
     int strength = m_batchStrengthSpin->value();
-    ProgramType prog = static_cast<ProgramType>(m_batchProgCombo->currentIndex());
-    QString progStr = m_batchProgCombo->currentText();
-    
-    m_appManager.addBatch(StudentBatch(id.toStdString(), strength, prog));
-    
-    m_batchList->addItem(QString("%1 (Strength: %2, Program: %3)").arg(id).arg(strength).arg(progStr));
+    ProgramType program = static_cast<ProgramType>(m_batchProgCombo->currentIndex());
+
+    if (name.empty()) {
+        QMessageBox::warning(this, "Validation Error", "Batch Name cannot be empty.");
+        return;
+    }
+
+    if (m_editingBatchId.empty() || m_editingBatchId != name) {
+        if (m_appManager.findBatchById(name) != nullptr) {
+            QMessageBox::warning(this, "Validation Error", "Batch Name must be unique.");
+            return;
+        }
+    }
+
+    if (dept.empty()) {
+        QMessageBox::warning(this, "Validation Error", "Department cannot be empty.");
+        return;
+    }
+
+    StudentBatch b(name, strength, program, dept);
+
+    if (!m_editingBatchId.empty()) {
+        m_appManager.updateBatch(b);
+        m_editingBatchId = "";
+        m_batchIdEdit->setEnabled(true);
+    } else {
+        m_appManager.addBatch(b);
+    }
+
     m_batchIdEdit->clear();
-    
+    m_batchDeptEdit->clear();
+    m_batchStrengthSpin->setValue(45);
+    m_batchProgCombo->setCurrentIndex(0);
+
+    m_batchList->clear();
+    for (const auto& bat : m_appManager.getBatches()) {
+        m_batchList->addItem(QString("%1 (Strength: %2, Program: %3)")
+            .arg(QString::fromStdString(bat.getBatchId()))
+            .arg(bat.getStrength())
+            .arg(QString::fromStdString(bat.getProgramAsString())));
+    }
+
     saveToFile();
     populateCombos();
+}
+
+void MainWindow::onEditBatch()
+{
+    QListWidgetItem *item = m_batchList->currentItem();
+    if (!item) {
+        QMessageBox::warning(this, "Selection Error", "No student batch selected to edit.");
+        return;
+    }
+
+    QString text = item->text();
+    int idx = text.indexOf(" (Strength:");
+    std::string name = (idx != -1) ? text.left(idx).toStdString() : text.toStdString();
+
+    StudentBatch* b = m_appManager.findBatchById(name);
+    if (!b) {
+        QMessageBox::warning(this, "Error", "Selected student batch not found.");
+        return;
+    }
+
+    m_batchIdEdit->setText(QString::fromStdString(b->getBatchId()));
+    m_batchDeptEdit->setText(QString::fromStdString(b->getDepartment()));
+    m_batchStrengthSpin->setValue(b->getStrength());
+    m_batchProgCombo->setCurrentIndex(static_cast<int>(b->getProgram()));
+
+    m_editingBatchId = b->getBatchId();
+    m_batchIdEdit->setEnabled(false);
+}
+
+void MainWindow::onDeleteBatch()
+{
+    QListWidgetItem *item = m_batchList->currentItem();
+    if (!item) {
+        QMessageBox::warning(this, "Selection Error", "No student batch selected to delete.");
+        return;
+    }
+
+    QString text = item->text();
+    int idx = text.indexOf(" (Strength:");
+    std::string name = (idx != -1) ? text.left(idx).toStdString() : text.toStdString();
+
+    if (m_appManager.isBatchUsed(name)) {
+        QMessageBox::critical(this, "Cannot Delete",
+                              "This item is currently used in one or more scheduled classes and cannot be deleted.");
+        return;
+    }
+
+    QMessageBox::StandardButton reply = QMessageBox::question(this, "Confirm Delete",
+                                                              "Are you sure you want to delete this student batch?",
+                                                              QMessageBox::Yes | QMessageBox::No);
+    if (reply == QMessageBox::No) {
+        return;
+    }
+
+    if (m_appManager.removeBatch(name)) {
+        delete item;
+        saveToFile();
+        populateCombos();
+    } else {
+        QMessageBox::warning(this, "Delete Failed", "Unable to delete student batch.");
+    }
 }
 
 void MainWindow::onAddClassSession()
@@ -723,7 +1206,10 @@ void MainWindow::onAddClassSession()
         return;
     }
     
-    Instructor* inst = m_appManager.findInstructorByName(instName.toStdString());
+    // Resolve instructor by ID first, then by name
+    Instructor* inst = m_appManager.findInstructorById(instName.toStdString());
+    if (!inst) inst = m_appManager.findInstructorByName(instName.toStdString());
+    
     Course* crs = m_appManager.findCourseByCode(courseCode.toStdString());
     Room* rm = m_appManager.findRoomById(roomId.toStdString());
     StudentBatch* btch = m_appManager.findBatchById(batchId.toStdString());
@@ -773,3 +1259,4 @@ void MainWindow::onAddClassSession()
     
     QMessageBox::information(this, "Schedule Succeeded", "Class session scheduled successfully!");
 }
+

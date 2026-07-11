@@ -1,45 +1,46 @@
 #include "Instructor.hpp"
 #include <iostream>
 
-Instructor::Instructor(std::string instructorName, int maxHours) {
-    name = instructorName;
+// Full constructor
+Instructor::Instructor(std::string instructorId, std::string instructorName, int maxHours)
+{
+    id = std::move(instructorId);
+    name = std::move(instructorName);
     maxLimitHours = maxHours;
 }
 
-std::string Instructor::getName() const {
-    return name;
+// Backward-compat constructor: id defaults to name
+Instructor::Instructor(std::string instructorName, int maxHours)
+{
+    id = instructorName;
+    name = std::move(instructorName);
+    maxLimitHours = maxHours;
 }
 
-int Instructor::getMaxLimitHours() const {
-    return maxLimitHours;
-}
+std::string Instructor::getId() const { return id; }
+std::string Instructor::getName() const { return name; }
+int Instructor::getMaxLimitHours() const { return maxLimitHours; }
 
 const std::vector<Course>& Instructor::getAssignedCourses() const {
     return assignedCourses;
 }
 
-// Logic to count total hours assigned across the whole schedule so far
 int Instructor::calculateTotalAssignedHours() const {
     int total = 0;
-    // Loops through every course currently in the vector and adds up the hours
     for (const Course& c : assignedCourses) {
         total += c.getAllocatedHours();
     }
     return total;
 }
 
-// Logic to make sure a subject/workload doesn't exceed boundaries
 bool Instructor::assignNewCourse(const Course& newCourse) {
     int currentHours = calculateTotalAssignedHours();
-    
-    // If adding this new course goes over the limit, reject it!
     if (currentHours + newCourse.getAllocatedHours() > maxLimitHours) {
-        std::cout << "Error: Cannot assign " << newCourse.getCourseCode() 
+        std::cout << "Error: Cannot assign " << newCourse.getCourseCode()
                   << ". It exceeds " << name << "'s weekly hour limit!\n";
-        return false; // Assignment failed
+        return false;
     }
-
-    // Otherwise, successfully add it to the schedule tracking list
     assignedCourses.push_back(newCourse);
-    return true; // Assignment succeeded
+    return true;
 }
+

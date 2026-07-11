@@ -1,6 +1,7 @@
 #include "Room.hpp"
 
-Room::Room(std::string roomId, int capacity, RoomType type) : m_roomId(roomId), m_capacity(capacity), m_type(type) {}
+Room::Room(std::string roomId, int capacity, RoomType type, std::string building) 
+    : m_roomId(roomId), m_capacity(capacity), m_type(type), m_building(building) {}
 
 std::string Room::getRoomId() const 
 { 
@@ -25,3 +26,7 @@ std::string Room::getTypeAsString() const {
         default:                    return "Unknown";
     }
 }
+
+std::string Room::getBuilding() const {
+    return m_building;
+}
