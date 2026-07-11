@@ -7,6 +7,7 @@ INCLUDEPATH += ../..
 SOURCES += \
     main.cpp \
     mainwindow.cpp \
+    TextFileHandler.cpp \
     ../../AppManager.cpp \
     ../../Course.cpp \
     ../../Instructor.cpp \
@@ -17,6 +18,7 @@ SOURCES += \
 
 HEADERS += \
     mainwindow.h \
+    TextFileHandler.h \
     ../../AppManager.hpp \
     ../../Course.hpp \
     ../../Instructor.hpp \

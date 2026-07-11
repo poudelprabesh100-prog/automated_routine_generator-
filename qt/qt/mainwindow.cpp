@@ -547,28 +547,62 @@ void MainWindow::loadFromFile()
     }
 
     // Populate list widgets based on loaded data
+    QStringList instLines, courseLines, roomLines, batchLines, sessionLines;
+
     for (const auto& inst : m_appManager.getInstructors()) {
         m_instList->addItem(QString("%1 (Max Hours: %2)")
             .arg(QString::fromStdString(inst.getName()))
             .arg(inst.getMaxLimitHours()));
+        instLines << QString("%1|%2")
+                         .arg(QString::fromStdString(inst.getName()))
+                         .arg(inst.getMaxLimitHours());
     }
     for (const auto& crs : m_appManager.getCourses()) {
         m_courseList->addItem(QString("%1 (Allocated Hours: %2)")
             .arg(QString::fromStdString(crs.getCourseCode()))
             .arg(crs.getAllocatedHours()));
+        courseLines << QString("%1|%2")
+                           .arg(QString::fromStdString(crs.getCourseCode()))
+                           .arg(crs.getAllocatedHours());
     }
     for (const auto& rm : m_appManager.getRooms()) {
         m_roomList->addItem(QString("%1 (Capacity: %2, Type: %3)")
             .arg(QString::fromStdString(rm.getRoomId()))
             .arg(rm.getCapacity())
             .arg(QString::fromStdString(rm.getTypeAsString())));
+        roomLines << QString("%1|%2|%3")
+                         .arg(QString::fromStdString(rm.getRoomId()))
+                         .arg(rm.getCapacity())
+                         .arg(QString::fromStdString(rm.getTypeAsString()));
     }
     for (const auto& b : m_appManager.getBatches()) {
         m_batchList->addItem(QString("%1 (Strength: %2, Program: %3)")
             .arg(QString::fromStdString(b.getBatchId()))
             .arg(b.getStrength())
             .arg(QString::fromStdString(b.getProgramAsString())));
+        batchLines << QString("%1|%2|%3")
+                          .arg(QString::fromStdString(b.getBatchId()))
+                          .arg(b.getStrength())
+                          .arg(QString::fromStdString(b.getProgramAsString()));
     }
+    for (const auto& s : m_appManager.getTimetable()) {
+        TimeSlot ts = s.getTimeSlot();
+        sessionLines << QString("%1|%2|%3|%4|%5|%6|%7")
+                            .arg(dayToString(ts.getDay()))
+                            .arg(formatClockTime(ts.getStartTime()))
+                            .arg(formatClockTime(ts.getEndTime()))
+                            .arg(QString::fromStdString(s.getTeacherId()->getName()))
+                            .arg(QString::fromStdString(s.getSubjectId()->getCourseCode()))
+                            .arg(QString::fromStdString(s.getRoomId()->getRoomId()))
+                            .arg(QString::fromStdString(s.getBatchId()->getBatchId()));
+    }
+
+    // Sync .txt files with the data just loaded from JSON
+    TextFileHandler::rewriteInstructors(instLines);
+    TextFileHandler::rewriteCourses(courseLines);
+    TextFileHandler::rewriteRooms(roomLines);
+    TextFileHandler::rewriteBatches(batchLines);
+    TextFileHandler::rewriteSessions(sessionLines);
 }
 
 void MainWindow::populateCombos()
@@ -640,14 +674,26 @@ void MainWindow::onAddInstructor()
         QMessageBox::warning(this, "Input Error", "Instructor name cannot be empty.");
         return;
     }
-    
+
+    // Duplicate check: reject if this instructor name already exists
+    if (m_appManager.findInstructorByName(name.toStdString()) != nullptr) {
+        QMessageBox::warning(this, "Duplicate Entry",
+            QString("An instructor named '%1' already exists.").arg(name));
+        return;
+    }
+
     int hours = m_instHoursSpin->value();
     m_appManager.addInstructor(Instructor(name.toStdString(), hours));
-    
+
     m_instList->addItem(QString("%1 (Max Hours: %2)").arg(name).arg(hours));
     m_instNameEdit->clear();
-    
+
+    // Persist: JSON (primary) + instructors.txt (mirror)
     saveToFile();
+    if (!TextFileHandler::appendInstructor(name, hours)) {
+        QMessageBox::warning(this, "File Write Error",
+            "Instructor saved in memory but could not be written to instructors.txt.");
+    }
     populateCombos();
 }
 
@@ -658,14 +704,26 @@ void MainWindow::onAddCourse()
         QMessageBox::warning(this, "Input Error", "Course code cannot be empty.");
         return;
     }
-    
+
+    // Duplicate check: reject if this course code already exists
+    if (m_appManager.findCourseByCode(code.toStdString()) != nullptr) {
+        QMessageBox::warning(this, "Duplicate Entry",
+            QString("A course with code '%1' already exists.").arg(code));
+        return;
+    }
+
     int hours = m_courseHoursSpin->value();
     m_appManager.addCourse(Course(code.toStdString(), hours));
-    
+
     m_courseList->addItem(QString("%1 (Allocated Hours: %2)").arg(code).arg(hours));
     m_courseCodeEdit->clear();
-    
+
+    // Persist: JSON (primary) + courses.txt (mirror)
     saveToFile();
+    if (!TextFileHandler::appendCourse(code, hours)) {
+        QMessageBox::warning(this, "File Write Error",
+            "Course saved in memory but could not be written to courses.txt.");
+    }
     populateCombos();
 }
 
@@ -676,17 +734,29 @@ void MainWindow::onAddRoom()
         QMessageBox::warning(this, "Input Error", "Room ID cannot be empty.");
         return;
     }
-    
+
+    // Duplicate check: reject if this room ID already exists
+    if (m_appManager.findRoomById(id.toStdString()) != nullptr) {
+        QMessageBox::warning(this, "Duplicate Entry",
+            QString("A room with ID '%1' already exists.").arg(id));
+        return;
+    }
+
     int cap = m_roomCapSpin->value();
     RoomType type = static_cast<RoomType>(m_roomTypeCombo->currentIndex());
     QString typeStr = m_roomTypeCombo->currentText();
-    
+
     m_appManager.addRoom(Room(id.toStdString(), cap, type));
-    
+
     m_roomList->addItem(QString("%1 (Capacity: %2, Type: %3)").arg(id).arg(cap).arg(typeStr));
     m_roomIdEdit->clear();
-    
+
+    // Persist: JSON (primary) + rooms.txt (mirror)
     saveToFile();
+    if (!TextFileHandler::appendRoom(id, cap, typeStr)) {
+        QMessageBox::warning(this, "File Write Error",
+            "Room saved in memory but could not be written to rooms.txt.");
+    }
     populateCombos();
 }
 
@@ -697,17 +767,29 @@ void MainWindow::onAddBatch()
         QMessageBox::warning(this, "Input Error", "Batch ID cannot be empty.");
         return;
     }
-    
+
+    // Duplicate check: reject if this batch ID already exists
+    if (m_appManager.findBatchById(id.toStdString()) != nullptr) {
+        QMessageBox::warning(this, "Duplicate Entry",
+            QString("A batch with ID '%1' already exists.").arg(id));
+        return;
+    }
+
     int strength = m_batchStrengthSpin->value();
     ProgramType prog = static_cast<ProgramType>(m_batchProgCombo->currentIndex());
     QString progStr = m_batchProgCombo->currentText();
-    
+
     m_appManager.addBatch(StudentBatch(id.toStdString(), strength, prog));
-    
+
     m_batchList->addItem(QString("%1 (Strength: %2, Program: %3)").arg(id).arg(strength).arg(progStr));
     m_batchIdEdit->clear();
-    
+
+    // Persist: JSON (primary) + batches.txt (mirror)
     saveToFile();
+    if (!TextFileHandler::appendBatch(id, strength, progStr)) {
+        QMessageBox::warning(this, "File Write Error",
+            "Batch saved in memory but could not be written to batches.txt.");
+    }
     populateCombos();
 }
 
@@ -767,9 +849,18 @@ void MainWindow::onAddClassSession()
     // Create class session and add it
     ClassSession session(slot, inst, crs, rm, btch);
     m_appManager.addClassSession(session);
-    
+
+    // Persist: JSON (primary) + timetable.txt (mirror)
     saveToFile();
+    if (!TextFileHandler::appendSession(
+            m_sessDayCombo->currentText(),
+            m_sessStartEdit->time().toString("HH:mm"),
+            m_sessEndEdit->time().toString("HH:mm"),
+            instName, courseCode, roomId, batchId)) {
+        QMessageBox::warning(this, "File Write Error",
+            "Session saved in memory but could not be written to timetable.txt.");
+    }
+
     refreshListsAndTables();
-    
     QMessageBox::information(this, "Schedule Succeeded", "Class session scheduled successfully!");
 }

@@ -18,6 +18,7 @@
 #include <QMessageBox>
 
 #include "AppManager.hpp"
+#include "TextFileHandler.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
