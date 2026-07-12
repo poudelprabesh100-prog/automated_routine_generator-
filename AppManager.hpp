@@ -21,12 +21,32 @@ class AppManager{
     void addRoom(const Room& room);
     void addCourse(const Course& course);
     void addBatch(const StudentBatch& batch);
-    void addClassSession(const ClassSession& session);
+    std::string validateAndAddClassSession(const ClassSession& session);
+    bool removeClassSession(int index); // Remove a timetable entry by index
+
 
     Instructor* findInstructorByName(const std::string& name);
+    Instructor* findInstructorById(const std::string& id);
     Course* findCourseByCode(const std::string& code);
     Room* findRoomById(const std::string& id);
     StudentBatch* findBatchById(const std::string& id);
+    // Deletion helpers – return true if removed
+    bool removeInstructor(const std::string& id);
+    bool removeCourse(const std::string& code);
+    bool removeRoom(const std::string& id);
+    bool removeBatch(const std::string& id);
+
+    // Update helpers
+    bool updateInstructor(const Instructor& instructor);
+    bool updateCourse(const Course& course);
+    bool updateRoom(const Room& room);
+    bool updateBatch(const StudentBatch& batch);
+
+    // Usage checks – block deletion if referenced
+    bool isInstructorUsed(const std::string& id) const;
+    bool isCourseUsed(const std::string& code) const;
+    bool isRoomUsed(const std::string& id) const;
+    bool isBatchUsed(const std::string& id) const;
 
     const std::vector<ClassSession>& getTimetable() const;
     const std::vector<Instructor>& getInstructors() const;
@@ -34,6 +54,16 @@ class AppManager{
     const std::vector<Room>& getRooms() const;
     const std::vector<StudentBatch>& getBatches() const;
 
+    // Auto-generation
+    void clearTimetable();
+    void autoGenerateTimetable();
 
-} ;
+    // Busy-check helpers for auto-generation
+    bool isInstructorBusyAt(const std::string& id, const TimeSlot& slot) const;
+    bool isRoomBusyAt(const std::string& id, const TimeSlot& slot) const;
+    bool isBatchBusyAt(const std::string& id, const TimeSlot& slot) const;
+
+};
+
+// Implementation notes: definitions are in AppManager.cpp ;
 #endif

@@ -35,10 +35,20 @@ public:
 
 private slots:
     void onAddInstructor();
+    void onEditInstructor();
+    void onDeleteInstructor();
     void onAddCourse();
+    void onEditCourse();
+    void onDeleteCourse();
     void onAddRoom();
+    void onEditRoom();
+    void onDeleteRoom();
     void onAddBatch();
+    void onEditBatch();
+    void onDeleteBatch();
     void onAddClassSession();
+    void onDeleteClassSession();
+    void onAutoGenerate();
 
 private:
     Ui::MainWindow *ui;
@@ -55,26 +65,30 @@ private:
     // Tab widgets
     QTabWidget *m_tabWidget;
 
-    // Instructor UI
+    // Instructor UI  (email / phone / department removed)
+    QLineEdit *m_instIdEdit;
     QLineEdit *m_instNameEdit;
-    QSpinBox *m_instHoursSpin;
+    QSpinBox  *m_instHoursSpin;
     QListWidget *m_instList;
 
-    // Course UI
+    // Course UI  (semester / department removed)
     QLineEdit *m_courseCodeEdit;
-    QSpinBox *m_courseHoursSpin;
+    QLineEdit *m_courseNameEdit;
+    QSpinBox  *m_courseHoursSpin;
     QListWidget *m_courseList;
 
     // Room UI
     QLineEdit *m_roomIdEdit;
-    QSpinBox *m_roomCapSpin;
+    QLineEdit *m_roomBuildingEdit;
+    QSpinBox  *m_roomCapSpin;
     QComboBox *m_roomTypeCombo;
     QListWidget *m_roomList;
 
     // Batch UI
     QLineEdit *m_batchIdEdit;
-    QSpinBox *m_batchStrengthSpin;
+    QSpinBox  *m_batchStrengthSpin;
     QComboBox *m_batchProgCombo;
+    QLineEdit *m_batchDeptEdit;
     QListWidget *m_batchList;
 
     // Session UI
@@ -86,6 +100,13 @@ private:
     QTimeEdit *m_sessStartEdit;
     QTimeEdit *m_sessEndEdit;
     QTableWidget *m_timetableTable;
+
+    // Editing states
+    std::string m_editingInstId;
+    std::string m_editingCourseCode;
+    std::string m_editingRoomId;
+    std::string m_editingBatchId;
 };
+
 
 #endif // MAINWINDOW_H

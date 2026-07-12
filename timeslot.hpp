@@ -20,5 +20,8 @@ Day getDay() const;
 ClockTime getStartTime() const;
 ClockTime getEndTime() const;
 int getDurationmin() const;
+
+    bool overlapsWith(const TimeSlot& other) const;
+    int lunchBreakOverlapMinutes() const;
 };
 #endif

@@ -1,16 +1,25 @@
 #include "Course.hpp"
 
-// Constructor implementation
+// Backward-compat constructor: name defaults to code
 Course::Course(std::string code, int hours) {
-    courseCode = code;
-    allocatedHours = hours;
+    this->code = code;
+    this->name = code;
+    this->creditHours = hours;
+    this->courseCode = code;
+    this->allocatedHours = hours;
 }
 
-// Getter implementations
-std::string Course::getCourseCode() const {
-    return courseCode;
+// Full constructor: explicit code + name + creditHours
+Course::Course(std::string code, std::string name, int creditHours) {
+    this->code = code;
+    this->name = name;
+    this->creditHours = creditHours;
+    this->courseCode = code;
+    this->allocatedHours = creditHours;
 }
 
-int Course::getAllocatedHours() const {
-    return allocatedHours;
-}
+std::string Course::getCourseCode() const { return courseCode; }
+int Course::getAllocatedHours() const { return allocatedHours; }
+std::string Course::getCode() const { return code; }
+std::string Course::getName() const { return name; }
+int Course::getCreditHours() const { return creditHours; }
