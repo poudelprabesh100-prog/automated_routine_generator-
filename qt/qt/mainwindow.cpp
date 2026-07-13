@@ -84,6 +84,11 @@ MainWindow::MainWindow(QWidget *parent)
         QLineEdit:focus, QSpinBox:focus, QComboBox:focus, QTimeEdit:focus {
             border: 1px solid #89b4fa;
         }
+        QLineEdit:disabled, QSpinBox:disabled, QComboBox:disabled {
+            background-color: #1e1e2e;
+            color: #6c7086;
+            border: 1px solid #313244;
+        }
         QPushButton {
             background-color: #89b4fa;
             color: #11111b;
@@ -138,7 +143,7 @@ void MainWindow::setupUI()
     setCentralWidget(m_tabWidget);
 
     // ==========================================
-    // 1. INSTRUCTORS TAB  (email / phone / department removed)
+    // 1. INSTRUCTORS TAB
     // ==========================================
     QWidget *instTab = new QWidget();
     QHBoxLayout *instLayout = new QHBoxLayout(instTab);
@@ -153,9 +158,28 @@ void MainWindow::setupUI()
     m_instHoursSpin->setRange(1, 100);
     m_instHoursSpin->setValue(20);
 
-    instForm->addRow(new QLabel("Instructor ID:"),      m_instIdEdit);
-    instForm->addRow(new QLabel("Instructor Name:"),    m_instNameEdit);
-    instForm->addRow(new QLabel("Max Weekly Hours:"),   m_instHoursSpin);
+    // Subject count spinner (1–3)
+    m_instSubjectCountSpin = new QSpinBox();
+    m_instSubjectCountSpin->setRange(1, 3);
+    m_instSubjectCountSpin->setValue(1);
+    m_instSubjectCountSpin->setToolTip("How many subjects will this instructor teach?");
+
+    instForm->addRow(new QLabel("Instructor ID:"),        m_instIdEdit);
+    instForm->addRow(new QLabel("Instructor Name:"),      m_instNameEdit);
+    instForm->addRow(new QLabel("Max Weekly Hours:"),     m_instHoursSpin);
+    instForm->addRow(new QLabel("Number of Subjects:"),   m_instSubjectCountSpin);
+
+    // Container for the dynamic subject-selection combos
+    m_instSubjectContainer = new QWidget();
+    m_instSubjectLayout    = new QVBoxLayout(m_instSubjectContainer);
+    m_instSubjectLayout->setContentsMargins(0, 0, 0, 0);
+    m_instSubjectLayout->setSpacing(6);
+
+    instFormLayout->addLayout(instForm);
+    instFormLayout->addWidget(m_instSubjectContainer);
+
+    connect(m_instSubjectCountSpin, QOverload<int>::of(&QSpinBox::valueChanged),
+            this, &MainWindow::onSubjectCountChanged);
 
     QPushButton *btnInstAdd    = new QPushButton("Add Instructor");
     QPushButton *btnInstEdit   = new QPushButton("Edit Instructor");
@@ -170,7 +194,6 @@ void MainWindow::setupUI()
     instBtnLayout->addWidget(btnInstEdit);
     instBtnLayout->addWidget(btnInstDelete);
 
-    instFormLayout->addLayout(instForm);
     instFormLayout->addLayout(instBtnLayout);
     instFormLayout->addStretch();
 
@@ -178,6 +201,10 @@ void MainWindow::setupUI()
     instLayout->addWidget(instLeft, 1);
     instLayout->addWidget(m_instList, 2);
     m_tabWidget->addTab(instTab, "Instructors");
+
+    // Build initial 1 subject combo (courses list may be empty at this point;
+    // combos are re-populated in populateCombos() and after each course add).
+    rebuildSubjectCombos(1);
 
     // ==========================================
     // 2. COURSES TAB  (semester / department removed)
@@ -387,14 +414,99 @@ void MainWindow::setupUI()
     m_tabWidget->addTab(timetableTab, "Generate & View Timetable");
 }
 
+// ==========================================
+// Subject combo helpers
+// ==========================================
 
+void MainWindow::rebuildSubjectCombos(int count)
+{
+    // Remove all existing combos from the layout and delete them
+    for (QComboBox* cb : m_instSubjectCombos) {
+        m_instSubjectLayout->removeWidget(cb);
+        delete cb;
+    }
+    m_instSubjectCombos.clear();
+
+    // Build the course-code list from the master list
+    QStringList courseCodes;
+    for (const auto& crs : m_appManager.getCourses()) {
+        courseCodes << QString::fromStdString(crs.getCourseCode());
+    }
+
+    for (int i = 0; i < count; ++i) {
+        QLabel *lbl = new QLabel(QString("Subject %1:").arg(i + 1));
+        lbl->setFixedWidth(90);
+
+        QComboBox *cb = new QComboBox();
+        cb->addItem("-- Select Course --");   // placeholder; index 0 is invalid
+        cb->addItems(courseCodes);
+
+        // Wrap label+combo in a widget so we can manage them together
+        QWidget *rowWidget = new QWidget();
+        QHBoxLayout *rowLayout = new QHBoxLayout(rowWidget);
+        rowLayout->setContentsMargins(0, 0, 0, 0);
+        rowLayout->addWidget(lbl);
+        rowLayout->addWidget(cb);
+
+        m_instSubjectLayout->addWidget(rowWidget);
+        m_instSubjectCombos.append(cb);
+    }
+}
+
+void MainWindow::onSubjectCountChanged(int count)
+{
+    rebuildSubjectCombos(count);
+}
+
+// ==========================================
+// Instructor list display helpers
+// ==========================================
+
+// Builds the display string for one instructor entry in the list.
+static QString instDisplayString(const Instructor& inst)
+{
+    QString base = QString("%1 (Max Hours: %2)")
+        .arg(QString::fromStdString(inst.getName()))
+        .arg(inst.getMaxLimitHours());
+
+    const auto& locked = inst.getLockedSubjects();
+    if (!locked.empty()) {
+        QStringList subjects;
+        for (const auto& s : locked)
+            subjects << QString::fromStdString(s);
+        base += QString(" \u2014 Subjects: %1 [LOCKED]").arg(subjects.join(", "));
+    }
+    return base;
+}
+
+void MainWindow::refreshInstList()
+{
+    m_instList->clear();
+    for (const auto& inst : m_appManager.getInstructors()) {
+        m_instList->addItem(instDisplayString(inst));
+    }
+}
+
+// ==========================================
+// populateInitialData
+// ==========================================
 void MainWindow::populateInitialData()
 {
-    m_appManager.addInstructor(Instructor("Dr. Niraj Sharma", 12));
-    m_appManager.addInstructor(Instructor("Prof. Ram Prasad", 15));
+    // Courses first (instructors reference course codes)
+    m_appManager.addCourse(Course("COMP-102", "Computer Programming", 3));
+    m_appManager.addCourse(Course("MATH-101", "Mathematics I", 4));
 
-    m_appManager.addCourse(Course("COMP-102", 3));
-    m_appManager.addCourse(Course("MATH-101", 4));
+    // Instructors — explicitly assigned subjects
+    {
+        Instructor inst("Dr. Niraj Sharma", 12);
+        inst.setLockedSubjects({"COMP-102"});
+        m_appManager.addInstructor(inst);
+    }
+    {
+        Instructor inst("Prof. Ram Prasad", 15);
+        inst.setLockedSubjects({"MATH-101"});
+        m_appManager.addInstructor(inst);
+    }
 
     m_appManager.addRoom(Room("Block-C-102", 60, RoomType::Theory));
     m_appManager.addRoom(Room("Lab-A-301",   40, RoomType::Lab));
@@ -402,8 +514,8 @@ void MainWindow::populateInitialData()
     m_appManager.addBatch(StudentBatch("BCT-2025-A", 48, ProgramType::BCE));
     m_appManager.addBatch(StudentBatch("BIT-2025-B", 45, ProgramType::BIT));
 
-    m_instList->addItem("Dr. Niraj Sharma (Max Hours: 12)");
-    m_instList->addItem("Prof. Ram Prasad (Max Hours: 15)");
+    // Populate list widgets
+    refreshInstList();
 
     m_courseList->addItem("COMP-102 (Allocated Hours: 3)");
     m_courseList->addItem("MATH-101 (Allocated Hours: 4)");
@@ -415,6 +527,9 @@ void MainWindow::populateInitialData()
     m_batchList->addItem("BIT-2025-B (Strength: 45, Program: BIT)");
 }
 
+// ==========================================
+// saveToFile
+// ==========================================
 void MainWindow::saveToFile()
 {
     QString filePath = QCoreApplication::applicationDirPath() + "/timetable_data.json";
@@ -426,7 +541,7 @@ void MainWindow::saveToFile()
 
     QJsonObject rootObj;
 
-    // 1. Instructors  (no email / phone / department)
+    // 1. Instructors
     QJsonArray instArray;
     for (const auto& inst : m_appManager.getInstructors()) {
         QJsonObject instObj;
@@ -434,11 +549,18 @@ void MainWindow::saveToFile()
         instObj["name"]          = QString::fromStdString(inst.getName());
         instObj["maxLimitHours"] = inst.getMaxLimitHours();
 
+        // Locked subjects (permanent)
+        QJsonArray lockedArray;
+        for (const auto& s : inst.getLockedSubjects())
+            lockedArray.append(QString::fromStdString(s));
+        instObj["lockedSubjects"] = lockedArray;
+
+        // Runtime-assigned courses (hour tracking)
         QJsonArray assignedArray;
-        for (const auto& crs : inst.getAssignedCourses()) {
+        for (const auto& crs : inst.getAssignedCourses())
             assignedArray.append(QString::fromStdString(crs.getCourseCode()));
-        }
         instObj["assignedCourses"] = assignedArray;
+
         instArray.append(instObj);
     }
     rootObj["instructors"] = instArray;
@@ -503,6 +625,9 @@ void MainWindow::saveToFile()
     file.close();
 }
 
+// ==========================================
+// loadFromFile
+// ==========================================
 void MainWindow::loadFromFile()
 {
     QString filePath = QCoreApplication::applicationDirPath() + "/timetable_data.json";
@@ -531,7 +656,7 @@ void MainWindow::loadFromFile()
 
     QJsonObject rootObj = doc.object();
 
-    // 1. Courses
+    // 1. Courses (loaded first so instructors can reference them)
     if (rootObj.contains("courses") && rootObj["courses"].isArray()) {
         QJsonArray courseArray = rootObj["courses"].toArray();
         for (const auto& val : courseArray) {
@@ -560,15 +685,20 @@ void MainWindow::loadFromFile()
 
             Instructor inst(id, name, maxHours);
 
-            // Re-assign courses
+            // Restore locked subjects (permanent) — backward-compat: key may be absent
+            if (instObj.contains("lockedSubjects") && instObj["lockedSubjects"].isArray()) {
+                std::vector<std::string> locked;
+                for (const auto& lv : instObj["lockedSubjects"].toArray())
+                    locked.push_back(lv.toString().toStdString());
+                inst.setLockedSubjects(locked);
+            }
+
+            // Restore runtime-assigned courses (hour tracking)
             if (instObj.contains("assignedCourses") && instObj["assignedCourses"].isArray()) {
-                QJsonArray assignedArray = instObj["assignedCourses"].toArray();
-                for (const auto& cVal : assignedArray) {
+                for (const auto& cVal : instObj["assignedCourses"].toArray()) {
                     std::string courseCode = cVal.toString().toStdString();
                     Course* crs = m_appManager.findCourseByCode(courseCode);
-                    if (crs) {
-                        inst.assignNewCourse(*crs);
-                    }
+                    if (crs) inst.assignNewCourse(*crs);
                 }
             }
             m_appManager.addInstructor(inst);
@@ -633,11 +763,7 @@ void MainWindow::loadFromFile()
     }
 
     // Populate list widgets
-    for (const auto& inst : m_appManager.getInstructors()) {
-        m_instList->addItem(QString("%1 (Max Hours: %2)")
-            .arg(QString::fromStdString(inst.getId()))
-            .arg(inst.getMaxLimitHours()));
-    }
+    refreshInstList();
     for (const auto& crs : m_appManager.getCourses()) {
         m_courseList->addItem(QString("%1 (Allocated Hours: %2)")
             .arg(QString::fromStdString(crs.getCourseCode()))
@@ -655,9 +781,14 @@ void MainWindow::loadFromFile()
             .arg(b.getStrength())
             .arg(QString::fromStdString(b.getProgramAsString())));
     }
+
+    // Rebuild the subject combos so they're populated after courses are loaded
+    rebuildSubjectCombos(m_instSubjectCountSpin->value());
 }
 
-
+// ==========================================
+// populateCombos
+// ==========================================
 void MainWindow::populateCombos()
 {
     m_sessInstCombo->clear();
@@ -665,10 +796,10 @@ void MainWindow::populateCombos()
     m_sessRoomCombo->clear();
     m_sessBatchCombo->clear();
 
-    for (int i = 0; i < m_instList->count(); ++i) {
-        QString text = m_instList->item(i)->text();
-        int idx = text.indexOf(" (Max Hours:");
-        if (idx != -1) m_sessInstCombo->addItem(text.left(idx));
+    // Instructor entries now include " — Subjects: ... [LOCKED]" suffix.
+    // We want just the name (stored as inst.getName()) in the session combo.
+    for (const auto& inst : m_appManager.getInstructors()) {
+        m_sessInstCombo->addItem(QString::fromStdString(inst.getName()));
     }
     for (int i = 0; i < m_courseList->count(); ++i) {
         QString text = m_courseList->item(i)->text();
@@ -685,8 +816,15 @@ void MainWindow::populateCombos()
         int idx = text.indexOf(" (Strength:");
         if (idx != -1) m_sessBatchCombo->addItem(text.left(idx));
     }
+
+    // Also refresh the subject combos in the instructor form so newly-added
+    // courses show up.
+    rebuildSubjectCombos(m_instSubjectCountSpin->value());
 }
 
+// ==========================================
+// refreshListsAndTables
+// ==========================================
 void MainWindow::refreshListsAndTables()
 {
     const auto& timetable = m_appManager.getTimetable();
@@ -717,42 +855,91 @@ void MainWindow::onAddInstructor()
     std::string name    = m_instNameEdit->text().trimmed().toStdString();
     int maxHours        = m_instHoursSpin->value();
 
+    // -- Basic validation --
     if (id.empty()) {
         QMessageBox::warning(this, "Validation Error", "Instructor ID cannot be empty.");
         return;
-    }
-    if (m_editingInstId.empty() || m_editingInstId != id) {
-        if (m_appManager.findInstructorById(id) != nullptr) {
-            QMessageBox::warning(this, "Validation Error", "Instructor ID must be unique.");
-            return;
-        }
     }
     if (name.empty()) {
         QMessageBox::warning(this, "Validation Error", "Instructor Name cannot be empty.");
         return;
     }
 
-    Instructor inst(id, name, maxHours);
+    bool isEditing = !m_editingInstId.empty();
 
-    if (!m_editingInstId.empty()) {
+    // Uniqueness check (only when adding a brand-new instructor)
+    if (!isEditing) {
+        if (m_appManager.findInstructorById(id) != nullptr) {
+            QMessageBox::warning(this, "Validation Error", "Instructor ID must be unique.");
+            return;
+        }
+    }
+
+    // -- Collect subject selections --
+    std::vector<std::string> lockedSubjects;
+
+    if (isEditing && m_appManager.isInstructorUsed(m_editingInstId)) {
+        // Subject section is read-only in this case; keep existing locked subjects
+        Instructor* existing = m_appManager.findInstructorById(m_editingInstId);
+        if (existing) lockedSubjects = existing->getLockedSubjects();
+    } else {
+        // Gather from the dynamic combos — validate all are selected
+        for (int i = 0; i < m_instSubjectCombos.size(); ++i) {
+            QComboBox* cb = m_instSubjectCombos[i];
+            if (cb->currentIndex() == 0) {
+                QMessageBox::warning(this, "Validation Error",
+                    QString("Please select a course for Subject %1.").arg(i + 1));
+                return;
+            }
+            QString selected = cb->currentText();
+            std::string code = selected.toStdString();
+
+            // Enforce distinct selections
+            for (const auto& already : lockedSubjects) {
+                if (already == code) {
+                    QMessageBox::warning(this, "Validation Error",
+                        QString("Subject %1 (\"%2\") is already selected. Each subject must be distinct.")
+                            .arg(i + 1).arg(selected));
+                    return;
+                }
+            }
+            lockedSubjects.push_back(code);
+        }
+        if (lockedSubjects.empty()) {
+            QMessageBox::warning(this, "Validation Error",
+                "At least one subject must be assigned to the instructor.");
+            return;
+        }
+    }
+
+    // -- Create / update the instructor --
+    Instructor inst(id, name, maxHours);
+    inst.setLockedSubjects(lockedSubjects);
+
+    if (isEditing) {
+        // Preserve runtime-assigned courses from the existing record
+        Instructor* existing = m_appManager.findInstructorById(m_editingInstId);
+        if (existing) {
+            for (const auto& c : existing->getAssignedCourses())
+                inst.assignNewCourse(c);
+        }
         m_appManager.updateInstructor(inst);
         m_editingInstId = "";
         m_instIdEdit->setEnabled(true);
+        m_instSubjectCountSpin->setEnabled(true);
     } else {
         m_appManager.addInstructor(inst);
     }
 
+    // -- Reset form --
     m_instIdEdit->clear();
     m_instNameEdit->clear();
     m_instHoursSpin->setValue(20);
+    m_instSubjectCountSpin->setValue(1);
+    m_instSubjectCountSpin->setEnabled(true);
+    rebuildSubjectCombos(1);
 
-    m_instList->clear();
-    for (const auto& i : m_appManager.getInstructors()) {
-        m_instList->addItem(QString("%1 (Max Hours: %2)")
-            .arg(QString::fromStdString(i.getId()))
-            .arg(i.getMaxLimitHours()));
-    }
-
+    refreshInstList();
     saveToFile();
     populateCombos();
 }
@@ -765,11 +952,18 @@ void MainWindow::onEditInstructor()
         return;
     }
 
+    // The display string starts with the instructor name before " (Max Hours:"
     QString text = item->text();
-    int idx = text.indexOf(" (Max Hours:");
-    std::string id = (idx != -1) ? text.left(idx).toStdString() : text.toStdString();
+    // Name is everything before " (Max Hours:"
+    int parenIdx = text.indexOf(" (Max Hours:");
+    QString displayName = (parenIdx != -1) ? text.left(parenIdx) : text;
 
-    Instructor* inst = m_appManager.findInstructorById(id);
+    // Find by name (the ID may differ; we stored name as display text)
+    Instructor* inst = m_appManager.findInstructorByName(displayName.toStdString());
+    if (!inst) {
+        // Fallback: try by ID in case name == id
+        inst = m_appManager.findInstructorById(displayName.toStdString());
+    }
     if (!inst) {
         QMessageBox::warning(this, "Error", "Selected instructor not found.");
         return;
@@ -780,7 +974,41 @@ void MainWindow::onEditInstructor()
     m_instHoursSpin->setValue(inst->getMaxLimitHours());
 
     m_editingInstId = inst->getId();
-    m_instIdEdit->setEnabled(false);
+    m_instIdEdit->setEnabled(false);  // ID cannot change once set
+
+    const auto& locked = inst->getLockedSubjects();
+    bool isUsed = m_appManager.isInstructorUsed(inst->getId());
+
+    if (isUsed) {
+        // Subject list is frozen — show as read-only
+        m_instSubjectCountSpin->setValue(static_cast<int>(locked.size() > 0 ? locked.size() : 1));
+        m_instSubjectCountSpin->setEnabled(false);
+
+        // Rebuild combos, select existing values, then disable them
+        rebuildSubjectCombos(static_cast<int>(locked.size() > 0 ? locked.size() : 1));
+        for (int i = 0; i < m_instSubjectCombos.size() && i < static_cast<int>(locked.size()); ++i) {
+            QString code = QString::fromStdString(locked[i]);
+            int idx = m_instSubjectCombos[i]->findText(code);
+            if (idx != -1) m_instSubjectCombos[i]->setCurrentIndex(idx);
+            m_instSubjectCombos[i]->setEnabled(false);
+        }
+
+        QMessageBox::information(this, "Subject List Locked",
+            "This instructor has scheduled sessions. Name and Max Hours can still be edited,\n"
+            "but the subject list is locked and cannot be changed.");
+    } else {
+        // No sessions yet — allow free editing of subjects
+        int subCount = static_cast<int>(locked.size() > 0 ? locked.size() : 1);
+        m_instSubjectCountSpin->setValue(subCount);
+        m_instSubjectCountSpin->setEnabled(true);
+        rebuildSubjectCombos(subCount);
+
+        for (int i = 0; i < m_instSubjectCombos.size() && i < static_cast<int>(locked.size()); ++i) {
+            QString code = QString::fromStdString(locked[i]);
+            int idx = m_instSubjectCombos[i]->findText(code);
+            if (idx != -1) m_instSubjectCombos[i]->setCurrentIndex(idx);
+        }
+    }
 }
 
 void MainWindow::onDeleteInstructor()
@@ -792,8 +1020,16 @@ void MainWindow::onDeleteInstructor()
     }
 
     QString text = item->text();
-    int idx = text.indexOf(" (Max Hours:");
-    std::string id = (idx != -1) ? text.left(idx).toStdString() : text.toStdString();
+    int parenIdx = text.indexOf(" (Max Hours:");
+    QString displayName = (parenIdx != -1) ? text.left(parenIdx) : text;
+
+    Instructor* inst = m_appManager.findInstructorByName(displayName.toStdString());
+    if (!inst) inst = m_appManager.findInstructorById(displayName.toStdString());
+    if (!inst) {
+        QMessageBox::warning(this, "Error", "Selected instructor not found.");
+        return;
+    }
+    std::string id = inst->getId();
 
     if (m_appManager.isInstructorUsed(id)) {
         QMessageBox::critical(this, "Cannot Delete",
@@ -1168,8 +1404,8 @@ void MainWindow::onAddClassSession()
         return;
     }
 
-    Instructor*   inst = m_appManager.findInstructorById(instName.toStdString());
-    if (!inst)    inst = m_appManager.findInstructorByName(instName.toStdString());
+    Instructor*   inst = m_appManager.findInstructorByName(instName.toStdString());
+    if (!inst)    inst = m_appManager.findInstructorById(instName.toStdString());
     Course*       crs  = m_appManager.findCourseByCode(courseCode.toStdString());
     Room*         rm   = m_appManager.findRoomById(roomId.toStdString());
     StudentBatch* btch = m_appManager.findBatchById(batchId.toStdString());
@@ -1177,6 +1413,20 @@ void MainWindow::onAddClassSession()
     if (!inst || !crs || !rm || !btch) {
         QMessageBox::critical(this, "System Error",
             "Failed to retrieve references for the selected objects.");
+        return;
+    }
+
+    // -- Subject qualification guard --
+    if (!inst->isQualifiedFor(crs->getCourseCode())) {
+        QStringList lockedList;
+        for (const auto& s : inst->getLockedSubjects())
+            lockedList << QString::fromStdString(s);
+        QMessageBox::warning(this, "Subject Not Assigned",
+            QString("Instructor \"%1\" is not qualified to teach \"%2\".\n\n"
+                    "Assigned subjects: %3")
+                .arg(QString::fromStdString(inst->getName()))
+                .arg(QString::fromStdString(crs->getCourseCode()))
+                .arg(lockedList.isEmpty() ? "(none)" : lockedList.join(", ")));
         return;
     }
 
@@ -1312,4 +1562,3 @@ void MainWindow::onAutoGenerate()
                 "Timeslots: 9:00-11:00 & 12:00-17:00 (Lunch: 11:00-12:00)")
         .arg(total));
 }
-

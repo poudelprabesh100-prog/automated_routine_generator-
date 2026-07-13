@@ -226,9 +226,9 @@ bool AppManager::updateBatch(const StudentBatch& batch) {
 }
 
 void AppManager::clearTimetable() {
-    // Also clear assigned courses from all instructors
+    // Reset runtime hour-tracking for all instructors (assigned courses),
+    // but do NOT clear m_lockedSubjects — those are permanent.
     for (auto& inst : m_masterInstructors) {
-        // Unassign all courses
         while (!inst.getAssignedCourses().empty()) {
             inst.unassignCourse(inst.getAssignedCourses().front().getCourseCode());
         }
@@ -314,10 +314,12 @@ void AppManager::autoGenerateTimetable() {
                             continue;
                         }
 
-                        // Find a free instructor
+                        // Find a free instructor qualified for this course
                         Instructor* freeInst = nullptr;
                         for (size_t iIdx = 0; iIdx < m_masterInstructors.size(); ++iIdx) {
                             Instructor& inst = m_masterInstructors[iIdx];
+                            // Must be qualified for this specific course
+                            if (!inst.isQualifiedFor(course.getCourseCode())) continue;
                             if (!isInstructorBusyAt(inst.getId(), slot)) {
                                 // Check if assigning this course would exceed their hour limit
                                 int currentHours = inst.calculateTotalAssignedHours();

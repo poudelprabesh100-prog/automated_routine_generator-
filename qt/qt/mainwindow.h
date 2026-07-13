@@ -16,6 +16,8 @@
 #include <QLabel>
 #include <QTimeEdit>
 #include <QMessageBox>
+#include <QVector>
+#include <QScrollArea>
 
 #include "AppManager.hpp"
 
@@ -37,6 +39,7 @@ private slots:
     void onAddInstructor();
     void onEditInstructor();
     void onDeleteInstructor();
+    void onSubjectCountChanged(int count);  // rebuilds the dynamic subject dropdowns
     void onAddCourse();
     void onEditCourse();
     void onDeleteCourse();
@@ -58,17 +61,25 @@ private:
     void setupUI();
     void populateCombos();
     void refreshListsAndTables();
+    void refreshInstList();          // rebuilds the instructor list widget
     void populateInitialData();
     void saveToFile();
     void loadFromFile();
 
+    // Rebuilds the N subject-selection combos in the add-instructor form
+    void rebuildSubjectCombos(int count);
+
     // Tab widgets
     QTabWidget *m_tabWidget;
 
-    // Instructor UI  (email / phone / department removed)
-    QLineEdit *m_instIdEdit;
-    QLineEdit *m_instNameEdit;
-    QSpinBox  *m_instHoursSpin;
+    // Instructor UI
+    QLineEdit   *m_instIdEdit;
+    QLineEdit   *m_instNameEdit;
+    QSpinBox    *m_instHoursSpin;
+    QSpinBox    *m_instSubjectCountSpin;   // how many subjects (1–3)
+    QWidget     *m_instSubjectContainer;   // holds the dynamic combo boxes
+    QVBoxLayout *m_instSubjectLayout;      // layout inside that container
+    QVector<QComboBox*> m_instSubjectCombos; // the dynamic subject combos
     QListWidget *m_instList;
 
     // Course UI  (semester / department removed)
