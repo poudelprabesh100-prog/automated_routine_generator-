@@ -14,26 +14,35 @@
 #include <QJsonObject>
 #include <QJsonArray>
 #include <QCoreApplication>
+#include <algorithm>
 
+// ──────────────────────────────────────────────────────────────────────────────
+// Static helpers
+// ──────────────────────────────────────────────────────────────────────────────
 
-// Helper to convert Day enum to QString
+// Convert Day enum → display string (handles all 7 days)
 static QString dayToString(Day d) {
-    switch(d) {
+    switch (d) {
+        case Day::Sunday:    return "Sunday";
         case Day::Monday:    return "Monday";
         case Day::Tuesday:   return "Tuesday";
         case Day::Wednesday: return "Wednesday";
         case Day::Thursday:  return "Thursday";
         case Day::Friday:    return "Friday";
+        case Day::Saturday:  return "Saturday";
         default:             return "Unknown";
     }
 }
 
-// Helper to format ClockTime as HH:MM
 static QString formatClockTime(ClockTime t) {
     return QString("%1:%2")
-        .arg(t.hours, 2, 10, QChar('0'))
+        .arg(t.hours,   2, 10, QChar('0'))
         .arg(t.minutes, 2, 10, QChar('0'));
 }
+
+// ──────────────────────────────────────────────────────────────────────────────
+// Constructor / Destructor
+// ──────────────────────────────────────────────────────────────────────────────
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -41,7 +50,7 @@ MainWindow::MainWindow(QWidget *parent)
 {
     ui->setupUi(this);
 
-    // Set modern Catppuccin-inspired dark stylesheet
+    // Catppuccin-inspired dark stylesheet (unchanged from original)
     this->setStyleSheet(R"(
         QMainWindow {
             background-color: #1e1e2e;
@@ -84,7 +93,7 @@ MainWindow::MainWindow(QWidget *parent)
         QLineEdit:focus, QSpinBox:focus, QComboBox:focus, QTimeEdit:focus {
             border: 1px solid #89b4fa;
         }
-        QLineEdit:disabled, QSpinBox:disabled, QComboBox:disabled {
+        QLineEdit:disabled, QSpinBox:disabled, QComboBox:disabled, QTimeEdit:disabled {
             background-color: #1e1e2e;
             color: #6c7086;
             border: 1px solid #313244;
@@ -105,6 +114,10 @@ MainWindow::MainWindow(QWidget *parent)
         QPushButton:pressed {
             background-color: #74c7ec;
         }
+        QPushButton:disabled {
+            background-color: #313244;
+            color: #6c7086;
+        }
         QListWidget, QTableWidget {
             background-color: #11111b;
             color: #cdd6f4;
@@ -124,6 +137,65 @@ MainWindow::MainWindow(QWidget *parent)
         QTableWidget QTableCornerButton::section {
             background-color: #313244;
         }
+        QCheckBox {
+            color: #cdd6f4;
+            font-size: 13px;
+            font-family: 'Segoe UI', Helvetica, sans-serif;
+            spacing: 8px;
+        }
+        QCheckBox::indicator {
+            width: 16px;
+            height: 16px;
+            border: 2px solid #45475a;
+            border-radius: 4px;
+            background-color: #313244;
+        }
+        QCheckBox::indicator:checked {
+            background-color: #89b4fa;
+            border-color: #89b4fa;
+        }
+        QCheckBox::indicator:disabled {
+            background-color: #a6e3a1;
+            border-color: #a6e3a1;
+        }
+        QGroupBox {
+            color: #89b4fa;
+            font-size: 13px;
+            font-weight: bold;
+            font-family: 'Segoe UI', Helvetica, sans-serif;
+            border: 1px solid #313244;
+            border-radius: 8px;
+            margin-top: 12px;
+            padding-top: 8px;
+        }
+        QGroupBox::title {
+            subcontrol-origin: margin;
+            left: 10px;
+            padding: 0 6px;
+        }
+        QTextEdit {
+            background-color: #11111b;
+            color: #cdd6f4;
+            border: 1px solid #313244;
+            border-radius: 8px;
+            padding: 8px;
+            font-family: 'Segoe UI', Helvetica, sans-serif;
+            font-size: 13px;
+        }
+        QScrollArea {
+            background-color: transparent;
+            border: none;
+        }
+        QScrollBar:vertical {
+            background: #1e1e2e;
+            width: 8px;
+            border-radius: 4px;
+        }
+        QScrollBar::handle:vertical {
+            background: #45475a;
+            border-radius: 4px;
+            min-height: 20px;
+        }
     )");
 
     setupUI();
@@ -137,14 +209,18 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
+// ──────────────────────────────────────────────────────────────────────────────
+// setupUI
+// ──────────────────────────────────────────────────────────────────────────────
+
 void MainWindow::setupUI()
 {
     m_tabWidget = new QTabWidget(this);
     setCentralWidget(m_tabWidget);
 
-    // ==========================================
+    // =====================================================================
     // 1. INSTRUCTORS TAB
-    // ==========================================
+    // =====================================================================
     QWidget *instTab = new QWidget();
     QHBoxLayout *instLayout = new QHBoxLayout(instTab);
 
@@ -152,24 +228,22 @@ void MainWindow::setupUI()
     QVBoxLayout *instFormLayout = new QVBoxLayout(instLeft);
     QFormLayout *instForm = new QFormLayout();
 
-    m_instIdEdit   = new QLineEdit();
-    m_instNameEdit = new QLineEdit();
+    m_instIdEdit    = new QLineEdit();
+    m_instNameEdit  = new QLineEdit();
     m_instHoursSpin = new QSpinBox();
     m_instHoursSpin->setRange(1, 100);
     m_instHoursSpin->setValue(20);
 
-    // Subject count spinner (1–3)
     m_instSubjectCountSpin = new QSpinBox();
     m_instSubjectCountSpin->setRange(1, 3);
     m_instSubjectCountSpin->setValue(1);
     m_instSubjectCountSpin->setToolTip("How many subjects will this instructor teach?");
 
-    instForm->addRow(new QLabel("Instructor ID:"),        m_instIdEdit);
-    instForm->addRow(new QLabel("Instructor Name:"),      m_instNameEdit);
-    instForm->addRow(new QLabel("Max Weekly Hours:"),     m_instHoursSpin);
-    instForm->addRow(new QLabel("Number of Subjects:"),   m_instSubjectCountSpin);
+    instForm->addRow(new QLabel("Instructor ID:"),      m_instIdEdit);
+    instForm->addRow(new QLabel("Instructor Name:"),    m_instNameEdit);
+    instForm->addRow(new QLabel("Max Weekly Hours:"),   m_instHoursSpin);
+    instForm->addRow(new QLabel("Number of Subjects:"), m_instSubjectCountSpin);
 
-    // Container for the dynamic subject-selection combos
     m_instSubjectContainer = new QWidget();
     m_instSubjectLayout    = new QVBoxLayout(m_instSubjectContainer);
     m_instSubjectLayout->setContentsMargins(0, 0, 0, 0);
@@ -202,13 +276,11 @@ void MainWindow::setupUI()
     instLayout->addWidget(m_instList, 2);
     m_tabWidget->addTab(instTab, "Instructors");
 
-    // Build initial 1 subject combo (courses list may be empty at this point;
-    // combos are re-populated in populateCombos() and after each course add).
     rebuildSubjectCombos(1);
 
-    // ==========================================
-    // 2. COURSES TAB  (semester / department removed)
-    // ==========================================
+    // =====================================================================
+    // 2. COURSES TAB
+    // =====================================================================
     QWidget *courseTab = new QWidget();
     QHBoxLayout *courseLayout = new QHBoxLayout(courseTab);
 
@@ -248,9 +320,9 @@ void MainWindow::setupUI()
     courseLayout->addWidget(m_courseList, 2);
     m_tabWidget->addTab(courseTab, "Courses");
 
-    // ==========================================
+    // =====================================================================
     // 3. ROOMS TAB
-    // ==========================================
+    // =====================================================================
     QWidget *roomTab = new QWidget();
     QHBoxLayout *roomLayout = new QHBoxLayout(roomTab);
 
@@ -293,9 +365,9 @@ void MainWindow::setupUI()
     roomLayout->addWidget(m_roomList, 2);
     m_tabWidget->addTab(roomTab, "Rooms");
 
-    // ==========================================
+    // =====================================================================
     // 4. STUDENT BATCHES TAB
-    // ==========================================
+    // =====================================================================
     QWidget *batchTab = new QWidget();
     QHBoxLayout *batchLayout = new QHBoxLayout(batchTab);
 
@@ -338,9 +410,14 @@ void MainWindow::setupUI()
     batchLayout->addWidget(m_batchList, 2);
     m_tabWidget->addTab(batchTab, "Student Batches");
 
-    // ==========================================
-    // 5. TIMETABLE / SCHEDULER TAB
-    // ==========================================
+    // =====================================================================
+    // 5. CONSTRAINTS TAB  (new)
+    // =====================================================================
+    setupConstraintsTab();
+
+    // =====================================================================
+    // 6. GENERATE & VIEW TIMETABLE TAB
+    // =====================================================================
     QWidget *timetableTab = new QWidget();
     QHBoxLayout *timetableLayout = new QHBoxLayout(timetableTab);
 
@@ -354,12 +431,13 @@ void MainWindow::setupUI()
     m_sessBatchCombo  = new QComboBox();
 
     m_sessDayCombo = new QComboBox();
-    m_sessDayCombo->addItems({"Monday", "Tuesday", "Wednesday", "Thursday", "Friday"});
+    m_sessDayCombo->addItems({"Monday", "Tuesday", "Wednesday", "Thursday", "Friday",
+                              "Sunday", "Saturday"});
 
     m_sessStartEdit = new QTimeEdit(QTime(9, 0));
     m_sessEndEdit   = new QTimeEdit(QTime(10, 0));
-    m_sessStartEdit->setTimeRange(QTime(9, 0), QTime(17, 0));
-    m_sessEndEdit->setTimeRange(QTime(9, 0), QTime(17, 0));
+    m_sessStartEdit->setTimeRange(QTime(0, 0), QTime(23, 59));
+    m_sessEndEdit->setTimeRange(QTime(0, 0), QTime(23, 59));
 
     sessionForm->addRow(new QLabel("Instructor:"),    m_sessInstCombo);
     sessionForm->addRow(new QLabel("Course:"),        m_sessCourseCombo);
@@ -369,14 +447,15 @@ void MainWindow::setupUI()
     sessionForm->addRow(new QLabel("Start Time:"),    m_sessStartEdit);
     sessionForm->addRow(new QLabel("End Time:"),      m_sessEndEdit);
 
-    QPushButton *btnSessionAdd = new QPushButton("Schedule Class Session");
+    QPushButton *btnSessionAdd    = new QPushButton("Schedule Class Session");
     QPushButton *btnSessionDelete = new QPushButton("Delete Class Session");
-    connect(btnSessionAdd, &QPushButton::clicked, this, &MainWindow::onAddClassSession);
+    connect(btnSessionAdd,    &QPushButton::clicked, this, &MainWindow::onAddClassSession);
     connect(btnSessionDelete, &QPushButton::clicked, this, &MainWindow::onDeleteClassSession);
 
-    // ---- Auto Generate Button ----
-    QPushButton *btnAutoGenerate = new QPushButton("Auto Generate Routine");
-    btnAutoGenerate->setStyleSheet(R"(
+    // Auto Generate button — stored as member so we can enable/disable it
+    m_btnAutoGenerate = new QPushButton("Auto Generate Routine");
+    m_btnAutoGenerate->setEnabled(false);  // disabled until constraints are validated
+    m_btnAutoGenerate->setStyleSheet(R"(
         QPushButton {
             background-color: #a6e3a1;
             color: #11111b;
@@ -393,11 +472,24 @@ void MainWindow::setupUI()
         QPushButton:pressed {
             background-color: #74c7ec;
         }
+        QPushButton:disabled {
+            background-color: #313244;
+            color: #6c7086;
+        }
     )");
-    connect(btnAutoGenerate, &QPushButton::clicked, this, &MainWindow::onAutoGenerate);
+    connect(m_btnAutoGenerate, &QPushButton::clicked, this, &MainWindow::onAutoGenerate);
+
+    // Status label under auto-generate button
+    QLabel *genStatusLabel = new QLabel(
+        "⚠  Validate constraints first (Constraints tab) before generating.");
+    genStatusLabel->setWordWrap(true);
+    genStatusLabel->setStyleSheet("color: #f38ba8; font-size: 12px;");
+    genStatusLabel->setObjectName("genStatusLabel");
 
     timetableFormLayout->addLayout(sessionForm);
-    timetableFormLayout->addWidget(btnAutoGenerate);
+    timetableFormLayout->addSpacing(10);
+    timetableFormLayout->addWidget(m_btnAutoGenerate);
+    timetableFormLayout->addWidget(genStatusLabel);
     timetableFormLayout->addSpacing(10);
     timetableFormLayout->addWidget(btnSessionAdd);
     timetableFormLayout->addWidget(btnSessionDelete);
@@ -405,7 +497,8 @@ void MainWindow::setupUI()
 
     m_timetableTable = new QTableWidget();
     m_timetableTable->setColumnCount(7);
-    m_timetableTable->setHorizontalHeaderLabels({"Day", "Time", "Course", "Instructor", "Room", "Batch", "Duration"});
+    m_timetableTable->setHorizontalHeaderLabels(
+        {"Day", "Time", "Course", "Instructor", "Room", "Batch", "Duration"});
     m_timetableTable->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
     m_timetableTable->setEditTriggers(QAbstractItemView::NoEditTriggers);
 
@@ -414,34 +507,490 @@ void MainWindow::setupUI()
     m_tabWidget->addTab(timetableTab, "Generate & View Timetable");
 }
 
-// ==========================================
+// ──────────────────────────────────────────────────────────────────────────────
+// setupConstraintsTab — builds the entire Constraints tab UI
+// ──────────────────────────────────────────────────────────────────────────────
+
+void MainWindow::setupConstraintsTab()
+{
+    // Outer scroll area so the panel stays usable at smaller window sizes
+    QScrollArea *scroll = new QScrollArea();
+    scroll->setWidgetResizable(true);
+    scroll->setFrameShape(QFrame::NoFrame);
+
+    QWidget     *inner  = new QWidget();
+    QVBoxLayout *layout = new QVBoxLayout(inner);
+    layout->setSpacing(16);
+    layout->setContentsMargins(20, 20, 20, 20);
+
+    // ── Header ─────────────────────────────────────────────────────────────
+    QLabel *headerLbl = new QLabel("⚙  Constraints & Rules");
+    headerLbl->setStyleSheet(
+        "font-size: 18px; font-weight: bold; color: #cba6f7; "
+        "font-family: 'Segoe UI', Helvetica, sans-serif;");
+    layout->addWidget(headerLbl);
+
+    QLabel *subLbl = new QLabel(
+        "Configure scheduling constraints and run a feasibility check before generating the timetable.");
+    subLbl->setWordWrap(true);
+    subLbl->setStyleSheet("color: #a6adc8; font-size: 12px;");
+    layout->addWidget(subLbl);
+
+    // ── Working Days ───────────────────────────────────────────────────────
+    QGroupBox   *daysGroup  = new QGroupBox("Working Days  (unchecked = holiday, sessions never placed)");
+    QHBoxLayout *daysLayout = new QHBoxLayout(daysGroup);
+    daysLayout->setSpacing(12);
+
+    const char* dayNames[7] = {"Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"};
+    // Defaults: Sun–Fri checked, Sat unchecked
+    bool dayDefaults[7] = { true, true, true, true, true, true, false };
+
+    for (int i = 0; i < 7; ++i) {
+        m_dayChecks[i] = new QCheckBox(dayNames[i]);
+        m_dayChecks[i]->setChecked(dayDefaults[i]);
+        connect(m_dayChecks[i], &QCheckBox::toggled, this, &MainWindow::onConstraintsChanged);
+        daysLayout->addWidget(m_dayChecks[i]);
+    }
+    daysLayout->addStretch();
+    layout->addWidget(daysGroup);
+
+    // ── Daily Time Window ──────────────────────────────────────────────────
+    QGroupBox   *timeGroup  = new QGroupBox("Daily Time Window");
+    QVBoxLayout *timeLayout = new QVBoxLayout(timeGroup);
+
+    QFormLayout *timeForm = new QFormLayout();
+    m_dayStartEdit = new QTimeEdit(QTime(9, 0));
+    m_dayEndEdit   = new QTimeEdit(QTime(17, 0));
+    m_dayStartEdit->setDisplayFormat("HH:mm");
+    m_dayEndEdit->setDisplayFormat("HH:mm");
+    connect(m_dayStartEdit, &QTimeEdit::timeChanged, this, &MainWindow::onConstraintsChanged);
+    connect(m_dayEndEdit,   &QTimeEdit::timeChanged, this, &MainWindow::onConstraintsChanged);
+    timeForm->addRow(new QLabel("Day Start:"), m_dayStartEdit);
+    timeForm->addRow(new QLabel("Day End:"),   m_dayEndEdit);
+    timeLayout->addLayout(timeForm);
+
+    // Lunch break sub-section
+    m_lunchEnabledCheck = new QCheckBox("Enable Lunch Break  (sessions blocked during this window)");
+    m_lunchEnabledCheck->setChecked(true);
+    connect(m_lunchEnabledCheck, &QCheckBox::toggled, this, &MainWindow::onConstraintsChanged);
+    timeLayout->addWidget(m_lunchEnabledCheck);
+
+    QFormLayout *lunchForm = new QFormLayout();
+    m_lunchStartEdit = new QTimeEdit(QTime(13, 0));
+    m_lunchEndEdit   = new QTimeEdit(QTime(14, 0));
+    m_lunchStartEdit->setDisplayFormat("HH:mm");
+    m_lunchEndEdit->setDisplayFormat("HH:mm");
+    connect(m_lunchStartEdit, &QTimeEdit::timeChanged, this, &MainWindow::onConstraintsChanged);
+    connect(m_lunchEndEdit,   &QTimeEdit::timeChanged, this, &MainWindow::onConstraintsChanged);
+    lunchForm->addRow(new QLabel("  Lunch Start:"), m_lunchStartEdit);
+    lunchForm->addRow(new QLabel("  Lunch End:"),   m_lunchEndEdit);
+    timeLayout->addLayout(lunchForm);
+
+    // Live capacity label
+    m_capacityLabel = new QLabel("Available capacity: —");
+    m_capacityLabel->setStyleSheet(
+        "color: #a6e3a1; font-weight: bold; font-size: 13px; "
+        "padding: 6px 10px; background: #1e1e2e; border-radius: 6px;");
+    timeLayout->addWidget(m_capacityLabel);
+
+    layout->addWidget(timeGroup);
+
+    // ── Scheduling Rules ───────────────────────────────────────────────────
+    QGroupBox   *rulesGroup  = new QGroupBox("Scheduling Rules");
+    QVBoxLayout *rulesLayout = new QVBoxLayout(rulesGroup);
+    rulesLayout->setSpacing(10);
+
+    auto makeRuleRow = [&](QCheckBox*& chk, const QString& title, const QString& desc) {
+        chk = new QCheckBox(title);
+        chk->setChecked(true);
+        chk->setStyleSheet("font-weight: bold;");
+        connect(chk, &QCheckBox::toggled, this, &MainWindow::onConstraintsChanged);
+        rulesLayout->addWidget(chk);
+        if (!desc.isEmpty()) {
+            QLabel *d = new QLabel("       " + desc);
+            d->setWordWrap(true);
+            d->setStyleSheet("color: #a6adc8; font-size: 11px;");
+            rulesLayout->addWidget(d);
+        }
+    };
+
+    makeRuleRow(m_ruleNoInstDoubleBook, "Prevent Instructor Double-Booking",
+        "The same instructor cannot be in two places at the same day/time.");
+    makeRuleRow(m_ruleNoRoomDoubleBook, "Prevent Room Double-Booking",
+        "The same room cannot hold two sessions at the same day/time.");
+    makeRuleRow(m_ruleNoBatchClash, "Prevent Student Batch Clash",
+        "The same batch cannot have two sessions at the same day/time.");
+    makeRuleRow(m_ruleInstDayGap, "Enforce Instructor Day Gap",
+        "An instructor should not teach on two immediately consecutive working days without at least one gap day.");
+    makeRuleRow(m_ruleNoSameSubjectConsec, "No Same Subject on Consecutive Days",
+        "A course cannot be scheduled on back-to-back working days for the same batch; at least one gap day required.");
+    makeRuleRow(m_ruleMaxWeeklyHours, "Respect Instructor Max Weekly Hours",
+        "No instructor will be assigned sessions that exceed their configured max weekly hours.");
+
+    // Max consecutive hours with spinner
+    m_ruleMaxConsecHoursEnabled = new QCheckBox("No Instructor Back-to-Back Beyond N Hours");
+    m_ruleMaxConsecHoursEnabled->setChecked(true);
+    m_ruleMaxConsecHoursEnabled->setStyleSheet("font-weight: bold;");
+    connect(m_ruleMaxConsecHoursEnabled, &QCheckBox::toggled,
+            this, &MainWindow::onConstraintsChanged);
+    rulesLayout->addWidget(m_ruleMaxConsecHoursEnabled);
+
+    QHBoxLayout *consecRow = new QHBoxLayout();
+    QLabel *consecLbl = new QLabel("       Max consecutive teaching hours per instructor per day:");
+    consecLbl->setStyleSheet("color: #a6adc8; font-size: 11px;");
+    m_maxConsecHoursSpin = new QSpinBox();
+    m_maxConsecHoursSpin->setRange(1, 12);
+    m_maxConsecHoursSpin->setValue(3);
+    m_maxConsecHoursSpin->setFixedWidth(70);
+    connect(m_maxConsecHoursSpin, QOverload<int>::of(&QSpinBox::valueChanged),
+            this, &MainWindow::onConstraintsChanged);
+    consecRow->addWidget(consecLbl);
+    consecRow->addWidget(m_maxConsecHoursSpin);
+    consecRow->addStretch();
+    rulesLayout->addLayout(consecRow);
+
+    // Enforce Instructor Subject Lock — always on, read-only
+    m_ruleSubjectLock = new QCheckBox("Enforce Instructor Subject Lock  [always enabled]");
+    m_ruleSubjectLock->setChecked(true);
+    m_ruleSubjectLock->setEnabled(false);   // greyed-out / read-only
+    m_ruleSubjectLock->setStyleSheet("font-weight: bold;");
+    rulesLayout->addWidget(m_ruleSubjectLock);
+    QLabel *lockDesc = new QLabel(
+        "       Instructors may only be assigned to courses in their locked subject list. "
+        "This is core to the data model and cannot be disabled.");
+    lockDesc->setWordWrap(true);
+    lockDesc->setStyleSheet("color: #a6adc8; font-size: 11px;");
+    rulesLayout->addWidget(lockDesc);
+
+    layout->addWidget(rulesGroup);
+
+    // ── Validate button ────────────────────────────────────────────────────
+    QPushButton *btnValidate = new QPushButton("✔  Validate Constraints");
+    btnValidate->setStyleSheet(R"(
+        QPushButton {
+            background-color: #cba6f7;
+            color: #11111b;
+            border: none;
+            border-radius: 8px;
+            padding: 12px 20px;
+            font-weight: bold;
+            font-size: 14px;
+            font-family: 'Segoe UI', Helvetica, sans-serif;
+        }
+        QPushButton:hover  { background-color: #f5c2e7; }
+        QPushButton:pressed{ background-color: #89b4fa; }
+    )");
+    connect(btnValidate, &QPushButton::clicked, this, &MainWindow::onValidateConstraints);
+    layout->addWidget(btnValidate);
+
+    // ── Validation output ──────────────────────────────────────────────────
+    QLabel *outLbl = new QLabel("Validation Results:");
+    outLbl->setStyleSheet("color: #89b4fa; font-weight: bold;");
+    layout->addWidget(outLbl);
+
+    m_validationOutput = new QTextEdit();
+    m_validationOutput->setReadOnly(true);
+    m_validationOutput->setMinimumHeight(180);
+    m_validationOutput->setPlaceholderText(
+        "Click \"Validate Constraints\" to run a feasibility check...");
+    layout->addWidget(m_validationOutput);
+
+    layout->addStretch();
+    scroll->setWidget(inner);
+
+    m_tabWidget->addTab(scroll, "Constraints");
+
+    // Compute initial capacity label
+    updateCapacityLabel();
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
+// Constraint helpers
+// ──────────────────────────────────────────────────────────────────────────────
+
+ConstraintSettings MainWindow::readConstraintsFromUI() const
+{
+    ConstraintSettings cs;
+
+    // Working days  [0]=Sun,[1]=Mon,...,[6]=Sat
+    for (int i = 0; i < 7; ++i)
+        cs.workingDays[i] = m_dayChecks[i]->isChecked();
+
+    QTime start = m_dayStartEdit->time();
+    QTime end   = m_dayEndEdit->time();
+    cs.dayStartMinutes = start.hour() * 60 + start.minute();
+    cs.dayEndMinutes   = end.hour()   * 60 + end.minute();
+
+    cs.lunchBreakEnabled = m_lunchEnabledCheck->isChecked();
+    QTime ls = m_lunchStartEdit->time();
+    QTime le = m_lunchEndEdit->time();
+    cs.lunchStartMinutes = ls.hour() * 60 + ls.minute();
+    cs.lunchEndMinutes   = le.hour() * 60 + le.minute();
+
+    cs.ruleNoInstructorDoubleBook  = m_ruleNoInstDoubleBook->isChecked();
+    cs.ruleNoRoomDoubleBook        = m_ruleNoRoomDoubleBook->isChecked();
+    cs.ruleNoBatchClash            = m_ruleNoBatchClash->isChecked();
+    cs.ruleInstructorDayGap        = m_ruleInstDayGap->isChecked();
+    cs.ruleNoSameSubjectConsecDays = m_ruleNoSameSubjectConsec->isChecked();
+    cs.ruleRespectMaxWeeklyHours   = m_ruleMaxWeeklyHours->isChecked();
+    cs.ruleMaxConsecHoursEnabled   = m_ruleMaxConsecHoursEnabled->isChecked();
+    cs.ruleMaxConsecHoursPerDay    = m_maxConsecHoursSpin->value();
+    cs.ruleEnforceSubjectLock      = true;  // always on
+
+    return cs;
+}
+
+void MainWindow::updateCapacityLabel()
+{
+    ConstraintSettings cs = readConstraintsFromUI();
+
+    int workingDayCount = 0;
+    for (int i = 0; i < 7; ++i)
+        if (cs.workingDays[i]) ++workingDayCount;
+
+    int dailyMinutes = cs.dayEndMinutes - cs.dayStartMinutes;
+    if (cs.lunchBreakEnabled) {
+        int lunchLen = cs.lunchEndMinutes - cs.lunchStartMinutes;
+        if (lunchLen > 0) dailyMinutes -= lunchLen;
+    }
+    if (dailyMinutes < 0) dailyMinutes = 0;
+
+    int totalWeeklyMins = workingDayCount * dailyMinutes;
+    double weeklyHours  = totalWeeklyMins / 60.0;
+
+    m_capacityLabel->setText(
+        QString("Available capacity:  %1 hrs/week  (%2 working day%3 × %4 hrs/day)")
+            .arg(weeklyHours, 0, 'f', 1)
+            .arg(workingDayCount)
+            .arg(workingDayCount != 1 ? "s" : "")
+            .arg(dailyMinutes / 60.0, 0, 'f', 1));
+}
+
+void MainWindow::markConstraintsDirty()
+{
+    m_constraintsValidated = false;
+    if (m_btnAutoGenerate) {
+        m_btnAutoGenerate->setEnabled(false);
+        m_btnAutoGenerate->setToolTip(
+            "Constraints have not been validated. "
+            "Go to the Constraints tab and click Validate.");
+    }
+}
+
+void MainWindow::onConstraintsChanged()
+{
+    markConstraintsDirty();
+    updateCapacityLabel();
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
+// onValidateConstraints — feasibility pre-check
+// ──────────────────────────────────────────────────────────────────────────────
+
+void MainWindow::onValidateConstraints()
+{
+    ConstraintSettings cs = readConstraintsFromUI();
+    m_constraints = cs;
+
+    QString output;
+    bool allPassed = true;
+
+    auto pass = [&](const QString& msg) {
+        output += "<span style='color:#a6e3a1'>&#10003; " + msg + "</span><br>";
+    };
+    auto fail = [&](const QString& msg) {
+        output += "<span style='color:#f38ba8'>&#10007; " + msg + "</span><br>";
+        allPassed = false;
+    };
+    auto info = [&](const QString& msg) {
+        output += "<span style='color:#fab387'>&#9432; " + msg + "</span><br>";
+    };
+
+    output += "<b style='color:#cba6f7'>─── Structural Checks ───</b><br>";
+
+    // 1. At least one working day
+    int workingDayCount = 0;
+    for (int i = 0; i < 7; ++i) if (cs.workingDays[i]) ++workingDayCount;
+
+    if (workingDayCount > 0)
+        pass(QString("Working days selected: %1").arg(workingDayCount));
+    else
+        fail("No working days selected — cannot schedule any sessions.");
+
+    // 2. Time window validity
+    if (cs.dayStartMinutes < cs.dayEndMinutes)
+        pass(QString("Day window valid: %1:%2 – %3:%4")
+             .arg(cs.dayStartMinutes/60,2,10,QChar('0'))
+             .arg(cs.dayStartMinutes%60,2,10,QChar('0'))
+             .arg(cs.dayEndMinutes/60,2,10,QChar('0'))
+             .arg(cs.dayEndMinutes%60,2,10,QChar('0')));
+    else
+        fail("Day Start must be earlier than Day End.");
+
+    // 3. Lunch break validity (if enabled)
+    if (cs.lunchBreakEnabled) {
+        if (cs.lunchStartMinutes >= cs.dayStartMinutes &&
+            cs.lunchEndMinutes   <= cs.dayEndMinutes   &&
+            cs.lunchStartMinutes <  cs.lunchEndMinutes)
+            pass(QString("Lunch break valid: %1:%2 – %3:%4")
+                 .arg(cs.lunchStartMinutes/60,2,10,QChar('0'))
+                 .arg(cs.lunchStartMinutes%60,2,10,QChar('0'))
+                 .arg(cs.lunchEndMinutes/60,2,10,QChar('0'))
+                 .arg(cs.lunchEndMinutes%60,2,10,QChar('0')));
+        else
+            fail("Lunch break window is invalid or lies outside the day window.");
+    } else {
+        info("Lunch break disabled.");
+    }
+
+    // 4. Data availability
+    output += "<br><b style='color:#cba6f7'>─── Data Availability ───</b><br>";
+
+    const auto& courses     = m_appManager.getCourses();
+    const auto& instructors = m_appManager.getInstructors();
+    const auto& rooms       = m_appManager.getRooms();
+    const auto& batches     = m_appManager.getBatches();
+
+    if (courses.empty())     fail("No courses defined.");
+    if (instructors.empty()) fail("No instructors defined.");
+    if (rooms.empty())       fail("No rooms defined.");
+    if (batches.empty())     fail("No student batches defined.");
+
+    if (!courses.empty() && !instructors.empty() && !rooms.empty() && !batches.empty())
+        pass(QString("Data loaded: %1 course(s), %2 instructor(s), %3 room(s), %4 batch(es).")
+             .arg(courses.size()).arg(instructors.size()).arg(rooms.size()).arg(batches.size()));
+
+    // 5. Weekly capacity check
+    output += "<br><b style='color:#cba6f7'>─── Weekly Capacity (per batch) ───</b><br>";
+
+    int dailyMinutes = cs.dayEndMinutes - cs.dayStartMinutes;
+    if (cs.lunchBreakEnabled) {
+        int ll = cs.lunchEndMinutes - cs.lunchStartMinutes;
+        if (ll > 0) dailyMinutes -= ll;
+    }
+    if (dailyMinutes < 0) dailyMinutes = 0;
+    int weeklyCapMins  = workingDayCount * dailyMinutes;
+    int weeklyCapHours = weeklyCapMins / 60;
+
+    // Total course hours needed by each batch
+    int totalCourseHours = 0;
+    for (const auto& crs : courses)
+        totalCourseHours += crs.getAllocatedHours();
+
+    for (const auto& b : batches) {
+        if (totalCourseHours <= weeklyCapHours) {
+            pass(QString("Weekly capacity sufficient for %1: needs %2 hrs, available %3 hrs/week.")
+                 .arg(QString::fromStdString(b.getBatchId()))
+                 .arg(totalCourseHours)
+                 .arg(weeklyCapHours));
+        } else {
+            fail(QString("Weekly capacity INSUFFICIENT for %1: needs %2 hrs but only %3 hrs/week available.")
+                 .arg(QString::fromStdString(b.getBatchId()))
+                 .arg(totalCourseHours)
+                 .arg(weeklyCapHours));
+        }
+    }
+
+    // 6. Each course has at least one qualified instructor
+    output += "<br><b style='color:#cba6f7'>─── Instructor Qualification ───</b><br>";
+
+    for (const auto& crs : courses) {
+        bool found = false;
+        for (const auto& inst : instructors) {
+            if (inst.isQualifiedFor(crs.getCourseCode())) { found = true; break; }
+        }
+        if (found)
+            pass(QString("Course \"%1\" has a qualified instructor.")
+                 .arg(QString::fromStdString(crs.getCourseCode())));
+        else
+            fail(QString("Course \"%1\" has NO qualified instructor assigned!")
+                 .arg(QString::fromStdString(crs.getCourseCode())));
+    }
+
+    // 7. Instructor workload vs their max hours
+    output += "<br><b style='color:#cba6f7'>─── Instructor Workload ───</b><br>";
+
+    for (const auto& inst : instructors) {
+        // Sum allocated hours for all courses this instructor is qualified for
+        int qualifiedHours = 0;
+        for (const auto& crs : courses) {
+            if (inst.isQualifiedFor(crs.getCourseCode()))
+                qualifiedHours += crs.getAllocatedHours() * static_cast<int>(batches.size());
+        }
+        int maxHrs = inst.getMaxLimitHours();
+        if (qualifiedHours == 0) {
+            info(QString("Instructor \"%1\" has no qualified courses assigned.")
+                 .arg(QString::fromStdString(inst.getName())));
+        } else if (qualifiedHours > maxHrs) {
+            fail(QString("Instructor \"%1\": potential load (%2 hrs across all batches) "
+                         "exceeds Max Weekly Hours (%3 hrs). "
+                         "Consider adding more instructors or reducing course load.")
+                 .arg(QString::fromStdString(inst.getName()))
+                 .arg(qualifiedHours)
+                 .arg(maxHrs));
+        } else {
+            pass(QString("Instructor \"%1\": load OK (%2 hrs ≤ %3 hrs max).")
+                 .arg(QString::fromStdString(inst.getName()))
+                 .arg(qualifiedHours)
+                 .arg(maxHrs));
+        }
+    }
+
+    // 8. Room count adequacy
+    output += "<br><b style='color:#cba6f7'>─── Room Availability ───</b><br>";
+
+    int roomCount  = static_cast<int>(rooms.size());
+    int batchCount = static_cast<int>(batches.size());
+    if (roomCount >= batchCount)
+        pass(QString("Room count (%1) is sufficient for the number of simultaneous batches (%2).")
+             .arg(roomCount).arg(batchCount));
+    else
+        fail(QString("Only %1 room(s) but %2 concurrent batch(es) may need scheduling simultaneously.")
+             .arg(roomCount).arg(batchCount));
+
+    // ── Final verdict ───────────────────────────────────────────────────────
+    output += "<br>";
+    if (allPassed) {
+        output += "<b style='color:#a6e3a1; font-size:14px'>"
+                  "✔  All checks passed — you may now Auto Generate the timetable.</b>";
+        m_constraintsValidated = true;
+        m_constraints = cs;
+        m_btnAutoGenerate->setEnabled(true);
+        m_btnAutoGenerate->setToolTip("Constraints validated — ready to generate.");
+    } else {
+        output += "<b style='color:#f38ba8; font-size:14px'>"
+                  "✘  Some checks failed — please fix the issues above before generating.</b>";
+        m_constraintsValidated = false;
+        m_btnAutoGenerate->setEnabled(false);
+    }
+
+    m_validationOutput->setHtml(output);
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
 // Subject combo helpers
-// ==========================================
+// ──────────────────────────────────────────────────────────────────────────────
 
 void MainWindow::rebuildSubjectCombos(int count)
 {
-    // Remove all existing combos from the layout and delete them
     for (QComboBox* cb : m_instSubjectCombos) {
         m_instSubjectLayout->removeWidget(cb);
         delete cb;
     }
     m_instSubjectCombos.clear();
 
-    // Build the course-code list from the master list
     QStringList courseCodes;
-    for (const auto& crs : m_appManager.getCourses()) {
+    for (const auto& crs : m_appManager.getCourses())
         courseCodes << QString::fromStdString(crs.getCourseCode());
-    }
 
     for (int i = 0; i < count; ++i) {
         QLabel *lbl = new QLabel(QString("Subject %1:").arg(i + 1));
         lbl->setFixedWidth(90);
 
         QComboBox *cb = new QComboBox();
-        cb->addItem("-- Select Course --");   // placeholder; index 0 is invalid
+        cb->addItem("-- Select Course --");
         cb->addItems(courseCodes);
 
-        // Wrap label+combo in a widget so we can manage them together
         QWidget *rowWidget = new QWidget();
         QHBoxLayout *rowLayout = new QHBoxLayout(rowWidget);
         rowLayout->setContentsMargins(0, 0, 0, 0);
@@ -458,11 +1007,10 @@ void MainWindow::onSubjectCountChanged(int count)
     rebuildSubjectCombos(count);
 }
 
-// ==========================================
-// Instructor list display helpers
-// ==========================================
+// ──────────────────────────────────────────────────────────────────────────────
+// Instructor list helpers
+// ──────────────────────────────────────────────────────────────────────────────
 
-// Builds the display string for one instructor entry in the list.
 static QString instDisplayString(const Instructor& inst)
 {
     QString base = QString("%1 (Max Hours: %2)")
@@ -482,21 +1030,19 @@ static QString instDisplayString(const Instructor& inst)
 void MainWindow::refreshInstList()
 {
     m_instList->clear();
-    for (const auto& inst : m_appManager.getInstructors()) {
+    for (const auto& inst : m_appManager.getInstructors())
         m_instList->addItem(instDisplayString(inst));
-    }
 }
 
-// ==========================================
+// ──────────────────────────────────────────────────────────────────────────────
 // populateInitialData
-// ==========================================
+// ──────────────────────────────────────────────────────────────────────────────
+
 void MainWindow::populateInitialData()
 {
-    // Courses first (instructors reference course codes)
     m_appManager.addCourse(Course("COMP-102", "Computer Programming", 3));
     m_appManager.addCourse(Course("MATH-101", "Mathematics I", 4));
 
-    // Instructors — explicitly assigned subjects
     {
         Instructor inst("Dr. Niraj Sharma", 12);
         inst.setLockedSubjects({"COMP-102"});
@@ -514,22 +1060,19 @@ void MainWindow::populateInitialData()
     m_appManager.addBatch(StudentBatch("BCT-2025-A", 48, ProgramType::BCE));
     m_appManager.addBatch(StudentBatch("BIT-2025-B", 45, ProgramType::BIT));
 
-    // Populate list widgets
     refreshInstList();
-
     m_courseList->addItem("COMP-102 (Allocated Hours: 3)");
     m_courseList->addItem("MATH-101 (Allocated Hours: 4)");
-
     m_roomList->addItem("Block-C-102 (Capacity: 60, Type: Theory)");
     m_roomList->addItem("Lab-A-301 (Capacity: 40, Type: Lab)");
-
     m_batchList->addItem("BCT-2025-A (Strength: 48, Program: BCE)");
     m_batchList->addItem("BIT-2025-B (Strength: 45, Program: BIT)");
 }
 
-// ==========================================
+// ──────────────────────────────────────────────────────────────────────────────
 // saveToFile
-// ==========================================
+// ──────────────────────────────────────────────────────────────────────────────
+
 void MainWindow::saveToFile()
 {
     QString filePath = QCoreApplication::applicationDirPath() + "/timetable_data.json";
@@ -549,13 +1092,11 @@ void MainWindow::saveToFile()
         instObj["name"]          = QString::fromStdString(inst.getName());
         instObj["maxLimitHours"] = inst.getMaxLimitHours();
 
-        // Locked subjects (permanent)
         QJsonArray lockedArray;
         for (const auto& s : inst.getLockedSubjects())
             lockedArray.append(QString::fromStdString(s));
         instObj["lockedSubjects"] = lockedArray;
 
-        // Runtime-assigned courses (hour tracking)
         QJsonArray assignedArray;
         for (const auto& crs : inst.getAssignedCourses())
             assignedArray.append(QString::fromStdString(crs.getCourseCode()));
@@ -565,7 +1106,7 @@ void MainWindow::saveToFile()
     }
     rootObj["instructors"] = instArray;
 
-    // 2. Courses  (no semester / department)
+    // 2. Courses
     QJsonArray courseArray;
     for (const auto& crs : m_appManager.getCourses()) {
         QJsonObject crsObj;
@@ -602,7 +1143,7 @@ void MainWindow::saveToFile()
     }
     rootObj["batches"] = batchArray;
 
-    // 5. Timetable (Class Sessions)
+    // 5. Timetable
     QJsonArray sessionArray;
     for (const auto& s : m_appManager.getTimetable()) {
         QJsonObject sObj;
@@ -620,14 +1161,36 @@ void MainWindow::saveToFile()
     }
     rootObj["timetable"] = sessionArray;
 
+    // 6. Constraints settings
+    QJsonObject csObj;
+    ConstraintSettings cs = readConstraintsFromUI();
+    QJsonArray daysArray;
+    for (int i = 0; i < 7; ++i) daysArray.append(cs.workingDays[i]);
+    csObj["workingDays"]           = daysArray;
+    csObj["dayStartMinutes"]       = cs.dayStartMinutes;
+    csObj["dayEndMinutes"]         = cs.dayEndMinutes;
+    csObj["lunchBreakEnabled"]     = cs.lunchBreakEnabled;
+    csObj["lunchStartMinutes"]     = cs.lunchStartMinutes;
+    csObj["lunchEndMinutes"]       = cs.lunchEndMinutes;
+    csObj["ruleNoInstDoubleBook"]  = cs.ruleNoInstructorDoubleBook;
+    csObj["ruleNoRoomDoubleBook"]  = cs.ruleNoRoomDoubleBook;
+    csObj["ruleNoBatchClash"]      = cs.ruleNoBatchClash;
+    csObj["ruleInstDayGap"]        = cs.ruleInstructorDayGap;
+    csObj["ruleNoSameSubjConsec"]  = cs.ruleNoSameSubjectConsecDays;
+    csObj["ruleMaxWeeklyHours"]    = cs.ruleRespectMaxWeeklyHours;
+    csObj["ruleMaxConsecEnabled"]  = cs.ruleMaxConsecHoursEnabled;
+    csObj["ruleMaxConsecHours"]    = cs.ruleMaxConsecHoursPerDay;
+    rootObj["constraints"] = csObj;
+
     QJsonDocument doc(rootObj);
     file.write(doc.toJson());
     file.close();
 }
 
-// ==========================================
+// ──────────────────────────────────────────────────────────────────────────────
 // loadFromFile
-// ==========================================
+// ──────────────────────────────────────────────────────────────────────────────
+
 void MainWindow::loadFromFile()
 {
     QString filePath = QCoreApplication::applicationDirPath() + "/timetable_data.json";
@@ -656,15 +1219,15 @@ void MainWindow::loadFromFile()
 
     QJsonObject rootObj = doc.object();
 
-    // 1. Courses (loaded first so instructors can reference them)
+    // 1. Courses
     if (rootObj.contains("courses") && rootObj["courses"].isArray()) {
-        QJsonArray courseArray = rootObj["courses"].toArray();
-        for (const auto& val : courseArray) {
+        for (const auto& val : rootObj["courses"].toArray()) {
             QJsonObject crsObj = val.toObject();
             std::string code = crsObj.contains("code")
                                ? crsObj["code"].toString().toStdString()
                                : crsObj["courseCode"].toString().toStdString();
-            std::string name = crsObj.contains("name") ? crsObj["name"].toString().toStdString() : code;
+            std::string name = crsObj.contains("name")
+                               ? crsObj["name"].toString().toStdString() : code;
             int creditHours  = crsObj.contains("creditHours")
                                ? crsObj["creditHours"].toInt()
                                : crsObj["allocatedHours"].toInt();
@@ -674,8 +1237,7 @@ void MainWindow::loadFromFile()
 
     // 2. Instructors
     if (rootObj.contains("instructors") && rootObj["instructors"].isArray()) {
-        QJsonArray instArray = rootObj["instructors"].toArray();
-        for (const auto& val : instArray) {
+        for (const auto& val : rootObj["instructors"].toArray()) {
             QJsonObject instObj = val.toObject();
             std::string id   = instObj.contains("id")
                                ? instObj["id"].toString().toStdString()
@@ -685,19 +1247,16 @@ void MainWindow::loadFromFile()
 
             Instructor inst(id, name, maxHours);
 
-            // Restore locked subjects (permanent) — backward-compat: key may be absent
             if (instObj.contains("lockedSubjects") && instObj["lockedSubjects"].isArray()) {
                 std::vector<std::string> locked;
                 for (const auto& lv : instObj["lockedSubjects"].toArray())
                     locked.push_back(lv.toString().toStdString());
                 inst.setLockedSubjects(locked);
             }
-
-            // Restore runtime-assigned courses (hour tracking)
             if (instObj.contains("assignedCourses") && instObj["assignedCourses"].isArray()) {
                 for (const auto& cVal : instObj["assignedCourses"].toArray()) {
-                    std::string courseCode = cVal.toString().toStdString();
-                    Course* crs = m_appManager.findCourseByCode(courseCode);
+                    Course* crs = m_appManager.findCourseByCode(
+                        cVal.toString().toStdString());
                     if (crs) inst.assignNewCourse(*crs);
                 }
             }
@@ -707,62 +1266,100 @@ void MainWindow::loadFromFile()
 
     // 3. Rooms
     if (rootObj.contains("rooms") && rootObj["rooms"].isArray()) {
-        QJsonArray roomArray = rootObj["rooms"].toArray();
-        for (const auto& val : roomArray) {
+        for (const auto& val : rootObj["rooms"].toArray()) {
             QJsonObject rmObj = val.toObject();
             std::string id    = rmObj["roomId"].toString().toStdString();
             int cap           = rmObj["capacity"].toInt();
             RoomType type     = static_cast<RoomType>(rmObj["type"].toInt());
             std::string building = rmObj.contains("building")
-                                   ? rmObj["building"].toString().toStdString()
-                                   : "Main";
+                                   ? rmObj["building"].toString().toStdString() : "Main";
             m_appManager.addRoom(Room(id, cap, type, building));
         }
     }
 
     // 4. Batches
     if (rootObj.contains("batches") && rootObj["batches"].isArray()) {
-        QJsonArray batchArray = rootObj["batches"].toArray();
-        for (const auto& val : batchArray) {
+        for (const auto& val : rootObj["batches"].toArray()) {
             QJsonObject bObj = val.toObject();
             std::string id   = bObj["batchId"].toString().toStdString();
             int strength     = bObj["strength"].toInt();
             ProgramType prog = static_cast<ProgramType>(bObj["program"].toInt());
-            std::string department = bObj.contains("department")
-                                     ? bObj["department"].toString().toStdString()
-                                     : "CS";
-            m_appManager.addBatch(StudentBatch(id, strength, prog, department));
+            std::string dept = bObj.contains("department")
+                               ? bObj["department"].toString().toStdString() : "CS";
+            m_appManager.addBatch(StudentBatch(id, strength, prog, dept));
         }
     }
 
-    // 5. Timetable (Class Sessions)
+    // 5. Timetable
     if (rootObj.contains("timetable") && rootObj["timetable"].isArray()) {
-        QJsonArray sessionArray = rootObj["timetable"].toArray();
-        for (const auto& val : sessionArray) {
+        for (const auto& val : rootObj["timetable"].toArray()) {
             QJsonObject sObj = val.toObject();
             Day day = static_cast<Day>(sObj["day"].toInt());
             ClockTime ctStart{ sObj["startH"].toInt(), sObj["startM"].toInt() };
             ClockTime ctEnd{   sObj["endH"].toInt(),   sObj["endM"].toInt()   };
             TimeSlot slot(day, ctStart, ctEnd);
 
-            std::string instKey    = sObj["instructor"].toString().toStdString();
-            std::string courseCode = sObj["course"].toString().toStdString();
-            std::string roomId     = sObj["room"].toString().toStdString();
-            std::string batchId    = sObj["batch"].toString().toStdString();
-
-            Instructor*   inst = m_appManager.findInstructorById(instKey);
-            if (!inst)    inst = m_appManager.findInstructorByName(instKey);
-            Course*       crs  = m_appManager.findCourseByCode(courseCode);
-            Room*         rm   = m_appManager.findRoomById(roomId);
-            StudentBatch* btch = m_appManager.findBatchById(batchId);
+            Instructor*   inst = m_appManager.findInstructorById(
+                sObj["instructor"].toString().toStdString());
+            if (!inst) inst = m_appManager.findInstructorByName(
+                sObj["instructor"].toString().toStdString());
+            Course*       crs  = m_appManager.findCourseByCode(
+                sObj["course"].toString().toStdString());
+            Room*         rm   = m_appManager.findRoomById(
+                sObj["room"].toString().toStdString());
+            StudentBatch* btch = m_appManager.findBatchById(
+                sObj["batch"].toString().toStdString());
 
             if (inst && crs && rm && btch) {
-                m_appManager.validateAndAddClassSession(ClassSession(slot, inst, crs, rm, btch));
+                // Use default CS (no lunch enforcement on load — just restore sessions)
+                ConstraintSettings loadCS;
+                loadCS.lunchBreakEnabled = false;
+                m_appManager.validateAndAddClassSession(
+                    ClassSession(slot, inst, crs, rm, btch), loadCS);
             }
         }
     }
 
-    // Populate list widgets
+    // 6. Constraints (optional section — present only in new save files)
+    if (rootObj.contains("constraints") && rootObj["constraints"].isObject()) {
+        QJsonObject csObj = rootObj["constraints"].toObject();
+
+        if (csObj.contains("workingDays") && csObj["workingDays"].isArray()) {
+            QJsonArray arr = csObj["workingDays"].toArray();
+            for (int i = 0; i < 7 && i < arr.size(); ++i)
+                m_dayChecks[i]->setChecked(arr[i].toBool());
+        }
+
+        auto loadTime = [&](const QString& key, QTimeEdit* te) {
+            if (csObj.contains(key)) {
+                int mins = csObj[key].toInt();
+                te->setTime(QTime(mins / 60, mins % 60));
+            }
+        };
+        loadTime("dayStartMinutes",   m_dayStartEdit);
+        loadTime("dayEndMinutes",     m_dayEndEdit);
+        loadTime("lunchStartMinutes", m_lunchStartEdit);
+        loadTime("lunchEndMinutes",   m_lunchEndEdit);
+
+        if (csObj.contains("lunchBreakEnabled"))
+            m_lunchEnabledCheck->setChecked(csObj["lunchBreakEnabled"].toBool());
+
+        auto loadRule = [&](const QString& key, QCheckBox* chk) {
+            if (csObj.contains(key)) chk->setChecked(csObj[key].toBool());
+        };
+        loadRule("ruleNoInstDoubleBook", m_ruleNoInstDoubleBook);
+        loadRule("ruleNoRoomDoubleBook", m_ruleNoRoomDoubleBook);
+        loadRule("ruleNoBatchClash",     m_ruleNoBatchClash);
+        loadRule("ruleInstDayGap",       m_ruleInstDayGap);
+        loadRule("ruleNoSameSubjConsec", m_ruleNoSameSubjectConsec);
+        loadRule("ruleMaxWeeklyHours",   m_ruleMaxWeeklyHours);
+        loadRule("ruleMaxConsecEnabled", m_ruleMaxConsecHoursEnabled);
+
+        if (csObj.contains("ruleMaxConsecHours"))
+            m_maxConsecHoursSpin->setValue(csObj["ruleMaxConsecHours"].toInt());
+    }
+
+    // Rebuild list widgets
     refreshInstList();
     for (const auto& crs : m_appManager.getCourses()) {
         m_courseList->addItem(QString("%1 (Allocated Hours: %2)")
@@ -782,13 +1379,14 @@ void MainWindow::loadFromFile()
             .arg(QString::fromStdString(b.getProgramAsString())));
     }
 
-    // Rebuild the subject combos so they're populated after courses are loaded
     rebuildSubjectCombos(m_instSubjectCountSpin->value());
+    updateCapacityLabel();
 }
 
-// ==========================================
+// ──────────────────────────────────────────────────────────────────────────────
 // populateCombos
-// ==========================================
+// ──────────────────────────────────────────────────────────────────────────────
+
 void MainWindow::populateCombos()
 {
     m_sessInstCombo->clear();
@@ -796,11 +1394,9 @@ void MainWindow::populateCombos()
     m_sessRoomCombo->clear();
     m_sessBatchCombo->clear();
 
-    // Instructor entries now include " — Subjects: ... [LOCKED]" suffix.
-    // We want just the name (stored as inst.getName()) in the session combo.
-    for (const auto& inst : m_appManager.getInstructors()) {
+    for (const auto& inst : m_appManager.getInstructors())
         m_sessInstCombo->addItem(QString::fromStdString(inst.getName()));
-    }
+
     for (int i = 0; i < m_courseList->count(); ++i) {
         QString text = m_courseList->item(i)->text();
         int idx = text.indexOf(" (Allocated Hours:");
@@ -817,45 +1413,49 @@ void MainWindow::populateCombos()
         if (idx != -1) m_sessBatchCombo->addItem(text.left(idx));
     }
 
-    // Also refresh the subject combos in the instructor form so newly-added
-    // courses show up.
     rebuildSubjectCombos(m_instSubjectCountSpin->value());
 }
 
-// ==========================================
+// ──────────────────────────────────────────────────────────────────────────────
 // refreshListsAndTables
-// ==========================================
+// ──────────────────────────────────────────────────────────────────────────────
+
 void MainWindow::refreshListsAndTables()
 {
-    const auto& timetable = m_appManager.getTimetable();
     m_timetableTable->setRowCount(0);
-    for (const auto& session : timetable) {
+    for (const auto& session : m_appManager.getTimetable()) {
         int row = m_timetableTable->rowCount();
         m_timetableTable->insertRow(row);
 
         TimeSlot ts = session.getTimeSlot();
-        QString timeStr = formatClockTime(ts.getStartTime()) + " - " + formatClockTime(ts.getEndTime());
+        QString timeStr = formatClockTime(ts.getStartTime()) + " - " +
+                          formatClockTime(ts.getEndTime());
 
         m_timetableTable->setItem(row, 0, new QTableWidgetItem(dayToString(ts.getDay())));
         m_timetableTable->setItem(row, 1, new QTableWidgetItem(timeStr));
-        m_timetableTable->setItem(row, 2, new QTableWidgetItem(QString::fromStdString(session.getSubjectId()->getCourseCode())));
-        m_timetableTable->setItem(row, 3, new QTableWidgetItem(QString::fromStdString(session.getTeacherId()->getName())));
-        m_timetableTable->setItem(row, 4, new QTableWidgetItem(QString::fromStdString(session.getRoomId()->getRoomId())));
-        m_timetableTable->setItem(row, 5, new QTableWidgetItem(QString::fromStdString(session.getBatchId()->getBatchId())));
-        m_timetableTable->setItem(row, 6, new QTableWidgetItem(QString("%1 mins").arg(ts.getDurationmin())));
+        m_timetableTable->setItem(row, 2, new QTableWidgetItem(
+            QString::fromStdString(session.getSubjectId()->getCourseCode())));
+        m_timetableTable->setItem(row, 3, new QTableWidgetItem(
+            QString::fromStdString(session.getTeacherId()->getName())));
+        m_timetableTable->setItem(row, 4, new QTableWidgetItem(
+            QString::fromStdString(session.getRoomId()->getRoomId())));
+        m_timetableTable->setItem(row, 5, new QTableWidgetItem(
+            QString::fromStdString(session.getBatchId()->getBatchId())));
+        m_timetableTable->setItem(row, 6, new QTableWidgetItem(
+            QString("%1 mins").arg(ts.getDurationmin())));
     }
 }
 
-// ==========================================
+// ──────────────────────────────────────────────────────────────────────────────
 // INSTRUCTOR CRUD
-// ==========================================
+// ──────────────────────────────────────────────────────────────────────────────
+
 void MainWindow::onAddInstructor()
 {
-    std::string id      = m_instIdEdit->text().trimmed().toStdString();
-    std::string name    = m_instNameEdit->text().trimmed().toStdString();
-    int maxHours        = m_instHoursSpin->value();
+    std::string id   = m_instIdEdit->text().trimmed().toStdString();
+    std::string name = m_instNameEdit->text().trimmed().toStdString();
+    int maxHours     = m_instHoursSpin->value();
 
-    // -- Basic validation --
     if (id.empty()) {
         QMessageBox::warning(this, "Validation Error", "Instructor ID cannot be empty.");
         return;
@@ -867,23 +1467,16 @@ void MainWindow::onAddInstructor()
 
     bool isEditing = !m_editingInstId.empty();
 
-    // Uniqueness check (only when adding a brand-new instructor)
-    if (!isEditing) {
-        if (m_appManager.findInstructorById(id) != nullptr) {
-            QMessageBox::warning(this, "Validation Error", "Instructor ID must be unique.");
-            return;
-        }
+    if (!isEditing && m_appManager.findInstructorById(id)) {
+        QMessageBox::warning(this, "Validation Error", "Instructor ID must be unique.");
+        return;
     }
 
-    // -- Collect subject selections --
     std::vector<std::string> lockedSubjects;
-
     if (isEditing && m_appManager.isInstructorUsed(m_editingInstId)) {
-        // Subject section is read-only in this case; keep existing locked subjects
         Instructor* existing = m_appManager.findInstructorById(m_editingInstId);
         if (existing) lockedSubjects = existing->getLockedSubjects();
     } else {
-        // Gather from the dynamic combos — validate all are selected
         for (int i = 0; i < m_instSubjectCombos.size(); ++i) {
             QComboBox* cb = m_instSubjectCombos[i];
             if (cb->currentIndex() == 0) {
@@ -891,15 +1484,12 @@ void MainWindow::onAddInstructor()
                     QString("Please select a course for Subject %1.").arg(i + 1));
                 return;
             }
-            QString selected = cb->currentText();
-            std::string code = selected.toStdString();
-
-            // Enforce distinct selections
+            std::string code = cb->currentText().toStdString();
             for (const auto& already : lockedSubjects) {
                 if (already == code) {
                     QMessageBox::warning(this, "Validation Error",
-                        QString("Subject %1 (\"%2\") is already selected. Each subject must be distinct.")
-                            .arg(i + 1).arg(selected));
+                        QString("Subject %1 (\"%2\") is already selected.")
+                            .arg(i + 1).arg(cb->currentText()));
                     return;
                 }
             }
@@ -912,17 +1502,14 @@ void MainWindow::onAddInstructor()
         }
     }
 
-    // -- Create / update the instructor --
     Instructor inst(id, name, maxHours);
     inst.setLockedSubjects(lockedSubjects);
 
     if (isEditing) {
-        // Preserve runtime-assigned courses from the existing record
         Instructor* existing = m_appManager.findInstructorById(m_editingInstId);
-        if (existing) {
+        if (existing)
             for (const auto& c : existing->getAssignedCourses())
                 inst.assignNewCourse(c);
-        }
         m_appManager.updateInstructor(inst);
         m_editingInstId = "";
         m_instIdEdit->setEnabled(true);
@@ -931,7 +1518,6 @@ void MainWindow::onAddInstructor()
         m_appManager.addInstructor(inst);
     }
 
-    // -- Reset form --
     m_instIdEdit->clear();
     m_instNameEdit->clear();
     m_instHoursSpin->setValue(20);
@@ -942,6 +1528,7 @@ void MainWindow::onAddInstructor()
     refreshInstList();
     saveToFile();
     populateCombos();
+    markConstraintsDirty();
 }
 
 void MainWindow::onEditInstructor()
@@ -952,18 +1539,12 @@ void MainWindow::onEditInstructor()
         return;
     }
 
-    // The display string starts with the instructor name before " (Max Hours:"
     QString text = item->text();
-    // Name is everything before " (Max Hours:"
     int parenIdx = text.indexOf(" (Max Hours:");
     QString displayName = (parenIdx != -1) ? text.left(parenIdx) : text;
 
-    // Find by name (the ID may differ; we stored name as display text)
     Instructor* inst = m_appManager.findInstructorByName(displayName.toStdString());
-    if (!inst) {
-        // Fallback: try by ID in case name == id
-        inst = m_appManager.findInstructorById(displayName.toStdString());
-    }
+    if (!inst) inst  = m_appManager.findInstructorById(displayName.toStdString());
     if (!inst) {
         QMessageBox::warning(this, "Error", "Selected instructor not found.");
         return;
@@ -974,38 +1555,30 @@ void MainWindow::onEditInstructor()
     m_instHoursSpin->setValue(inst->getMaxLimitHours());
 
     m_editingInstId = inst->getId();
-    m_instIdEdit->setEnabled(false);  // ID cannot change once set
+    m_instIdEdit->setEnabled(false);
 
     const auto& locked = inst->getLockedSubjects();
     bool isUsed = m_appManager.isInstructorUsed(inst->getId());
 
     if (isUsed) {
-        // Subject list is frozen — show as read-only
         m_instSubjectCountSpin->setValue(static_cast<int>(locked.size() > 0 ? locked.size() : 1));
         m_instSubjectCountSpin->setEnabled(false);
-
-        // Rebuild combos, select existing values, then disable them
         rebuildSubjectCombos(static_cast<int>(locked.size() > 0 ? locked.size() : 1));
         for (int i = 0; i < m_instSubjectCombos.size() && i < static_cast<int>(locked.size()); ++i) {
-            QString code = QString::fromStdString(locked[i]);
-            int idx = m_instSubjectCombos[i]->findText(code);
+            int idx = m_instSubjectCombos[i]->findText(QString::fromStdString(locked[i]));
             if (idx != -1) m_instSubjectCombos[i]->setCurrentIndex(idx);
             m_instSubjectCombos[i]->setEnabled(false);
         }
-
         QMessageBox::information(this, "Subject List Locked",
             "This instructor has scheduled sessions. Name and Max Hours can still be edited,\n"
             "but the subject list is locked and cannot be changed.");
     } else {
-        // No sessions yet — allow free editing of subjects
         int subCount = static_cast<int>(locked.size() > 0 ? locked.size() : 1);
         m_instSubjectCountSpin->setValue(subCount);
         m_instSubjectCountSpin->setEnabled(true);
         rebuildSubjectCombos(subCount);
-
         for (int i = 0; i < m_instSubjectCombos.size() && i < static_cast<int>(locked.size()); ++i) {
-            QString code = QString::fromStdString(locked[i]);
-            int idx = m_instSubjectCombos[i]->findText(code);
+            int idx = m_instSubjectCombos[i]->findText(QString::fromStdString(locked[i]));
             if (idx != -1) m_instSubjectCombos[i]->setCurrentIndex(idx);
         }
     }
@@ -1024,36 +1597,36 @@ void MainWindow::onDeleteInstructor()
     QString displayName = (parenIdx != -1) ? text.left(parenIdx) : text;
 
     Instructor* inst = m_appManager.findInstructorByName(displayName.toStdString());
-    if (!inst) inst = m_appManager.findInstructorById(displayName.toStdString());
+    if (!inst) inst  = m_appManager.findInstructorById(displayName.toStdString());
     if (!inst) {
         QMessageBox::warning(this, "Error", "Selected instructor not found.");
         return;
     }
-    std::string id = inst->getId();
 
-    if (m_appManager.isInstructorUsed(id)) {
+    if (m_appManager.isInstructorUsed(inst->getId())) {
         QMessageBox::critical(this, "Cannot Delete",
-            "This item is currently used in one or more scheduled classes and cannot be deleted.");
+            "This instructor is used in scheduled sessions and cannot be deleted.");
         return;
     }
 
-    QMessageBox::StandardButton reply = QMessageBox::question(this, "Confirm Delete",
-        "Are you sure you want to delete this instructor?",
-        QMessageBox::Yes | QMessageBox::No);
-    if (reply == QMessageBox::No) return;
+    if (QMessageBox::question(this, "Confirm Delete",
+            "Are you sure you want to delete this instructor?",
+            QMessageBox::Yes | QMessageBox::No) == QMessageBox::No) return;
 
-    if (m_appManager.removeInstructor(id)) {
+    if (m_appManager.removeInstructor(inst->getId())) {
         delete item;
         saveToFile();
         populateCombos();
+        markConstraintsDirty();
     } else {
         QMessageBox::warning(this, "Delete Failed", "Unable to delete instructor.");
     }
 }
 
-// ==========================================
+// ──────────────────────────────────────────────────────────────────────────────
 // COURSE CRUD
-// ==========================================
+// ──────────────────────────────────────────────────────────────────────────────
+
 void MainWindow::onAddCourse()
 {
     std::string code = m_courseCodeEdit->text().trimmed().toStdString();
@@ -1065,17 +1638,13 @@ void MainWindow::onAddCourse()
         return;
     }
     if (m_editingCourseCode.empty() || m_editingCourseCode != code) {
-        if (m_appManager.findCourseByCode(code) != nullptr) {
+        if (m_appManager.findCourseByCode(code)) {
             QMessageBox::warning(this, "Validation Error", "Course Code must be unique.");
             return;
         }
     }
     if (name.empty()) {
         QMessageBox::warning(this, "Validation Error", "Course Name cannot be empty.");
-        return;
-    }
-    if (hours <= 0) {
-        QMessageBox::warning(this, "Validation Error", "Credit Hours must be a positive integer.");
         return;
     }
 
@@ -1102,6 +1671,7 @@ void MainWindow::onAddCourse()
 
     saveToFile();
     populateCombos();
+    markConstraintsDirty();
 }
 
 void MainWindow::onEditCourse()
@@ -1144,27 +1714,27 @@ void MainWindow::onDeleteCourse()
 
     if (m_appManager.isCourseUsed(code)) {
         QMessageBox::critical(this, "Cannot Delete",
-            "This item is currently used in one or more scheduled classes and cannot be deleted.");
+            "This course is used in scheduled sessions and cannot be deleted.");
         return;
     }
 
-    QMessageBox::StandardButton reply = QMessageBox::question(this, "Confirm Delete",
-        "Are you sure you want to delete this course?",
-        QMessageBox::Yes | QMessageBox::No);
-    if (reply == QMessageBox::No) return;
+    if (QMessageBox::question(this, "Confirm Delete", "Are you sure you want to delete this course?",
+            QMessageBox::Yes | QMessageBox::No) == QMessageBox::No) return;
 
     if (m_appManager.removeCourse(code)) {
         delete item;
         saveToFile();
         populateCombos();
+        markConstraintsDirty();
     } else {
         QMessageBox::warning(this, "Delete Failed", "Unable to delete course.");
     }
 }
 
-// ==========================================
+// ──────────────────────────────────────────────────────────────────────────────
 // ROOM CRUD
-// ==========================================
+// ──────────────────────────────────────────────────────────────────────────────
+
 void MainWindow::onAddRoom()
 {
     std::string number   = m_roomIdEdit->text().trimmed().toStdString();
@@ -1177,17 +1747,13 @@ void MainWindow::onAddRoom()
         return;
     }
     if (m_editingRoomId.empty() || m_editingRoomId != number) {
-        if (m_appManager.findRoomById(number) != nullptr) {
+        if (m_appManager.findRoomById(number)) {
             QMessageBox::warning(this, "Validation Error", "Room Number must be unique.");
             return;
         }
     }
     if (building.empty()) {
         QMessageBox::warning(this, "Validation Error", "Building cannot be empty.");
-        return;
-    }
-    if (capacity <= 0) {
-        QMessageBox::warning(this, "Validation Error", "Capacity must be a positive integer.");
         return;
     }
 
@@ -1216,6 +1782,7 @@ void MainWindow::onAddRoom()
 
     saveToFile();
     populateCombos();
+    markConstraintsDirty();
 }
 
 void MainWindow::onEditRoom()
@@ -1259,40 +1826,40 @@ void MainWindow::onDeleteRoom()
 
     if (m_appManager.isRoomUsed(number)) {
         QMessageBox::critical(this, "Cannot Delete",
-            "This item is currently used in one or more scheduled classes and cannot be deleted.");
+            "This room is used in scheduled sessions and cannot be deleted.");
         return;
     }
 
-    QMessageBox::StandardButton reply = QMessageBox::question(this, "Confirm Delete",
-        "Are you sure you want to delete this room?",
-        QMessageBox::Yes | QMessageBox::No);
-    if (reply == QMessageBox::No) return;
+    if (QMessageBox::question(this, "Confirm Delete", "Are you sure you want to delete this room?",
+            QMessageBox::Yes | QMessageBox::No) == QMessageBox::No) return;
 
     if (m_appManager.removeRoom(number)) {
         delete item;
         saveToFile();
         populateCombos();
+        markConstraintsDirty();
     } else {
         QMessageBox::warning(this, "Delete Failed", "Unable to delete room.");
     }
 }
 
-// ==========================================
+// ──────────────────────────────────────────────────────────────────────────────
 // BATCH CRUD
-// ==========================================
+// ──────────────────────────────────────────────────────────────────────────────
+
 void MainWindow::onAddBatch()
 {
     std::string name = m_batchIdEdit->text().trimmed().toStdString();
     std::string dept = m_batchDeptEdit->text().trimmed().toStdString();
     int strength     = m_batchStrengthSpin->value();
-    ProgramType program = static_cast<ProgramType>(m_batchProgCombo->currentIndex());
+    ProgramType prog = static_cast<ProgramType>(m_batchProgCombo->currentIndex());
 
     if (name.empty()) {
         QMessageBox::warning(this, "Validation Error", "Batch Name cannot be empty.");
         return;
     }
     if (m_editingBatchId.empty() || m_editingBatchId != name) {
-        if (m_appManager.findBatchById(name) != nullptr) {
+        if (m_appManager.findBatchById(name)) {
             QMessageBox::warning(this, "Validation Error", "Batch Name must be unique.");
             return;
         }
@@ -1302,7 +1869,7 @@ void MainWindow::onAddBatch()
         return;
     }
 
-    StudentBatch b(name, strength, program, dept);
+    StudentBatch b(name, strength, prog, dept);
 
     if (!m_editingBatchId.empty()) {
         m_appManager.updateBatch(b);
@@ -1327,6 +1894,7 @@ void MainWindow::onAddBatch()
 
     saveToFile();
     populateCombos();
+    markConstraintsDirty();
 }
 
 void MainWindow::onEditBatch()
@@ -1370,27 +1938,28 @@ void MainWindow::onDeleteBatch()
 
     if (m_appManager.isBatchUsed(name)) {
         QMessageBox::critical(this, "Cannot Delete",
-            "This item is currently used in one or more scheduled classes and cannot be deleted.");
+            "This batch is used in scheduled sessions and cannot be deleted.");
         return;
     }
 
-    QMessageBox::StandardButton reply = QMessageBox::question(this, "Confirm Delete",
-        "Are you sure you want to delete this student batch?",
-        QMessageBox::Yes | QMessageBox::No);
-    if (reply == QMessageBox::No) return;
+    if (QMessageBox::question(this, "Confirm Delete",
+            "Are you sure you want to delete this student batch?",
+            QMessageBox::Yes | QMessageBox::No) == QMessageBox::No) return;
 
     if (m_appManager.removeBatch(name)) {
         delete item;
         saveToFile();
         populateCombos();
+        markConstraintsDirty();
     } else {
         QMessageBox::warning(this, "Delete Failed", "Unable to delete student batch.");
     }
 }
 
-// ==========================================
+// ──────────────────────────────────────────────────────────────────────────────
 // SESSION CRUD
-// ==========================================
+// ──────────────────────────────────────────────────────────────────────────────
+
 void MainWindow::onAddClassSession()
 {
     QString instName   = m_sessInstCombo->currentText();
@@ -1400,7 +1969,8 @@ void MainWindow::onAddClassSession()
 
     if (instName.isEmpty() || courseCode.isEmpty() || roomId.isEmpty() || batchId.isEmpty()) {
         QMessageBox::warning(this, "Selection Error",
-            "Please ensure all entities (Instructors, Courses, Rooms, Batches) are created and selected.");
+            "Please ensure all entities (Instructors, Courses, Rooms, Batches) "
+            "are created and selected.");
         return;
     }
 
@@ -1416,7 +1986,7 @@ void MainWindow::onAddClassSession()
         return;
     }
 
-    // -- Subject qualification guard --
+    // Subject qualification guard
     if (!inst->isQualifiedFor(crs->getCourseCode())) {
         QStringList lockedList;
         for (const auto& s : inst->getLockedSubjects())
@@ -1434,131 +2004,172 @@ void MainWindow::onAddClassSession()
     QTime endTime   = m_sessEndEdit->time();
 
     if (startTime >= endTime) {
-        QMessageBox::warning(this, "Time Range Error", "End time must be strictly after start time.");
+        QMessageBox::warning(this, "Time Range Error",
+            "End time must be strictly after start time.");
         return;
     }
 
-    if (startTime < QTime(9, 0) || endTime > QTime(17, 0)) {
-        QMessageBox::warning(this, "Time Range Error", "Classes must be scheduled between 9:00 AM and 5:00 PM.");
+    // Read current constraints for the time window check
+    ConstraintSettings cs = readConstraintsFromUI();
+    QTime csStart(cs.dayStartMinutes / 60, cs.dayStartMinutes % 60);
+    QTime csEnd(cs.dayEndMinutes / 60, cs.dayEndMinutes % 60);
+
+    if (startTime < csStart || endTime > csEnd) {
+        QMessageBox::warning(this, "Time Range Error",
+            QString("Classes must be scheduled between %1 and %2 (as set in Constraints tab).")
+                .arg(csStart.toString("HH:mm"))
+                .arg(csEnd.toString("HH:mm")));
         return;
     }
 
-    Day day = static_cast<Day>(m_sessDayCombo->currentIndex());
+    // Determine Day from combo index
+    // Combo order: Monday(0), Tuesday(1), Wednesday(2), Thursday(3), Friday(4), Sunday(5), Saturday(6)
+    const Day dayMap[] = {
+        Day::Monday, Day::Tuesday, Day::Wednesday, Day::Thursday,
+        Day::Friday, Day::Sunday, Day::Saturday
+    };
+    Day day = dayMap[m_sessDayCombo->currentIndex()];
+
     ClockTime ctStart{ startTime.hour(), startTime.minute() };
     ClockTime ctEnd{   endTime.hour(),   endTime.minute()   };
-    TimeSlot slot(day, ctStart, ctEnd);
+    TimeSlot  slot(day, ctStart, ctEnd);
 
-    // Soft constraint: 1 hr break after every 2 classes
+    // Soft constraint: 1-hr break after every 2 back-to-back classes for the batch
     std::vector<TimeSlot> batchDaySlots;
     batchDaySlots.push_back(slot);
     for (const auto& existing : m_appManager.getTimetable()) {
         if (existing.getBatchId()->getBatchId() == btch->getBatchId() &&
-            existing.getTimeSlot().getDay() == day) {
+            existing.getTimeSlot().getDay() == day)
             batchDaySlots.push_back(existing.getTimeSlot());
-        }
     }
-    
     std::sort(batchDaySlots.begin(), batchDaySlots.end(), [](const TimeSlot& a, const TimeSlot& b) {
-        int aStart = a.getStartTime().hours * 60 + a.getStartTime().minutes;
-        int bStart = b.getStartTime().hours * 60 + b.getStartTime().minutes;
-        return aStart < bStart;
+        return (a.getStartTime().hours * 60 + a.getStartTime().minutes) <
+               (b.getStartTime().hours * 60 + b.getStartTime().minutes);
     });
 
     bool needsBreakWarning = false;
     int consecutiveClasses = 1;
     for (size_t i = 1; i < batchDaySlots.size(); ++i) {
-        int prevEnd = batchDaySlots[i-1].getEndTime().hours * 60 + batchDaySlots[i-1].getEndTime().minutes;
-        int currStart = batchDaySlots[i].getStartTime().hours * 60 + batchDaySlots[i].getStartTime().minutes;
-        
+        int prevEnd   = batchDaySlots[i-1].getEndTime().hours * 60 +
+                        batchDaySlots[i-1].getEndTime().minutes;
+        int currStart = batchDaySlots[i].getStartTime().hours * 60 +
+                        batchDaySlots[i].getStartTime().minutes;
         if (currStart - prevEnd < 60) {
-            consecutiveClasses++;
-            if (consecutiveClasses > 2) {
-                needsBreakWarning = true;
-                break;
-            }
+            ++consecutiveClasses;
+            if (consecutiveClasses > 2) { needsBreakWarning = true; break; }
         } else {
             consecutiveClasses = 1;
         }
     }
 
     if (needsBreakWarning) {
-        QMessageBox::StandardButton reply = QMessageBox::question(this, "Batch Overload Warning",
-            "This schedule places 3 or more classes for the student batch without a 1-hour break in between.\n\n"
-            "Do you want to proceed anyway?",
-            QMessageBox::Yes | QMessageBox::No);
-        if (reply == QMessageBox::No) return;
+        if (QMessageBox::question(this, "Batch Overload Warning",
+                "This schedule places 3 or more classes for the student batch without a 1-hour break.\n\n"
+                "Proceed anyway?",
+                QMessageBox::Yes | QMessageBox::No) == QMessageBox::No) return;
     }
 
     if (!inst->assignNewCourse(*crs)) {
-        int currentHours = inst->calculateTotalAssignedHours();
         QMessageBox::warning(this, "Workload Limit Exceeded",
             QString("Cannot schedule: %1 would exceed weekly hour limit!\n\n"
-                    "Instructor: %2\n"
-                    "Max Weekly Limit: %3 hours\n"
-                    "Assigned so far: %4 hours\n"
-                    "Course to assign: %5 (%6 hours)")
+                    "Instructor: %2\nMax Weekly Limit: %3 hours\n"
+                    "Assigned so far: %4 hours\nCourse to assign: %5 (%6 hours)")
             .arg(QString::fromStdString(crs->getCourseCode()))
             .arg(QString::fromStdString(inst->getName()))
             .arg(inst->getMaxLimitHours())
-            .arg(currentHours)
+            .arg(inst->calculateTotalAssignedHours())
             .arg(QString::fromStdString(crs->getCourseCode()))
             .arg(crs->getAllocatedHours()));
         return;
     }
 
     ClassSession session(slot, inst, crs, rm, btch);
-    std::string err = m_appManager.validateAndAddClassSession(session);
+    std::string err = m_appManager.validateAndAddClassSession(session, cs);
     if (!err.empty()) {
         inst->unassignCourse(crs->getCourseCode());
-        QMessageBox::warning(this, "Scheduling Constraint Violation", QString::fromStdString(err));
+        QMessageBox::warning(this, "Scheduling Constraint Violation",
+            QString::fromStdString(err));
         return;
     }
 
     saveToFile();
     refreshListsAndTables();
-
-    QMessageBox::information(this, "Schedule Succeeded", "Class session scheduled successfully!");
+    QMessageBox::information(this, "Schedule Succeeded",
+        "Class session scheduled successfully!");
 }
 
 void MainWindow::onDeleteClassSession()
 {
     int row = m_timetableTable->currentRow();
     if (row < 0) {
-        QMessageBox::warning(this, "Selection Error", "No class session selected to delete.");
+        QMessageBox::warning(this, "Selection Error",
+            "No class session selected to delete.");
         return;
     }
 
-    QMessageBox::StandardButton reply = QMessageBox::question(this, "Confirm Delete",
-        "Are you sure you want to remove this scheduled session?",
-        QMessageBox::Yes | QMessageBox::No);
-    if (reply == QMessageBox::No) return;
+    if (QMessageBox::question(this, "Confirm Delete",
+            "Are you sure you want to remove this scheduled session?",
+            QMessageBox::Yes | QMessageBox::No) == QMessageBox::No) return;
 
     if (m_appManager.removeClassSession(row)) {
         saveToFile();
         refreshListsAndTables();
     } else {
-        QMessageBox::warning(this, "Delete Failed", "Unable to remove the selected session.");
+        QMessageBox::warning(this, "Delete Failed",
+            "Unable to remove the selected session.");
     }
 }
 
+// ──────────────────────────────────────────────────────────────────────────────
+// onAutoGenerate — gated by constraintsValidated
+// ──────────────────────────────────────────────────────────────────────────────
+
 void MainWindow::onAutoGenerate()
 {
-    QMessageBox::StandardButton reply = QMessageBox::question(this, "Auto Generate Routine",
-        "This will clear the current timetable and automatically generate a new routine "
-        "for all batches across Monday to Friday.\n\nProceed?",
-        QMessageBox::Yes | QMessageBox::No);
-    if (reply == QMessageBox::No) return;
+    if (!m_constraintsValidated) {
+        QMessageBox::warning(this, "Constraints Not Validated",
+            "Please validate constraints first before generating the routine.\n\n"
+            "Go to the Constraints tab and click \"Validate Constraints\".");
+        return;
+    }
 
-    m_appManager.autoGenerateTimetable();
+    ConstraintSettings cs = readConstraintsFromUI();
+
+    if (QMessageBox::question(this, "Auto Generate Routine",
+            "This will clear the current timetable and generate a new routine "
+            "based on your configured constraints.\n\nProceed?",
+            QMessageBox::Yes | QMessageBox::No) == QMessageBox::No) return;
+
+    m_appManager.autoGenerateTimetable(cs);
 
     saveToFile();
     refreshListsAndTables();
 
+    // Count how many working days were used
+    int workingDayCount = 0;
+    for (int i = 0; i < 7; ++i) if (cs.workingDays[i]) ++workingDayCount;
+
     int total = static_cast<int>(m_appManager.getTimetable().size());
+    int startH = cs.dayStartMinutes / 60, startM = cs.dayStartMinutes % 60;
+    int endH   = cs.dayEndMinutes   / 60, endM   = cs.dayEndMinutes   % 60;
+
+    QString lunchInfo = cs.lunchBreakEnabled
+        ? QString("Lunch break: %1:%2 – %3:%4")
+              .arg(cs.lunchStartMinutes/60,2,10,QChar('0'))
+              .arg(cs.lunchStartMinutes%60,2,10,QChar('0'))
+              .arg(cs.lunchEndMinutes/60,2,10,QChar('0'))
+              .arg(cs.lunchEndMinutes%60,2,10,QChar('0'))
+        : "No lunch break";
+
     QMessageBox::information(this, "Generation Complete",
         QString("Routine generated successfully!\n\n"
                 "Total sessions scheduled: %1\n"
-                "Days: Monday - Friday\n"
-                "Timeslots: 9:00-11:00 & 12:00-17:00 (Lunch: 11:00-12:00)")
-        .arg(total));
+                "Working days: %2\n"
+                "Time window: %3:%4 – %5:%6\n"
+                "%7")
+        .arg(total)
+        .arg(workingDayCount)
+        .arg(startH,2,10,QChar('0')).arg(startM,2,10,QChar('0'))
+        .arg(endH,2,10,QChar('0')).arg(endM,2,10,QChar('0'))
+        .arg(lunchInfo));
 }

@@ -1,229 +1,396 @@
 #include "AppManager.hpp"
-void AppManager::addInstructor(const Instructor& instructor){
+#include <algorithm>
+
+// ──────────────────────────────────────────────────────────────────────────────
+// Basic CRUD
+// ──────────────────────────────────────────────────────────────────────────────
+
+void AppManager::addInstructor(const Instructor& instructor) {
     m_masterInstructors.push_back(instructor);
 }
-void AppManager::addRoom(const Room& room){
+void AppManager::addRoom(const Room& room) {
     m_masterRooms.push_back(room);
 }
-void AppManager::addCourse(const Course& course){
+void AppManager::addCourse(const Course& course) {
     m_masterCourses.push_back(course);
 }
-void AppManager::addBatch(const StudentBatch& batch ){
+void AppManager::addBatch(const StudentBatch& batch) {
     m_masterBatches.push_back(batch);
-
 }
-std::string AppManager::validateAndAddClassSession(const ClassSession& session) {
+
+// ──────────────────────────────────────────────────────────────────────────────
+// Session validation + insertion
+// ──────────────────────────────────────────────────────────────────────────────
+
+std::string AppManager::validateAndAddClassSession(const ClassSession& session,
+                                                    const ConstraintSettings& cs)
+{
     TimeSlot newSlot = session.getTimeSlot();
-    
-    // Lunch break overlap logic
-    // Max 20 mins overlap allowed (leaves 40 mins of the 1 hr break).
-    if (newSlot.lunchBreakOverlapMinutes() > 20) {
-        return "Cannot schedule: Class eats into lunch break (11:00 AM to 12:00 PM). At least 40 minutes of break must remain.";
-    }
-    
-    // Iterate over existing timetable for conflicts
-    for (const auto& existing : m_timetable) {
-        if (existing.getTimeSlot().overlapsWith(newSlot)) {
-            if (existing.getTeacherId()->getId() == session.getTeacherId()->getId()) {
-                return "Teacher Conflict: Instructor is already teaching at this time.";
-            }
-            if (existing.getRoomId()->getRoomId() == session.getRoomId()->getRoomId()) {
-                return "Classroom Conflict: Room is already booked at this time.";
-            }
-            if (existing.getBatchId()->getBatchId() == session.getBatchId()->getBatchId()) {
-                return "Student Class Conflict: Batch already has a class at this time.";
-            }
+
+    // Lunch break overlap — use configurable window from ConstraintSettings.
+    if (cs.lunchBreakEnabled) {
+        // Allow at most 20 minutes of overlap (leaves ≥40 min of break).
+        if (newSlot.lunchBreakOverlapMinutes(cs.lunchStartMinutes, cs.lunchEndMinutes) > 20) {
+            return "Cannot schedule: Class eats into the lunch break. "
+                   "At least 40 minutes of break must remain.";
         }
     }
-    
+
+    // Conflict checks (each guarded by its rule toggle)
+    for (const auto& existing : m_timetable) {
+        if (!existing.getTimeSlot().overlapsWith(newSlot)) continue;
+
+        if (cs.ruleNoInstructorDoubleBook &&
+            existing.getTeacherId()->getId() == session.getTeacherId()->getId()) {
+            return "Teacher Conflict: Instructor is already teaching at this time.";
+        }
+        if (cs.ruleNoRoomDoubleBook &&
+            existing.getRoomId()->getRoomId() == session.getRoomId()->getRoomId()) {
+            return "Classroom Conflict: Room is already booked at this time.";
+        }
+        if (cs.ruleNoBatchClash &&
+            existing.getBatchId()->getBatchId() == session.getBatchId()->getBatchId()) {
+            return "Student Class Conflict: Batch already has a class at this time.";
+        }
+    }
+
     m_timetable.push_back(session);
     return "";
 }
 
 bool AppManager::removeClassSession(int index) {
     if (index < 0 || index >= static_cast<int>(m_timetable.size())) return false;
-    
-    // Unassign the course from the instructor
+
     Instructor* teacher = m_timetable[index].getTeacherId();
-    Course* course = m_timetable[index].getSubjectId();
+    Course*     course  = m_timetable[index].getSubjectId();
     if (teacher && course) {
         teacher->unassignCourse(course->getCourseCode());
     }
-    
+
     m_timetable.erase(m_timetable.begin() + index);
     return true;
 }
 
-Instructor* AppManager::findInstructorByName(const std::string& name){
- for(size_t i=0;i<m_masterInstructors.size(); ++i){
-    if(m_masterInstructors[i].getName()==name){
-        return &m_masterInstructors[i];
+// ──────────────────────────────────────────────────────────────────────────────
+// Finders
+// ──────────────────────────────────────────────────────────────────────────────
 
-    }
- }
- return nullptr;
-}
-Course* AppManager::findCourseByCode(const std::string& code){
-    for(size_t i=0;i<m_masterCourses.size();++i){
-       if(m_masterCourses[i].getCourseCode()==code){
-        return &m_masterCourses[i];
-       }
-    }
+Instructor* AppManager::findInstructorByName(const std::string& name) {
+    for (auto& inst : m_masterInstructors)
+        if (inst.getName() == name) return &inst;
     return nullptr;
-}
-StudentBatch* AppManager::findBatchById(const std::string& id){
-    for(size_t i=0;i<m_masterBatches.size();i++){
-        if(m_masterBatches[i].getBatchId()==id ){
-            return &m_masterBatches[i];
-        }
-    }
-    return nullptr;
-}
-Room* AppManager::findRoomById(const std::string& id){
-    for(size_t i=0;i<m_masterRooms.size();i++){
-        if(m_masterRooms[i].getRoomId()==id){
-            return &m_masterRooms[i];
-
-        }
-    }
-    return nullptr;
-
-}
-const std::vector<ClassSession>& AppManager::getTimetable() const{
-    return m_timetable;
-}
-const std::vector<Instructor>& AppManager::getInstructors() const {
-    return m_masterInstructors;
-}
-const std::vector<Course>& AppManager::getCourses() const {
-    return m_masterCourses;
-}
-const std::vector<Room>& AppManager::getRooms() const {
-    return m_masterRooms;
-}
-const std::vector<StudentBatch>& AppManager::getBatches() const {
-    return m_masterBatches;
 }
 
 Instructor* AppManager::findInstructorById(const std::string& id) {
-    for (size_t i = 0; i < m_masterInstructors.size(); ++i) {
-        if (m_masterInstructors[i].getId() == id) {
-            return &m_masterInstructors[i];
-        }
-    }
+    for (auto& inst : m_masterInstructors)
+        if (inst.getId() == id) return &inst;
     return nullptr;
 }
 
-// Removal helpers
-bool AppManager::removeInstructor(const std::string& id) {
+Course* AppManager::findCourseByCode(const std::string& code) {
+    for (auto& crs : m_masterCourses)
+        if (crs.getCourseCode() == code) return &crs;
+    return nullptr;
+}
 
+Room* AppManager::findRoomById(const std::string& id) {
+    for (auto& rm : m_masterRooms)
+        if (rm.getRoomId() == id) return &rm;
+    return nullptr;
+}
+
+StudentBatch* AppManager::findBatchById(const std::string& id) {
+    for (auto& b : m_masterBatches)
+        if (b.getBatchId() == id) return &b;
+    return nullptr;
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
+// Getters
+// ──────────────────────────────────────────────────────────────────────────────
+
+const std::vector<ClassSession>&  AppManager::getTimetable()   const { return m_timetable; }
+const std::vector<Instructor>&    AppManager::getInstructors() const { return m_masterInstructors; }
+const std::vector<Course>&        AppManager::getCourses()     const { return m_masterCourses; }
+const std::vector<Room>&          AppManager::getRooms()       const { return m_masterRooms; }
+const std::vector<StudentBatch>&  AppManager::getBatches()     const { return m_masterBatches; }
+
+// ──────────────────────────────────────────────────────────────────────────────
+// Removal
+// ──────────────────────────────────────────────────────────────────────────────
+
+bool AppManager::removeInstructor(const std::string& id) {
     for (auto it = m_masterInstructors.begin(); it != m_masterInstructors.end(); ++it) {
-        if (it->getId() == id) {
-            m_masterInstructors.erase(it);
-            return true;
-        }
+        if (it->getId() == id) { m_masterInstructors.erase(it); return true; }
     }
     return false;
 }
 
 bool AppManager::removeCourse(const std::string& code) {
     for (auto it = m_masterCourses.begin(); it != m_masterCourses.end(); ++it) {
-        if (it->getCourseCode() == code) {
-            m_masterCourses.erase(it);
-            return true;
-        }
+        if (it->getCourseCode() == code) { m_masterCourses.erase(it); return true; }
     }
     return false;
 }
 
 bool AppManager::removeRoom(const std::string& id) {
     for (auto it = m_masterRooms.begin(); it != m_masterRooms.end(); ++it) {
-        if (it->getRoomId() == id) {
-            m_masterRooms.erase(it);
-            return true;
-        }
+        if (it->getRoomId() == id) { m_masterRooms.erase(it); return true; }
     }
     return false;
 }
 
 bool AppManager::removeBatch(const std::string& id) {
     for (auto it = m_masterBatches.begin(); it != m_masterBatches.end(); ++it) {
-        if (it->getBatchId() == id) {
-            m_masterBatches.erase(it);
-            return true;
-        }
+        if (it->getBatchId() == id) { m_masterBatches.erase(it); return true; }
     }
     return false;
 }
 
+// ──────────────────────────────────────────────────────────────────────────────
 // Usage checks
+// ──────────────────────────────────────────────────────────────────────────────
+
 bool AppManager::isInstructorUsed(const std::string& id) const {
-    for (const auto& sess : m_timetable) {
+    for (const auto& sess : m_timetable)
         if (sess.getTeacherId() && sess.getTeacherId()->getId() == id) return true;
-    }
     return false;
 }
 
 bool AppManager::isCourseUsed(const std::string& code) const {
-    for (const auto& sess : m_timetable) {
+    for (const auto& sess : m_timetable)
         if (sess.getSubjectId() && sess.getSubjectId()->getCourseCode() == code) return true;
-    }
     return false;
 }
 
 bool AppManager::isRoomUsed(const std::string& id) const {
-    for (const auto& sess : m_timetable) {
+    for (const auto& sess : m_timetable)
         if (sess.getRoomId() && sess.getRoomId()->getRoomId() == id) return true;
-    }
     return false;
 }
 
 bool AppManager::isBatchUsed(const std::string& id) const {
-    for (const auto& sess : m_timetable) {
+    for (const auto& sess : m_timetable)
         if (sess.getBatchId() && sess.getBatchId()->getBatchId() == id) return true;
-    }
     return false;
 }
 
+// ──────────────────────────────────────────────────────────────────────────────
+// Update helpers
+// ──────────────────────────────────────────────────────────────────────────────
+
 bool AppManager::updateInstructor(const Instructor& instructor) {
-    for (auto& inst : m_masterInstructors) {
-        if (inst.getId() == instructor.getId()) {
-            inst = instructor;
-            return true;
-        }
-    }
+    for (auto& inst : m_masterInstructors)
+        if (inst.getId() == instructor.getId()) { inst = instructor; return true; }
     return false;
 }
 
 bool AppManager::updateCourse(const Course& course) {
-    for (auto& crs : m_masterCourses) {
-        if (crs.getCourseCode() == course.getCourseCode()) {
-            crs = course;
-            return true;
-        }
-    }
+    for (auto& crs : m_masterCourses)
+        if (crs.getCourseCode() == course.getCourseCode()) { crs = course; return true; }
     return false;
 }
 
 bool AppManager::updateRoom(const Room& room) {
-    for (auto& rm : m_masterRooms) {
-        if (rm.getRoomId() == room.getRoomId()) {
-            rm = room;
+    for (auto& rm : m_masterRooms)
+        if (rm.getRoomId() == room.getRoomId()) { rm = room; return true; }
+    return false;
+}
+
+bool AppManager::updateBatch(const StudentBatch& batch) {
+    for (auto& b : m_masterBatches)
+        if (b.getBatchId() == batch.getBatchId()) { b = batch; return true; }
+    return false;
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
+// Busy-check helpers
+// ──────────────────────────────────────────────────────────────────────────────
+
+bool AppManager::isInstructorBusyAt(const std::string& id, const TimeSlot& slot) const {
+    for (const auto& sess : m_timetable)
+        if (sess.getTeacherId() && sess.getTeacherId()->getId() == id &&
+            sess.getTimeSlot().overlapsWith(slot))
             return true;
+    return false;
+}
+
+bool AppManager::isRoomBusyAt(const std::string& id, const TimeSlot& slot) const {
+    for (const auto& sess : m_timetable)
+        if (sess.getRoomId() && sess.getRoomId()->getRoomId() == id &&
+            sess.getTimeSlot().overlapsWith(slot))
+            return true;
+    return false;
+}
+
+bool AppManager::isBatchBusyAt(const std::string& id, const TimeSlot& slot) const {
+    for (const auto& sess : m_timetable)
+        if (sess.getBatchId() && sess.getBatchId()->getBatchId() == id &&
+            sess.getTimeSlot().overlapsWith(slot))
+            return true;
+    return false;
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
+// Auto-generation private helpers
+// ──────────────────────────────────────────────────────────────────────────────
+
+// Map Day enum → UI working-day array index
+// UI array: [0]=Sunday,[1]=Mon,[2]=Tue,[3]=Wed,[4]=Thu,[5]=Fri,[6]=Sat
+static int dayToUIIndex(Day d) {
+    switch (d) {
+        case Day::Sunday:    return 0;
+        case Day::Monday:    return 1;
+        case Day::Tuesday:   return 2;
+        case Day::Wednesday: return 3;
+        case Day::Thursday:  return 4;
+        case Day::Friday:    return 5;
+        case Day::Saturday:  return 6;
+        default:             return -1;
+    }
+}
+
+bool AppManager::isWorkingDay(Day d, const ConstraintSettings& cs) {
+    int idx = dayToUIIndex(d);
+    return (idx >= 0) ? cs.workingDays[idx] : false;
+}
+
+// Build a list of {startMin, endMin} 1-hour slot pairs for one working day,
+// based on the configurable window and optional lunch break.
+std::vector<std::pair<int,int>> AppManager::buildSlotDefs(const ConstraintSettings& cs) {
+    std::vector<std::pair<int,int>> slots;
+    int cur = cs.dayStartMinutes;
+    while (cur + 60 <= cs.dayEndMinutes) {
+        int slotEnd = cur + 60;
+        // Skip if the slot overlaps with the lunch break
+        if (cs.lunchBreakEnabled) {
+            // Overlap: slot overlaps lunch if cur < lunchEnd && slotEnd > lunchStart
+            bool overlapsLunch = (cur < cs.lunchEndMinutes) &&
+                                 (slotEnd > cs.lunchStartMinutes);
+            if (!overlapsLunch) {
+                slots.push_back({cur, slotEnd});
+            }
+            // If this slot started before lunch and we are now at the lunch start,
+            // jump the cursor past the lunch end so we don't stall in an infinite loop.
+            if (cur < cs.lunchStartMinutes && slotEnd > cs.lunchStartMinutes) {
+                cur = cs.lunchEndMinutes;
+                continue;
+            }
+        } else {
+            slots.push_back({cur, slotEnd});
+        }
+        cur += 60;
+    }
+    return slots;
+}
+
+// How many minutes the instructor has been teaching *consecutively* on `day`
+// immediately before `slotStartMin` (i.e., adjacent sessions with no gap).
+int AppManager::consecutiveTeachingMinutes(const std::string& instId,
+                                            Day day, int slotStartMin) const
+{
+    // Collect all end-times for this instructor on this day
+    std::vector<int> endTimes;
+    for (const auto& sess : m_timetable) {
+        if (sess.getTeacherId() && sess.getTeacherId()->getId() == instId &&
+            sess.getTimeSlot().getDay() == day) {
+            endTimes.push_back(sess.getTimeSlot().getEndTime().hours * 60 +
+                               sess.getTimeSlot().getEndTime().minutes);
+        }
+    }
+
+    // Walk backwards from slotStartMin along the chain of contiguous sessions
+    int totalMins = 0;
+    int cursor    = slotStartMin;
+    bool found    = true;
+    while (found) {
+        found = false;
+        for (int e : endTimes) {
+            if (e == cursor) {
+                // There is a session ending exactly at cursor — find its start
+                for (const auto& sess : m_timetable) {
+                    if (sess.getTeacherId() && sess.getTeacherId()->getId() == instId &&
+                        sess.getTimeSlot().getDay() == day) {
+                        int sEnd   = sess.getTimeSlot().getEndTime().hours * 60 +
+                                     sess.getTimeSlot().getEndTime().minutes;
+                        int sStart = sess.getTimeSlot().getStartTime().hours * 60 +
+                                     sess.getTimeSlot().getStartTime().minutes;
+                        if (sEnd == cursor) {
+                            totalMins += (sEnd - sStart);
+                            cursor     = sStart;
+                            found      = true;
+                            break;
+                        }
+                    }
+                }
+                break;
+            }
+        }
+    }
+    return totalMins;
+}
+
+// Returns true if the course-batch pair already appears on a day that is
+// immediately adjacent (previous or next working day) to `day`.
+bool AppManager::sameSubjectOnAdjacentDay(const std::string& courseCode,
+                                           const std::string& batchId,
+                                           Day day,
+                                           const std::vector<Day>& workDays) const
+{
+    // Find the index of `day` in the working-days list
+    int dayIdx = -1;
+    for (int i = 0; i < static_cast<int>(workDays.size()); ++i) {
+        if (workDays[i] == day) { dayIdx = i; break; }
+    }
+    if (dayIdx < 0) return false;
+
+    // Collect adjacent working days (previous and next in the list)
+    std::vector<Day> adjacent;
+    if (dayIdx > 0)                                 adjacent.push_back(workDays[dayIdx - 1]);
+    if (dayIdx < static_cast<int>(workDays.size()) - 1) adjacent.push_back(workDays[dayIdx + 1]);
+
+    for (const auto& sess : m_timetable) {
+        if (sess.getSubjectId() && sess.getBatchId() &&
+            sess.getSubjectId()->getCourseCode() == courseCode &&
+            sess.getBatchId()->getBatchId() == batchId)
+        {
+            for (Day adj : adjacent) {
+                if (sess.getTimeSlot().getDay() == adj) return true;
+            }
         }
     }
     return false;
 }
 
-bool AppManager::updateBatch(const StudentBatch& batch) {
-    for (auto& b : m_masterBatches) {
-        if (b.getBatchId() == batch.getBatchId()) {
-            b = batch;
-            return true;
+// Returns true if the instructor has a session on a working day adjacent
+// to `day` (used for the "Instructor Day Gap" rule).
+bool AppManager::instructorOnAdjacentDay(const std::string& instId,
+                                          Day day,
+                                          const std::vector<Day>& workDays) const
+{
+    int dayIdx = -1;
+    for (int i = 0; i < static_cast<int>(workDays.size()); ++i) {
+        if (workDays[i] == day) { dayIdx = i; break; }
+    }
+    if (dayIdx < 0) return false;
+
+    std::vector<Day> adjacent;
+    if (dayIdx > 0)                                     adjacent.push_back(workDays[dayIdx - 1]);
+    if (dayIdx < static_cast<int>(workDays.size()) - 1) adjacent.push_back(workDays[dayIdx + 1]);
+
+    for (const auto& sess : m_timetable) {
+        if (sess.getTeacherId() && sess.getTeacherId()->getId() == instId) {
+            for (Day adj : adjacent) {
+                if (sess.getTimeSlot().getDay() == adj) return true;
+            }
         }
     }
     return false;
 }
+
+// ──────────────────────────────────────────────────────────────────────────────
+// clearTimetable
+// ──────────────────────────────────────────────────────────────────────────────
 
 void AppManager::clearTimetable() {
     // Reset runtime hour-tracking for all instructors (assigned courses),
@@ -236,55 +403,30 @@ void AppManager::clearTimetable() {
     m_timetable.clear();
 }
 
-bool AppManager::isInstructorBusyAt(const std::string& id, const TimeSlot& slot) const {
-    for (const auto& sess : m_timetable) {
-        if (sess.getTeacherId() && sess.getTeacherId()->getId() == id &&
-            sess.getTimeSlot().overlapsWith(slot)) {
-            return true;
-        }
-    }
-    return false;
-}
+// ──────────────────────────────────────────────────────────────────────────────
+// autoGenerateTimetable — constraint-driven implementation
+// ──────────────────────────────────────────────────────────────────────────────
 
-bool AppManager::isRoomBusyAt(const std::string& id, const TimeSlot& slot) const {
-    for (const auto& sess : m_timetable) {
-        if (sess.getRoomId() && sess.getRoomId()->getRoomId() == id &&
-            sess.getTimeSlot().overlapsWith(slot)) {
-            return true;
-        }
-    }
-    return false;
-}
-
-bool AppManager::isBatchBusyAt(const std::string& id, const TimeSlot& slot) const {
-    for (const auto& sess : m_timetable) {
-        if (sess.getBatchId() && sess.getBatchId()->getBatchId() == id &&
-            sess.getTimeSlot().overlapsWith(slot)) {
-            return true;
-        }
-    }
-    return false;
-}
-
-void AppManager::autoGenerateTimetable() {
+void AppManager::autoGenerateTimetable(const ConstraintSettings& cs) {
     clearTimetable();
 
-    // Define standard 1-hour time slots (9 AM to 5 PM, skip 11:00-12:00 lunch)
-    struct SlotDef { int startH; int startM; int endH; int endM; };
-    std::vector<SlotDef> slotDefs = {
-        {9,  0,  10, 0},   // 9:00 - 10:00
-        {10, 0,  11, 0},   // 10:00 - 11:00
-        // 11:00 - 12:00 is lunch break
-        {12, 0,  13, 0},   // 12:00 - 13:00
-        {13, 0,  14, 0},   // 13:00 - 14:00
-        {14, 0,  15, 0},   // 14:00 - 15:00
-        {15, 0,  16, 0},   // 15:00 - 16:00
-        {16, 0,  17, 0},   // 16:00 - 17:00
+    // Build the ordered list of working Days
+    // We iterate in a natural calendar order: Sun, Mon, Tue, Wed, Thu, Fri, Sat
+    const Day calendarOrder[] = {
+        Day::Sunday, Day::Monday, Day::Tuesday, Day::Wednesday,
+        Day::Thursday, Day::Friday, Day::Saturday
     };
+    std::vector<Day> workDays;
+    // workingDays indices: 0=Sun,1=Mon,2=Tue,3=Wed,4=Thu,5=Fri,6=Sat
+    for (int i = 0; i < 7; ++i) {
+        if (cs.workingDays[i]) workDays.push_back(calendarOrder[i]);
+    }
 
-    std::vector<Day> days = {
-        Day::Monday, Day::Tuesday, Day::Wednesday, Day::Thursday, Day::Friday
-    };
+    if (workDays.empty()) return;  // No working days — nothing to schedule
+
+    // Build slot definitions for one day
+    std::vector<std::pair<int,int>> slotDefs = buildSlotDefs(cs);
+    if (slotDefs.empty()) return;  // No slots fit in the window
 
     int nextStartDay = 0;
 
@@ -293,71 +435,110 @@ void AppManager::autoGenerateTimetable() {
         StudentBatch& batch = m_masterBatches[bIdx];
 
         for (size_t cIdx = 0; cIdx < m_masterCourses.size(); ++cIdx) {
-            Course& course = m_masterCourses[cIdx];
-            int hoursNeeded = course.getAllocatedHours();
-            int hoursScheduled = 0;
+            Course& course     = m_masterCourses[cIdx];
+            int     hoursNeeded    = course.getAllocatedHours();
+            int     hoursScheduled = 0;
 
-            // Try to schedule 'hoursNeeded' 1-hour sessions for this course+batch
             int attempts = 0;
-            while (hoursScheduled < hoursNeeded && attempts < 10) {
-                attempts++;
-                for (size_t offset = 0; offset < days.size() && hoursScheduled < hoursNeeded; ++offset) {
-                    size_t dIdx = (nextStartDay + offset) % days.size();
-                    
-                    for (size_t sIdx = 0; sIdx < slotDefs.size() && hoursScheduled < hoursNeeded; ++sIdx) {
-                        ClockTime startT{slotDefs[sIdx].startH, slotDefs[sIdx].startM};
-                        ClockTime endT{slotDefs[sIdx].endH, slotDefs[sIdx].endM};
-                        TimeSlot slot(days[dIdx], startT, endT);
+            while (hoursScheduled < hoursNeeded && attempts < 20) {
+                ++attempts;
+                for (size_t offset = 0;
+                     offset < workDays.size() && hoursScheduled < hoursNeeded;
+                     ++offset)
+                {
+                    size_t dIdx = (nextStartDay + offset) % workDays.size();
+                    Day    day  = workDays[dIdx];
 
-                        // Check if this batch is already busy at this slot
-                        if (isBatchBusyAt(batch.getBatchId(), slot)) {
+                    for (size_t sIdx = 0;
+                         sIdx < slotDefs.size() && hoursScheduled < hoursNeeded;
+                         ++sIdx)
+                    {
+                        int startMin = slotDefs[sIdx].first;
+                        int endMin   = slotDefs[sIdx].second;
+                        ClockTime ctStart{ startMin / 60, startMin % 60 };
+                        ClockTime ctEnd{   endMin   / 60, endMin   % 60 };
+                        TimeSlot  slot(day, ctStart, ctEnd);
+
+                        // ── Batch clash ──────────────────────────────────────
+                        if (cs.ruleNoBatchClash &&
+                            isBatchBusyAt(batch.getBatchId(), slot))
                             continue;
-                        }
 
-                        // Find a free instructor qualified for this course
+                        // ── No same subject on consecutive days ──────────────
+                        if (cs.ruleNoSameSubjectConsecDays &&
+                            sameSubjectOnAdjacentDay(course.getCourseCode(),
+                                                     batch.getBatchId(),
+                                                     day, workDays))
+                            continue;
+
+                        // ── Find a free, qualified instructor ────────────────
                         Instructor* freeInst = nullptr;
                         for (size_t iIdx = 0; iIdx < m_masterInstructors.size(); ++iIdx) {
                             Instructor& inst = m_masterInstructors[iIdx];
-                            // Must be qualified for this specific course
-                            if (!inst.isQualifiedFor(course.getCourseCode())) continue;
-                            if (!isInstructorBusyAt(inst.getId(), slot)) {
-                                // Check if assigning this course would exceed their hour limit
-                                int currentHours = inst.calculateTotalAssignedHours();
-                                if (currentHours + course.getAllocatedHours() <= inst.getMaxLimitHours()) {
-                                    freeInst = &inst;
+
+                            // Subject-lock qualification
+                            if (cs.ruleEnforceSubjectLock &&
+                                !inst.isQualifiedFor(course.getCourseCode()))
+                                continue;
+
+                            // Instructor double-booking
+                            if (cs.ruleNoInstructorDoubleBook &&
+                                isInstructorBusyAt(inst.getId(), slot))
+                                continue;
+
+                            // Max weekly hours
+                            if (cs.ruleRespectMaxWeeklyHours) {
+                                int cur = inst.calculateTotalAssignedHours();
+                                if (cur + 1 > inst.getMaxLimitHours()) continue;
+                            }
+
+                            // Instructor day-gap rule
+                            if (cs.ruleInstructorDayGap &&
+                                instructorOnAdjacentDay(inst.getId(), day, workDays))
+                                continue;
+
+                            // Max consecutive hours per day
+                            if (cs.ruleMaxConsecHoursEnabled) {
+                                int consecMins = consecutiveTeachingMinutes(
+                                    inst.getId(), day, startMin);
+                                if (consecMins >= cs.ruleMaxConsecHoursPerDay * 60)
+                                    continue;
+                            }
+
+                            freeInst = &inst;
+                            break;
+                        }
+                        if (!freeInst) continue;
+
+                        // ── Find a free room ────────────────────────────────
+                        Room* freeRoom = nullptr;
+                        for (size_t rIdx = 0; rIdx < m_masterRooms.size(); ++rIdx) {
+                            Room& rm = m_masterRooms[rIdx];
+                            if (!cs.ruleNoRoomDoubleBook ||
+                                !isRoomBusyAt(rm.getRoomId(), slot))
+                            {
+                                if (rm.getCapacity() >= batch.getStrength()) {
+                                    freeRoom = &rm;
                                     break;
                                 }
                             }
                         }
-                        if (!freeInst) continue;
-
-                        // Find a free room with enough capacity
-                        Room* freeRoom = nullptr;
-                        for (size_t rIdx = 0; rIdx < m_masterRooms.size(); ++rIdx) {
-                            Room& rm = m_masterRooms[rIdx];
-                            if (!isRoomBusyAt(rm.getRoomId(), slot) &&
-                                rm.getCapacity() >= batch.getStrength()) {
-                                freeRoom = &rm;
-                                break;
-                            }
-                        }
                         if (!freeRoom) continue;
 
-                        // All resources free — schedule the session
+                        // ── All checks passed — schedule the session ─────────
                         freeInst->assignNewCourse(course);
-                        ClassSession session(slot, freeInst, &course, freeRoom, &batch);
-                        m_timetable.push_back(session);
-                        hoursScheduled++;
-                        
-                        // Break out of the slot loop to move to the next day!
-                        // This ensures the course is spread out across the week.
-                        break; 
+                        m_timetable.push_back(ClassSession(slot, freeInst, &course,
+                                                            freeRoom, &batch));
+                        ++hoursScheduled;
+
+                        // One session per day per course-batch to spread things out
+                        break;
                     }
                 }
             }
-            // Stagger the start day for the next course so days are balanced evenly
-            nextStartDay = (nextStartDay + 1) % days.size();
+
+            // Stagger the start day for the next course
+            nextStartDay = (nextStartDay + 1) % static_cast<int>(workDays.size());
         }
     }
 }
-

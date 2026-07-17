@@ -18,8 +18,12 @@
 #include <QMessageBox>
 #include <QVector>
 #include <QScrollArea>
+#include <QCheckBox>
+#include <QGroupBox>
+#include <QTextEdit>
 
 #include "AppManager.hpp"
+#include "ConstraintSettings.hpp"
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -53,71 +57,106 @@ private slots:
     void onDeleteClassSession();
     void onAutoGenerate();
 
+    // ── Constraints tab slots ────────────────────────────────────────────────
+    void onValidateConstraints();
+    void onConstraintsChanged();   // resets validated flag, disables generate button
+
 private:
     Ui::MainWindow *ui;
     AppManager m_appManager;
 
-    // Helper UI setup
+    // ── Constraint state ─────────────────────────────────────────────────────
+    bool              m_constraintsValidated = false;
+    ConstraintSettings m_constraints;
+
+    // ── Helper methods ────────────────────────────────────────────────────────
     void setupUI();
+    void setupConstraintsTab();
     void populateCombos();
     void refreshListsAndTables();
-    void refreshInstList();          // rebuilds the instructor list widget
+    void refreshInstList();
     void populateInitialData();
     void saveToFile();
     void loadFromFile();
-
-    // Rebuilds the N subject-selection combos in the add-instructor form
     void rebuildSubjectCombos(int count);
+    void markConstraintsDirty();       // sets m_constraintsValidated=false, disables generate btn
+    void updateCapacityLabel();        // recomputes and updates the live capacity label
+    ConstraintSettings readConstraintsFromUI() const;
 
-    // Tab widgets
+    // ── Tab widget ────────────────────────────────────────────────────────────
     QTabWidget *m_tabWidget;
 
-    // Instructor UI
+    // ── Instructor UI ─────────────────────────────────────────────────────────
     QLineEdit   *m_instIdEdit;
     QLineEdit   *m_instNameEdit;
     QSpinBox    *m_instHoursSpin;
-    QSpinBox    *m_instSubjectCountSpin;   // how many subjects (1–3)
-    QWidget     *m_instSubjectContainer;   // holds the dynamic combo boxes
-    QVBoxLayout *m_instSubjectLayout;      // layout inside that container
-    QVector<QComboBox*> m_instSubjectCombos; // the dynamic subject combos
+    QSpinBox    *m_instSubjectCountSpin;
+    QWidget     *m_instSubjectContainer;
+    QVBoxLayout *m_instSubjectLayout;
+    QVector<QComboBox*> m_instSubjectCombos;
     QListWidget *m_instList;
 
-    // Course UI  (semester / department removed)
-    QLineEdit *m_courseCodeEdit;
-    QLineEdit *m_courseNameEdit;
-    QSpinBox  *m_courseHoursSpin;
+    // ── Course UI ─────────────────────────────────────────────────────────────
+    QLineEdit   *m_courseCodeEdit;
+    QLineEdit   *m_courseNameEdit;
+    QSpinBox    *m_courseHoursSpin;
     QListWidget *m_courseList;
 
-    // Room UI
+    // ── Room UI ───────────────────────────────────────────────────────────────
     QLineEdit *m_roomIdEdit;
     QLineEdit *m_roomBuildingEdit;
     QSpinBox  *m_roomCapSpin;
     QComboBox *m_roomTypeCombo;
     QListWidget *m_roomList;
 
-    // Batch UI
+    // ── Batch UI ──────────────────────────────────────────────────────────────
     QLineEdit *m_batchIdEdit;
     QSpinBox  *m_batchStrengthSpin;
     QComboBox *m_batchProgCombo;
     QLineEdit *m_batchDeptEdit;
     QListWidget *m_batchList;
 
-    // Session UI
-    QComboBox *m_sessInstCombo;
-    QComboBox *m_sessCourseCombo;
-    QComboBox *m_sessRoomCombo;
-    QComboBox *m_sessBatchCombo;
-    QComboBox *m_sessDayCombo;
-    QTimeEdit *m_sessStartEdit;
-    QTimeEdit *m_sessEndEdit;
+    // ── Session / Generate UI ─────────────────────────────────────────────────
+    QComboBox    *m_sessInstCombo;
+    QComboBox    *m_sessCourseCombo;
+    QComboBox    *m_sessRoomCombo;
+    QComboBox    *m_sessBatchCombo;
+    QComboBox    *m_sessDayCombo;
+    QTimeEdit    *m_sessStartEdit;
+    QTimeEdit    *m_sessEndEdit;
     QTableWidget *m_timetableTable;
+    QPushButton  *m_btnAutoGenerate;   // kept as member so we can enable/disable it
 
-    // Editing states
+    // ── Constraints tab UI ────────────────────────────────────────────────────
+    // Working days
+    QCheckBox *m_dayChecks[7];         // [0]=Sun,[1]=Mon,...,[6]=Sat
+    // Time window
+    QTimeEdit *m_dayStartEdit;
+    QTimeEdit *m_dayEndEdit;
+    // Lunch break
+    QCheckBox *m_lunchEnabledCheck;
+    QTimeEdit *m_lunchStartEdit;
+    QTimeEdit *m_lunchEndEdit;
+    // Live capacity display
+    QLabel    *m_capacityLabel;
+    // Rule checkboxes
+    QCheckBox *m_ruleNoInstDoubleBook;
+    QCheckBox *m_ruleNoRoomDoubleBook;
+    QCheckBox *m_ruleNoBatchClash;
+    QCheckBox *m_ruleInstDayGap;
+    QCheckBox *m_ruleNoSameSubjectConsec;
+    QCheckBox *m_ruleMaxWeeklyHours;
+    QCheckBox *m_ruleMaxConsecHoursEnabled;
+    QSpinBox  *m_maxConsecHoursSpin;
+    QCheckBox *m_ruleSubjectLock;      // always checked, disabled (read-only)
+    // Validation output
+    QTextEdit   *m_validationOutput;
+
+    // ── Editing states ────────────────────────────────────────────────────────
     std::string m_editingInstId;
     std::string m_editingCourseCode;
     std::string m_editingRoomId;
     std::string m_editingBatchId;
 };
-
 
 #endif // MAINWINDOW_H

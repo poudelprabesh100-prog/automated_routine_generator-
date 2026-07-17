@@ -18,6 +18,7 @@ SOURCES += \
 HEADERS += \
     mainwindow.h \
     AppManager.hpp \
+    ConstraintSettings.hpp \
     Course.hpp \
     Instructor.hpp \
     room.hpp \

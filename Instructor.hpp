@@ -3,7 +3,7 @@
 
 #include <string>
 #include <vector>
-#include "Course.hpp" // Links Course to Instructor
+#include "Course.hpp" // Links Course to Instructo
 
 class Instructor {
 private:
