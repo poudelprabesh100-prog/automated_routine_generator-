@@ -56,6 +56,8 @@ private slots:
     void onAddClassSession();
     void onDeleteClassSession();
     void onAutoGenerate();
+    void onViewBatchChanged(); // Triggers a redraw of the timetable grid
+    void onRefreshGridClicked(); // Manually refreshes the grid
 
     // ── Constraints tab slots ────────────────────────────────────────────────
     void onValidateConstraints();
@@ -74,6 +76,7 @@ private:
     void setupConstraintsTab();
     void populateCombos();
     void refreshListsAndTables();
+    void refreshTimetableGrid();
     void refreshInstList();
     void populateInitialData();
     void saveToFile();
@@ -124,8 +127,13 @@ private:
     QComboBox    *m_sessDayCombo;
     QTimeEdit    *m_sessStartEdit;
     QTimeEdit    *m_sessEndEdit;
-    QTableWidget *m_timetableTable;
+    QComboBox    *m_viewBatchCombo;    // Dropdown to select batch for visual grid
+    QTabWidget   *m_timetableSubTabs;  // Holds Schedule and Grid views
+    QTableWidget *m_timetableTable;    // Flat row-by-row table (Schedule)
+    QTableWidget *m_timetableGrid;     // Visual grid
+    QPushButton  *m_btnRefreshGrid;    // Refreshes visual grid
     QPushButton  *m_btnAutoGenerate;   // kept as member so we can enable/disable it
+    QDialog      *m_addSessionDialog;  // Dialog for adding class sessions
 
     // ── Constraints tab UI ────────────────────────────────────────────────────
     // Working days

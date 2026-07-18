@@ -423,6 +423,14 @@ void MainWindow::setupUI()
 
     QWidget *timetableLeft = new QWidget();
     QVBoxLayout *timetableFormLayout = new QVBoxLayout(timetableLeft);
+
+    // -- Dialog setup --
+    m_addSessionDialog = new QDialog(this);
+    m_addSessionDialog->setWindowTitle("Add Class Session");
+    m_addSessionDialog->setModal(true);
+    m_addSessionDialog->setStyleSheet("QDialog { background-color: #1e1e2e; color: #cdd6f4; } QLabel { color: #cdd6f4; }");
+    QVBoxLayout *dialogLayout = new QVBoxLayout(m_addSessionDialog);
+
     QFormLayout *sessionForm = new QFormLayout();
 
     m_sessInstCombo   = new QComboBox();
@@ -447,9 +455,74 @@ void MainWindow::setupUI()
     sessionForm->addRow(new QLabel("Start Time:"),    m_sessStartEdit);
     sessionForm->addRow(new QLabel("End Time:"),      m_sessEndEdit);
 
-    QPushButton *btnSessionAdd    = new QPushButton("Schedule Class Session");
+    dialogLayout->addLayout(sessionForm);
+
+    QHBoxLayout *dialogBtnLayout = new QHBoxLayout();
+    QPushButton *btnDialogSchedule = new QPushButton("Schedule Class Session");
+    QPushButton *btnDialogCancel   = new QPushButton("Cancel");
+    
+    btnDialogSchedule->setStyleSheet(R"(
+        QPushButton {
+            background-color: #89b4fa;
+            color: #11111b;
+            border: none;
+            border-radius: 4px;
+            padding: 8px 16px;
+            font-weight: bold;
+        }
+        QPushButton:hover { background-color: #74c7ec; }
+    )");
+    
+    btnDialogCancel->setStyleSheet(R"(
+        QPushButton {
+            background-color: #313244;
+            color: #cdd6f4;
+            border: none;
+            border-radius: 4px;
+            padding: 8px 16px;
+        }
+        QPushButton:hover { background-color: #45475a; }
+    )");
+
+    dialogBtnLayout->addStretch();
+    dialogBtnLayout->addWidget(btnDialogCancel);
+    dialogBtnLayout->addWidget(btnDialogSchedule);
+    dialogLayout->addLayout(dialogBtnLayout);
+
+    connect(btnDialogSchedule, &QPushButton::clicked, this, &MainWindow::onAddClassSession);
+    connect(btnDialogCancel, &QPushButton::clicked, m_addSessionDialog, &QDialog::reject);
+
+    // -- Main layout buttons --
+    QPushButton *btnOpenAddDialog = new QPushButton("+ Add Class Session");
+    btnOpenAddDialog->setStyleSheet(R"(
+        QPushButton {
+            background-color: #89b4fa;
+            color: #11111b;
+            border: none;
+            border-radius: 8px;
+            padding: 12px 20px;
+            font-weight: bold;
+            font-size: 15px;
+            font-family: 'Segoe UI', Helvetica, sans-serif;
+        }
+        QPushButton:hover { background-color: #74c7ec; }
+    )");
+    connect(btnOpenAddDialog, &QPushButton::clicked, m_addSessionDialog, &QDialog::exec);
+
     QPushButton *btnSessionDelete = new QPushButton("Delete Class Session");
-    connect(btnSessionAdd,    &QPushButton::clicked, this, &MainWindow::onAddClassSession);
+    btnSessionDelete->setStyleSheet(R"(
+        QPushButton {
+            background-color: #f38ba8;
+            color: #11111b;
+            border: none;
+            border-radius: 8px;
+            padding: 12px 20px;
+            font-weight: bold;
+            font-size: 15px;
+            font-family: 'Segoe UI', Helvetica, sans-serif;
+        }
+        QPushButton:hover { background-color: #eba0ac; }
+    )");
     connect(btnSessionDelete, &QPushButton::clicked, this, &MainWindow::onDeleteClassSession);
 
     // Auto Generate button — stored as member so we can enable/disable it
@@ -466,16 +539,8 @@ void MainWindow::setupUI()
             font-size: 15px;
             font-family: 'Segoe UI', Helvetica, sans-serif;
         }
-        QPushButton:hover {
-            background-color: #94e2d5;
-        }
-        QPushButton:pressed {
-            background-color: #74c7ec;
-        }
-        QPushButton:disabled {
-            background-color: #313244;
-            color: #6c7086;
-        }
+        QPushButton:hover { background-color: #94e2d5; }
+        QPushButton:disabled { background-color: #313244; color: #6c7086; }
     )");
     connect(m_btnAutoGenerate, &QPushButton::clicked, this, &MainWindow::onAutoGenerate);
 
@@ -486,24 +551,68 @@ void MainWindow::setupUI()
     genStatusLabel->setStyleSheet("color: #f38ba8; font-size: 12px;");
     genStatusLabel->setObjectName("genStatusLabel");
 
-    timetableFormLayout->addLayout(sessionForm);
+    timetableFormLayout->addWidget(btnOpenAddDialog);
     timetableFormLayout->addSpacing(10);
     timetableFormLayout->addWidget(m_btnAutoGenerate);
     timetableFormLayout->addWidget(genStatusLabel);
     timetableFormLayout->addSpacing(10);
-    timetableFormLayout->addWidget(btnSessionAdd);
     timetableFormLayout->addWidget(btnSessionDelete);
     timetableFormLayout->addStretch();
 
+    m_timetableSubTabs = new QTabWidget();
+    m_timetableSubTabs->setStyleSheet(R"(
+        QTabWidget::pane { border: 1px solid #313244; background: #1e1e2e; }
+        QTabBar::tab { background: #11111b; color: #a6adc8; padding: 8px 16px; border: 1px solid #313244; }
+        QTabBar::tab:selected { background: #1e1e2e; color: #89b4fa; border-bottom-color: #1e1e2e; font-weight: bold; }
+    )");
+
+    // 1. "Schedule" Tab
+    QWidget *flatTab = new QWidget();
+    QVBoxLayout *flatLayout = new QVBoxLayout(flatTab);
+    flatLayout->setContentsMargins(0, 0, 0, 0);
     m_timetableTable = new QTableWidget();
-    m_timetableTable->setColumnCount(7);
-    m_timetableTable->setHorizontalHeaderLabels(
-        {"Day", "Time", "Course", "Instructor", "Room", "Batch", "Duration"});
-    m_timetableTable->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
     m_timetableTable->setEditTriggers(QAbstractItemView::NoEditTriggers);
+    m_timetableTable->setColumnCount(7);
+    m_timetableTable->setHorizontalHeaderLabels({"Day", "Time", "Course", "Instructor", "Room", "Batch", "Duration"});
+    flatLayout->addWidget(m_timetableTable);
+    m_timetableSubTabs->addTab(flatTab, "Schedule");
+
+    // 2. "Grid View" Tab
+    QWidget *gridTab = new QWidget();
+    QVBoxLayout *gridLayout = new QVBoxLayout(gridTab);
+    gridLayout->setContentsMargins(0, 8, 0, 0);
+
+    m_viewBatchCombo = new QComboBox();
+    m_viewBatchCombo->addItem("-- Select Batch to View --", QVariant(""));
+    connect(m_viewBatchCombo, &QComboBox::currentIndexChanged, this, &MainWindow::onViewBatchChanged);
+
+    m_btnRefreshGrid = new QPushButton("Refresh Grid");
+    m_btnRefreshGrid->setStyleSheet(R"(
+        QPushButton { background-color: #313244; color: #89b4fa; border: none; border-radius: 4px; padding: 6px 12px; font-weight: bold; }
+        QPushButton:hover { background-color: #45475a; }
+    )");
+    connect(m_btnRefreshGrid, &QPushButton::clicked, this, &MainWindow::onRefreshGridClicked);
+
+    QHBoxLayout *gridHeaderLayout = new QHBoxLayout();
+    QLabel *lblDisplayBatch = new QLabel("Display Batch:");
+    lblDisplayBatch->setStyleSheet("color: #89b4fa; font-weight: bold;");
+    gridHeaderLayout->addWidget(lblDisplayBatch);
+    gridHeaderLayout->addWidget(m_viewBatchCombo);
+    gridHeaderLayout->addWidget(m_btnRefreshGrid);
+    gridHeaderLayout->addStretch();
+
+    m_timetableGrid = new QTableWidget();
+    m_timetableGrid->setEditTriggers(QAbstractItemView::NoEditTriggers);
+    
+    gridLayout->addLayout(gridHeaderLayout);
+    gridLayout->addWidget(m_timetableGrid);
+    m_timetableSubTabs->addTab(gridTab, "Grid View");
+
+    QVBoxLayout *tableLayout = new QVBoxLayout();
+    tableLayout->addWidget(m_timetableSubTabs);
 
     timetableLayout->addWidget(timetableLeft, 1);
-    timetableLayout->addWidget(m_timetableTable, 2);
+    timetableLayout->addLayout(tableLayout, 2);
     m_tabWidget->addTab(timetableTab, "Generate & View Timetable");
 }
 
@@ -519,21 +628,20 @@ void MainWindow::setupConstraintsTab()
     scroll->setFrameShape(QFrame::NoFrame);
 
     QWidget     *inner  = new QWidget();
+    inner->setObjectName("constraintsInner");
+    inner->setStyleSheet("#constraintsInner { background-color: transparent; }");
     QVBoxLayout *layout = new QVBoxLayout(inner);
     layout->setSpacing(16);
     layout->setContentsMargins(20, 20, 20, 20);
 
     // ── Header ─────────────────────────────────────────────────────────────
     QLabel *headerLbl = new QLabel("⚙  Constraints & Rules");
-    headerLbl->setStyleSheet(
-        "font-size: 18px; font-weight: bold; color: #cba6f7; "
-        "font-family: 'Segoe UI', Helvetica, sans-serif;");
+    headerLbl->setStyleSheet("font-size: 18px; font-weight: bold;");
     layout->addWidget(headerLbl);
 
     QLabel *subLbl = new QLabel(
         "Configure scheduling constraints and run a feasibility check before generating the timetable.");
     subLbl->setWordWrap(true);
-    subLbl->setStyleSheet("color: #a6adc8; font-size: 12px;");
     layout->addWidget(subLbl);
 
     // ── Working Days ───────────────────────────────────────────────────────
@@ -545,9 +653,31 @@ void MainWindow::setupConstraintsTab()
     // Defaults: Sun–Fri checked, Sat unchecked
     bool dayDefaults[7] = { true, true, true, true, true, true, false };
 
+    const QString chipStyle = R"(
+        QCheckBox {
+            background-color: #11111b;
+            color: #cdd6f4;
+            border: 1px solid #313244;
+            border-radius: 6px;
+            padding: 6px 12px;
+        }
+        QCheckBox::indicator {
+            width: 0px; height: 0px;
+        }
+        QCheckBox:checked {
+            background-color: #181825;
+            color: #89b4fa;
+            border-color: #89b4fa;
+        }
+        QCheckBox:hover {
+            background-color: #181825;
+        }
+    )";
+
     for (int i = 0; i < 7; ++i) {
         m_dayChecks[i] = new QCheckBox(dayNames[i]);
         m_dayChecks[i]->setChecked(dayDefaults[i]);
+        m_dayChecks[i]->setStyleSheet(chipStyle);
         connect(m_dayChecks[i], &QCheckBox::toggled, this, &MainWindow::onConstraintsChanged);
         daysLayout->addWidget(m_dayChecks[i]);
     }
@@ -589,8 +719,9 @@ void MainWindow::setupConstraintsTab()
     // Live capacity label
     m_capacityLabel = new QLabel("Available capacity: —");
     m_capacityLabel->setStyleSheet(
-        "color: #a6e3a1; font-weight: bold; font-size: 13px; "
-        "padding: 6px 10px; background: #1e1e2e; border-radius: 6px;");
+        "color: #89b4fa; font-weight: bold; font-size: 13px; "
+        "padding: 6px 10px; background-color: #11111b; "
+        "border: 1px solid #313244; border-radius: 6px;");
     timeLayout->addWidget(m_capacityLabel);
 
     layout->addWidget(timeGroup);
@@ -603,13 +734,12 @@ void MainWindow::setupConstraintsTab()
     auto makeRuleRow = [&](QCheckBox*& chk, const QString& title, const QString& desc) {
         chk = new QCheckBox(title);
         chk->setChecked(true);
-        chk->setStyleSheet("font-weight: bold;");
         connect(chk, &QCheckBox::toggled, this, &MainWindow::onConstraintsChanged);
         rulesLayout->addWidget(chk);
         if (!desc.isEmpty()) {
             QLabel *d = new QLabel("       " + desc);
             d->setWordWrap(true);
-            d->setStyleSheet("color: #a6adc8; font-size: 11px;");
+            d->setStyleSheet("font-size: 11px;");
             rulesLayout->addWidget(d);
         }
     };
@@ -630,14 +760,13 @@ void MainWindow::setupConstraintsTab()
     // Max consecutive hours with spinner
     m_ruleMaxConsecHoursEnabled = new QCheckBox("No Instructor Back-to-Back Beyond N Hours");
     m_ruleMaxConsecHoursEnabled->setChecked(true);
-    m_ruleMaxConsecHoursEnabled->setStyleSheet("font-weight: bold;");
     connect(m_ruleMaxConsecHoursEnabled, &QCheckBox::toggled,
             this, &MainWindow::onConstraintsChanged);
     rulesLayout->addWidget(m_ruleMaxConsecHoursEnabled);
 
     QHBoxLayout *consecRow = new QHBoxLayout();
     QLabel *consecLbl = new QLabel("       Max consecutive teaching hours per instructor per day:");
-    consecLbl->setStyleSheet("color: #a6adc8; font-size: 11px;");
+    consecLbl->setStyleSheet("font-size: 11px;");
     m_maxConsecHoursSpin = new QSpinBox();
     m_maxConsecHoursSpin->setRange(1, 12);
     m_maxConsecHoursSpin->setValue(3);
@@ -653,39 +782,24 @@ void MainWindow::setupConstraintsTab()
     m_ruleSubjectLock = new QCheckBox("Enforce Instructor Subject Lock  [always enabled]");
     m_ruleSubjectLock->setChecked(true);
     m_ruleSubjectLock->setEnabled(false);   // greyed-out / read-only
-    m_ruleSubjectLock->setStyleSheet("font-weight: bold;");
     rulesLayout->addWidget(m_ruleSubjectLock);
     QLabel *lockDesc = new QLabel(
         "       Instructors may only be assigned to courses in their locked subject list. "
         "This is core to the data model and cannot be disabled.");
     lockDesc->setWordWrap(true);
-    lockDesc->setStyleSheet("color: #a6adc8; font-size: 11px;");
+    lockDesc->setStyleSheet("font-size: 11px;");
     rulesLayout->addWidget(lockDesc);
 
     layout->addWidget(rulesGroup);
 
     // ── Validate button ────────────────────────────────────────────────────
     QPushButton *btnValidate = new QPushButton("✔  Validate Constraints");
-    btnValidate->setStyleSheet(R"(
-        QPushButton {
-            background-color: #cba6f7;
-            color: #11111b;
-            border: none;
-            border-radius: 8px;
-            padding: 12px 20px;
-            font-weight: bold;
-            font-size: 14px;
-            font-family: 'Segoe UI', Helvetica, sans-serif;
-        }
-        QPushButton:hover  { background-color: #f5c2e7; }
-        QPushButton:pressed{ background-color: #89b4fa; }
-    )");
     connect(btnValidate, &QPushButton::clicked, this, &MainWindow::onValidateConstraints);
     layout->addWidget(btnValidate);
 
     // ── Validation output ──────────────────────────────────────────────────
     QLabel *outLbl = new QLabel("Validation Results:");
-    outLbl->setStyleSheet("color: #89b4fa; font-weight: bold;");
+    outLbl->setStyleSheet("font-size: 14px; font-weight: bold;");
     layout->addWidget(outLbl);
 
     m_validationOutput = new QTextEdit();
@@ -979,17 +1093,16 @@ void MainWindow::rebuildSubjectCombos(int count)
     }
     m_instSubjectCombos.clear();
 
-    QStringList courseCodes;
-    for (const auto& crs : m_appManager.getCourses())
-        courseCodes << QString::fromStdString(crs.getCourseCode());
-
     for (int i = 0; i < count; ++i) {
         QLabel *lbl = new QLabel(QString("Subject %1:").arg(i + 1));
         lbl->setFixedWidth(90);
 
         QComboBox *cb = new QComboBox();
-        cb->addItem("-- Select Course --");
-        cb->addItems(courseCodes);
+        cb->addItem("-- Select Course --", QVariant(""));
+        for (const auto& crs : m_appManager.getCourses()) {
+            cb->addItem(QString::fromStdString(crs.getCourseCode()), 
+                        QVariant(QString::fromStdString(crs.getCourseCode())));
+        }
 
         QWidget *rowWidget = new QWidget();
         QHBoxLayout *rowLayout = new QHBoxLayout(rowWidget);
@@ -1397,20 +1510,22 @@ void MainWindow::populateCombos()
     for (const auto& inst : m_appManager.getInstructors())
         m_sessInstCombo->addItem(QString::fromStdString(inst.getName()));
 
-    for (int i = 0; i < m_courseList->count(); ++i) {
-        QString text = m_courseList->item(i)->text();
-        int idx = text.indexOf(" (Allocated Hours:");
-        if (idx != -1) m_sessCourseCombo->addItem(text.left(idx));
+    m_viewBatchCombo->clear();
+    m_viewBatchCombo->addItem("-- Select Batch to View --", QVariant(""));
+    
+    for (const auto& crs : m_appManager.getCourses()) {
+        m_sessCourseCombo->addItem(QString::fromStdString(crs.getCourseCode()), 
+                                   QVariant(QString::fromStdString(crs.getCourseCode())));
     }
-    for (int i = 0; i < m_roomList->count(); ++i) {
-        QString text = m_roomList->item(i)->text();
-        int idx = text.indexOf(" (Capacity:");
-        if (idx != -1) m_sessRoomCombo->addItem(text.left(idx));
+    for (const auto& room : m_appManager.getRooms()) {
+        m_sessRoomCombo->addItem(QString::fromStdString(room.getRoomId()), 
+                                 QVariant(QString::fromStdString(room.getRoomId())));
     }
-    for (int i = 0; i < m_batchList->count(); ++i) {
-        QString text = m_batchList->item(i)->text();
-        int idx = text.indexOf(" (Strength:");
-        if (idx != -1) m_sessBatchCombo->addItem(text.left(idx));
+    for (const auto& batch : m_appManager.getBatches()) {
+        m_sessBatchCombo->addItem(QString::fromStdString(batch.getBatchId()), 
+                                  QVariant(QString::fromStdString(batch.getBatchId())));
+        m_viewBatchCombo->addItem(QString::fromStdString(batch.getBatchId()), 
+                                  QVariant(QString::fromStdString(batch.getBatchId())));
     }
 
     rebuildSubjectCombos(m_instSubjectCountSpin->value());
@@ -1420,29 +1535,158 @@ void MainWindow::populateCombos()
 // refreshListsAndTables
 // ──────────────────────────────────────────────────────────────────────────────
 
+void MainWindow::onViewBatchChanged()
+{
+    refreshTimetableGrid();
+}
+
+// Map course code string to a fixed catppuccin color
+static QColor getCourseColor(const std::string& code) {
+    const std::vector<std::string> palette = {
+        "#89b4fa", // blue
+        "#f38ba8", // red
+        "#a6e3a1", // green
+        "#f9e2af", // yellow
+        "#cba6f7", // mauve
+        "#fab387", // peach
+        "#94e2d5", // teal
+        "#b4befe", // lavender
+        "#74c7ec", // sapphire
+    };
+    unsigned int hash = 0;
+    for (char c : code) hash = hash * 31 + c;
+    return QColor(QString::fromStdString(palette[hash % palette.size()]));
+}
+
 void MainWindow::refreshListsAndTables()
 {
+    const auto& timetable = m_appManager.getTimetable();
     m_timetableTable->setRowCount(0);
-    for (const auto& session : m_appManager.getTimetable()) {
+    for (const auto& session : timetable) {
         int row = m_timetableTable->rowCount();
         m_timetableTable->insertRow(row);
 
         TimeSlot ts = session.getTimeSlot();
-        QString timeStr = formatClockTime(ts.getStartTime()) + " - " +
-                          formatClockTime(ts.getEndTime());
+        QString timeStr = formatClockTime(ts.getStartTime()) + " - " + formatClockTime(ts.getEndTime());
 
         m_timetableTable->setItem(row, 0, new QTableWidgetItem(dayToString(ts.getDay())));
         m_timetableTable->setItem(row, 1, new QTableWidgetItem(timeStr));
-        m_timetableTable->setItem(row, 2, new QTableWidgetItem(
-            QString::fromStdString(session.getSubjectId()->getCourseCode())));
-        m_timetableTable->setItem(row, 3, new QTableWidgetItem(
-            QString::fromStdString(session.getTeacherId()->getName())));
-        m_timetableTable->setItem(row, 4, new QTableWidgetItem(
-            QString::fromStdString(session.getRoomId()->getRoomId())));
-        m_timetableTable->setItem(row, 5, new QTableWidgetItem(
-            QString::fromStdString(session.getBatchId()->getBatchId())));
-        m_timetableTable->setItem(row, 6, new QTableWidgetItem(
-            QString("%1 mins").arg(ts.getDurationmin())));
+        m_timetableTable->setItem(row, 2, new QTableWidgetItem(QString::fromStdString(session.getSubjectId()->getCourseCode())));
+        m_timetableTable->setItem(row, 3, new QTableWidgetItem(QString::fromStdString(session.getTeacherId()->getName())));
+        m_timetableTable->setItem(row, 4, new QTableWidgetItem(QString::fromStdString(session.getRoomId()->getRoomId())));
+        m_timetableTable->setItem(row, 5, new QTableWidgetItem(QString::fromStdString(session.getBatchId()->getBatchId())));
+        m_timetableTable->setItem(row, 6, new QTableWidgetItem(QString("%1 mins").arg(ts.getDurationmin())));
+    }
+
+    refreshTimetableGrid();
+}
+
+void MainWindow::onRefreshGridClicked()
+{
+    refreshTimetableGrid();
+}
+
+void MainWindow::refreshTimetableGrid()
+{
+    m_timetableGrid->clear();
+    m_timetableGrid->clearSpans();
+
+    QString batchId = m_viewBatchCombo->currentData().toString();
+    if (batchId.isEmpty()) {
+        m_timetableGrid->setRowCount(0);
+        m_timetableGrid->setColumnCount(0);
+        return;
+    }
+
+    ConstraintSettings cs = readConstraintsFromUI();
+    std::vector<Day> workDays;
+    for (int i = 0; i < 7; ++i) {
+        if (cs.workingDays[i]) workDays.push_back(static_cast<Day>(i));
+    }
+
+    m_timetableGrid->setRowCount(workDays.size());
+    QStringList vHeaders;
+    for (Day d : workDays) vHeaders << dayToString(d);
+    m_timetableGrid->setVerticalHeaderLabels(vHeaders);
+
+    int totalMinutes = cs.dayEndMinutes - cs.dayStartMinutes;
+    int cols = totalMinutes / 60;
+    if (cols < 0) cols = 0;
+    m_timetableGrid->setColumnCount(cols);
+
+    QStringList hHeaders;
+    for (int i = 0; i < cols; ++i) {
+        int startMin = cs.dayStartMinutes + i * 60;
+        int endMin = startMin + 60;
+        ClockTime startCT = {startMin / 60, startMin % 60};
+        ClockTime endCT = {endMin / 60, endMin % 60};
+        
+        QString headerText = formatClockTime(startCT) + " - " + formatClockTime(endCT);
+        if (cs.lunchBreakEnabled && startMin >= cs.lunchStartMinutes && startMin < cs.lunchEndMinutes) {
+            headerText += "\n(Lunch)";
+        }
+        hHeaders << headerText;
+    }
+    m_timetableGrid->setHorizontalHeaderLabels(hHeaders);
+
+    // Initialize grid with blanks and lunch breaks
+    for (size_t r = 0; r < workDays.size(); ++r) {
+        for (int c = 0; c < cols; ++c) {
+            int startMin = cs.dayStartMinutes + c * 60;
+            bool isLunch = false;
+            if (cs.lunchBreakEnabled && startMin >= cs.lunchStartMinutes && startMin < cs.lunchEndMinutes) {
+                isLunch = true;
+            }
+            
+            QTableWidgetItem *item = new QTableWidgetItem("-X-");
+            item->setTextAlignment(Qt::AlignCenter);
+            if (isLunch) {
+                item->setBackground(QColor("#313244"));
+                item->setForeground(QColor("#6c7086"));
+            } else {
+                item->setBackground(QColor("#181825"));
+                item->setForeground(QColor("#45475a"));
+            }
+            m_timetableGrid->setItem(r, c, item);
+        }
+    }
+
+    // Populate actual sessions
+    for (const auto& session : m_appManager.getTimetable()) {
+        if (QString::fromStdString(session.getBatchId()->getBatchId()) != batchId) continue;
+
+        TimeSlot ts = session.getTimeSlot();
+        int r = -1;
+        for (size_t i = 0; i < workDays.size(); ++i) {
+            if (workDays[i] == ts.getDay()) { r = i; break; }
+        }
+        if (r == -1) continue;
+
+        int startMin = ts.getStartTime().hours * 60 + ts.getStartTime().minutes;
+        int startSlot = (startMin - cs.dayStartMinutes) / 60;
+        int spanSlots = ts.getDurationmin() / 60;
+
+        if (startSlot < 0 || startSlot + spanSlots > cols) continue;
+
+        QString cellText = QString("%1\n%2")
+            .arg(QString::fromStdString(session.getSubjectId()->getCourseCode()))
+            .arg(QString::fromStdString(session.getRoomId()->getRoomId()));
+
+        QTableWidgetItem *item = new QTableWidgetItem(cellText);
+        item->setTextAlignment(Qt::AlignCenter);
+        
+        QFont font = item->font();
+        font.setBold(true);
+        item->setFont(font); // Bolds both lines, standard behavior
+        
+        QColor bg = getCourseColor(session.getSubjectId()->getCourseCode());
+        item->setBackground(bg);
+        item->setForeground(QColor("#11111b")); // Dark text for legibility on pastel colors
+
+        m_timetableGrid->setItem(r, startSlot, item);
+        if (spanSlots > 1) {
+            m_timetableGrid->setSpan(r, startSlot, 1, spanSlots);
+        }
     }
 }
 
@@ -1484,7 +1728,7 @@ void MainWindow::onAddInstructor()
                     QString("Please select a course for Subject %1.").arg(i + 1));
                 return;
             }
-            std::string code = cb->currentText().toStdString();
+            std::string code = cb->currentData().toString().toStdString();
             for (const auto& already : lockedSubjects) {
                 if (already == code) {
                     QMessageBox::warning(this, "Validation Error",
@@ -1565,7 +1809,7 @@ void MainWindow::onEditInstructor()
         m_instSubjectCountSpin->setEnabled(false);
         rebuildSubjectCombos(static_cast<int>(locked.size() > 0 ? locked.size() : 1));
         for (int i = 0; i < m_instSubjectCombos.size() && i < static_cast<int>(locked.size()); ++i) {
-            int idx = m_instSubjectCombos[i]->findText(QString::fromStdString(locked[i]));
+            int idx = m_instSubjectCombos[i]->findData(QString::fromStdString(locked[i]));
             if (idx != -1) m_instSubjectCombos[i]->setCurrentIndex(idx);
             m_instSubjectCombos[i]->setEnabled(false);
         }
@@ -1578,7 +1822,7 @@ void MainWindow::onEditInstructor()
         m_instSubjectCountSpin->setEnabled(true);
         rebuildSubjectCombos(subCount);
         for (int i = 0; i < m_instSubjectCombos.size() && i < static_cast<int>(locked.size()); ++i) {
-            int idx = m_instSubjectCombos[i]->findText(QString::fromStdString(locked[i]));
+            int idx = m_instSubjectCombos[i]->findData(QString::fromStdString(locked[i]));
             if (idx != -1) m_instSubjectCombos[i]->setCurrentIndex(idx);
         }
     }
@@ -1962,10 +2206,10 @@ void MainWindow::onDeleteBatch()
 
 void MainWindow::onAddClassSession()
 {
-    QString instName   = m_sessInstCombo->currentText();
-    QString courseCode = m_sessCourseCombo->currentText();
-    QString roomId     = m_sessRoomCombo->currentText();
-    QString batchId    = m_sessBatchCombo->currentText();
+    QString instName   = m_sessInstCombo->currentText(); // Name works as ID for Instructor, though not ideal
+    QString courseCode = m_sessCourseCombo->currentData().toString();
+    QString roomId     = m_sessRoomCombo->currentData().toString();
+    QString batchId    = m_sessBatchCombo->currentData().toString();
 
     if (instName.isEmpty() || courseCode.isEmpty() || roomId.isEmpty() || batchId.isEmpty()) {
         QMessageBox::warning(this, "Selection Error",
@@ -2096,6 +2340,10 @@ void MainWindow::onAddClassSession()
     refreshListsAndTables();
     QMessageBox::information(this, "Schedule Succeeded",
         "Class session scheduled successfully!");
+
+    if (m_addSessionDialog) {
+        m_addSessionDialog->accept();
+    }
 }
 
 void MainWindow::onDeleteClassSession()
@@ -2141,6 +2389,25 @@ void MainWindow::onAutoGenerate()
             QMessageBox::Yes | QMessageBox::No) == QMessageBox::No) return;
 
     m_appManager.autoGenerateTimetable(cs);
+
+    // Post-generation validation: Ensure no invalid/truncated course codes bypassed generation constraints
+    bool dataCorrupted = false;
+    for (const auto& session : m_appManager.getTimetable()) {
+        std::string genCode = session.getSubjectId()->getCourseCode();
+        if (!m_appManager.findCourseByCode(genCode)) {
+            dataCorrupted = true;
+            break;
+        }
+    }
+    
+    if (dataCorrupted) {
+        QMessageBox::critical(this, "Data Corruption Detected",
+            "A session with an invalid or truncated Course Code was detected during generation.\n"
+            "This usually indicates that a course was not retrieved or stored properly. "
+            "Please clear the timetable and verify your course assignments.");
+        // We still save/refresh to allow the user to see the issue if they wish, 
+        // but we alerted them. Alternatively, we could clear it. We will just alert for now.
+    }
 
     saveToFile();
     refreshListsAndTables();

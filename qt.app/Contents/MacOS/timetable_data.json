@@ -1,0 +1,94 @@
+{
+    "batches": [
+        {
+            "batchId": "BCT-2025-A",
+            "department": "",
+            "program": 1,
+            "strength": 48
+        },
+        {
+            "batchId": "BIT-2025-B",
+            "department": "",
+            "program": 0,
+            "strength": 45
+        }
+    ],
+    "constraints": {
+        "dayEndMinutes": 1020,
+        "dayStartMinutes": 540,
+        "lunchBreakEnabled": true,
+        "lunchEndMinutes": 840,
+        "lunchStartMinutes": 780,
+        "ruleInstDayGap": true,
+        "ruleMaxConsecEnabled": true,
+        "ruleMaxConsecHours": 3,
+        "ruleMaxWeeklyHours": true,
+        "ruleNoBatchClash": true,
+        "ruleNoInstDoubleBook": true,
+        "ruleNoRoomDoubleBook": true,
+        "ruleNoSameSubjConsec": true,
+        "workingDays": [
+            true,
+            true,
+            true,
+            true,
+            true,
+            true,
+            false
+        ]
+    },
+    "courses": [
+        {
+            "allocatedHours": 3,
+            "code": "COMP-102",
+            "courseCode": "COMP-102",
+            "creditHours": 3,
+            "name": "Computer Programming"
+        },
+        {
+            "allocatedHours": 4,
+            "code": "MATH-101",
+            "courseCode": "MATH-101",
+            "creditHours": 4,
+            "name": "Mathematics I"
+        }
+    ],
+    "instructors": [
+        {
+            "assignedCourses": [
+            ],
+            "id": "Dr. Niraj Sharma",
+            "lockedSubjects": [
+                "COMP-102"
+            ],
+            "maxLimitHours": 12,
+            "name": "Dr. Niraj Sharma"
+        },
+        {
+            "assignedCourses": [
+            ],
+            "id": "Prof. Ram Prasad",
+            "lockedSubjects": [
+                "MATH-101"
+            ],
+            "maxLimitHours": 15,
+            "name": "Prof. Ram Prasad"
+        }
+    ],
+    "rooms": [
+        {
+            "building": "",
+            "capacity": 60,
+            "roomId": "Block-C-102",
+            "type": 0
+        },
+        {
+            "building": "",
+            "capacity": 40,
+            "roomId": "Lab-A-301",
+            "type": 1
+        }
+    ],
+    "timetable": [
+    ]
+}

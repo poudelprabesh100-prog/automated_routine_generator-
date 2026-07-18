@@ -57,7 +57,11 @@ template <> constexpr inline auto MainWindow::qt_create_metaobjectdata<qt_meta_t
         "onDeleteBatch",
         "onAddClassSession",
         "onDeleteClassSession",
-        "onAutoGenerate"
+        "onAutoGenerate",
+        "onViewBatchChanged",
+        "onRefreshGridClicked",
+        "onValidateConstraints",
+        "onConstraintsChanged"
     };
 
     QtMocHelpers::UintData qt_methods {
@@ -95,6 +99,14 @@ template <> constexpr inline auto MainWindow::qt_create_metaobjectdata<qt_meta_t
         QtMocHelpers::SlotData<void()>(17, 2, QMC::AccessPrivate, QMetaType::Void),
         // Slot 'onAutoGenerate'
         QtMocHelpers::SlotData<void()>(18, 2, QMC::AccessPrivate, QMetaType::Void),
+        // Slot 'onViewBatchChanged'
+        QtMocHelpers::SlotData<void()>(19, 2, QMC::AccessPrivate, QMetaType::Void),
+        // Slot 'onRefreshGridClicked'
+        QtMocHelpers::SlotData<void()>(20, 2, QMC::AccessPrivate, QMetaType::Void),
+        // Slot 'onValidateConstraints'
+        QtMocHelpers::SlotData<void()>(21, 2, QMC::AccessPrivate, QMetaType::Void),
+        // Slot 'onConstraintsChanged'
+        QtMocHelpers::SlotData<void()>(22, 2, QMC::AccessPrivate, QMetaType::Void),
     };
     QtMocHelpers::UintData qt_properties {
     };
@@ -134,6 +146,10 @@ void MainWindow::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int _id, 
         case 13: _t->onAddClassSession(); break;
         case 14: _t->onDeleteClassSession(); break;
         case 15: _t->onAutoGenerate(); break;
+        case 16: _t->onViewBatchChanged(); break;
+        case 17: _t->onRefreshGridClicked(); break;
+        case 18: _t->onValidateConstraints(); break;
+        case 19: _t->onConstraintsChanged(); break;
         default: ;
         }
     }
@@ -158,14 +174,14 @@ int MainWindow::qt_metacall(QMetaObject::Call _c, int _id, void **_a)
     if (_id < 0)
         return _id;
     if (_c == QMetaObject::InvokeMetaMethod) {
-        if (_id < 16)
+        if (_id < 20)
             qt_static_metacall(this, _c, _id, _a);
-        _id -= 16;
+        _id -= 20;
     }
     if (_c == QMetaObject::RegisterMethodArgumentMetaType) {
-        if (_id < 16)
+        if (_id < 20)
             *reinterpret_cast<QMetaType *>(_a[0]) = QMetaType();
-        _id -= 16;
+        _id -= 20;
     }
     return _id;
 }
