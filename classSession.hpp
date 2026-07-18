@@ -15,10 +15,12 @@ private:
     Course* m_subjectid;
     Room* m_roomid;
     StudentBatch* m_batchid;
+    std::string m_sessionId;
 
 public:
-    ClassSession(TimeSlot timeslot, Instructor* teacherid, Course* subjectid, Room* roomid, StudentBatch* batchid);
+    ClassSession(TimeSlot timeslot, Instructor* teacherid, Course* subjectid, Room* roomid, StudentBatch* batchid, std::string sessionId = "");
     
+    std::string getSessionId() const;
     TimeSlot getTimeSlot() const;
     Instructor* getTeacherId() const;
     Course* getSubjectId() const;

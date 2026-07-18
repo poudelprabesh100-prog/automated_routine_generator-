@@ -1270,6 +1270,7 @@ void MainWindow::saveToFile()
         sObj["course"]     = QString::fromStdString(s.getSubjectId()->getCourseCode());
         sObj["room"]       = QString::fromStdString(s.getRoomId()->getRoomId());
         sObj["batch"]      = QString::fromStdString(s.getBatchId()->getBatchId());
+        sObj["sessionId"]  = QString::fromStdString(s.getSessionId());
         sessionArray.append(sObj);
     }
     rootObj["timetable"] = sessionArray;
@@ -1422,13 +1423,14 @@ void MainWindow::loadFromFile()
                 sObj["room"].toString().toStdString());
             StudentBatch* btch = m_appManager.findBatchById(
                 sObj["batch"].toString().toStdString());
+            std::string sessionId = sObj.contains("sessionId") ? sObj["sessionId"].toString().toStdString() : "";
 
             if (inst && crs && rm && btch) {
                 // Use default CS (no lunch enforcement on load — just restore sessions)
                 ConstraintSettings loadCS;
                 loadCS.lunchBreakEnabled = false;
                 m_appManager.validateAndAddClassSession(
-                    ClassSession(slot, inst, crs, rm, btch), loadCS);
+                    ClassSession(slot, inst, crs, rm, btch, sessionId), loadCS);
             }
         }
     }
@@ -1540,8 +1542,8 @@ void MainWindow::onViewBatchChanged()
     refreshTimetableGrid();
 }
 
-// Map course code string to a fixed catppuccin color
-static QColor getCourseColor(const std::string& code) {
+static QMap<QString, QColor> buildCourseColorMap(const std::vector<Course>& courses) {
+    QMap<QString, QColor> colorMap;
     const std::vector<std::string> palette = {
         "#89b4fa", // blue
         "#f38ba8", // red
@@ -1552,10 +1554,25 @@ static QColor getCourseColor(const std::string& code) {
         "#94e2d5", // teal
         "#b4befe", // lavender
         "#74c7ec", // sapphire
+        "#f5e0dc", // rosewater
+        "#f2cdcd", // flamingo
+        "#eba0ac", // maroon
+        "#f5c2e7", // pink
+        "#8caaee", // blue/lavender
+        "#a6d189"  // lighter green
     };
-    unsigned int hash = 0;
-    for (char c : code) hash = hash * 31 + c;
-    return QColor(QString::fromStdString(palette[hash % palette.size()]));
+    int index = 0;
+    for (const auto& crs : courses) {
+        QString code = QString::fromStdString(crs.getCourseCode());
+        if (!colorMap.contains(code)) {
+            if (index >= static_cast<int>(palette.size())) {
+                qWarning("Warning: Ran out of unique colors in palette, cycling colors for %s", qPrintable(code));
+            }
+            colorMap[code] = QColor(QString::fromStdString(palette[index % palette.size()]));
+            index++;
+        }
+    }
+    return colorMap;
 }
 
 void MainWindow::refreshListsAndTables()
@@ -1569,7 +1586,9 @@ void MainWindow::refreshListsAndTables()
         TimeSlot ts = session.getTimeSlot();
         QString timeStr = formatClockTime(ts.getStartTime()) + " - " + formatClockTime(ts.getEndTime());
 
-        m_timetableTable->setItem(row, 0, new QTableWidgetItem(dayToString(ts.getDay())));
+        QTableWidgetItem* dayItem = new QTableWidgetItem(dayToString(ts.getDay()));
+        dayItem->setData(Qt::UserRole, QString::fromStdString(session.getSessionId()));
+        m_timetableTable->setItem(row, 0, dayItem);
         m_timetableTable->setItem(row, 1, new QTableWidgetItem(timeStr));
         m_timetableTable->setItem(row, 2, new QTableWidgetItem(QString::fromStdString(session.getSubjectId()->getCourseCode())));
         m_timetableTable->setItem(row, 3, new QTableWidgetItem(QString::fromStdString(session.getTeacherId()->getName())));
@@ -1597,6 +1616,8 @@ void MainWindow::refreshTimetableGrid()
         m_timetableGrid->setColumnCount(0);
         return;
     }
+
+    QMap<QString, QColor> courseColors = buildCourseColorMap(m_appManager.getCourses());
 
     ConstraintSettings cs = readConstraintsFromUI();
     std::vector<Day> workDays;
@@ -1679,9 +1700,11 @@ void MainWindow::refreshTimetableGrid()
         font.setBold(true);
         item->setFont(font); // Bolds both lines, standard behavior
         
-        QColor bg = getCourseColor(session.getSubjectId()->getCourseCode());
+        QString cCode = QString::fromStdString(session.getSubjectId()->getCourseCode());
+        QColor bg = courseColors.value(cCode, QColor("#89b4fa")); // default fallback
         item->setBackground(bg);
         item->setForeground(QColor("#11111b")); // Dark text for legibility on pastel colors
+        item->setData(Qt::UserRole, QString::fromStdString(session.getSessionId()));
 
         m_timetableGrid->setItem(r, startSlot, item);
         if (spanSlots > 1) {
@@ -2348,18 +2371,44 @@ void MainWindow::onAddClassSession()
 
 void MainWindow::onDeleteClassSession()
 {
-    int row = m_timetableTable->currentRow();
-    if (row < 0) {
-        QMessageBox::warning(this, "Selection Error",
-            "No class session selected to delete.");
-        return;
+    std::string sessionId;
+
+    if (m_timetableSubTabs->currentIndex() == 0) {
+        // We are on the Schedule (Table) view
+        int row = m_timetableTable->currentRow();
+        if (row < 0) {
+            QMessageBox::warning(this, "Selection Error",
+                "No class session selected in the Schedule table to delete.");
+            return;
+        }
+
+        QTableWidgetItem* item = m_timetableTable->item(row, 0);
+        if (!item) return;
+        sessionId = item->data(Qt::UserRole).toString().toStdString();
+    } else {
+        // We are on the Grid View
+        int row = m_timetableGrid->currentRow();
+        int col = m_timetableGrid->currentColumn();
+        if (row < 0 || col < 0) {
+            QMessageBox::warning(this, "Selection Error",
+                "No class session selected in the Grid View to delete.");
+            return;
+        }
+
+        QTableWidgetItem* item = m_timetableGrid->item(row, col);
+        if (!item || item->data(Qt::UserRole).isNull() || item->data(Qt::UserRole).toString().isEmpty()) {
+            QMessageBox::warning(this, "Selection Error",
+                "Please select a valid scheduled session block in the Grid View.");
+            return;
+        }
+        sessionId = item->data(Qt::UserRole).toString().toStdString();
     }
 
     if (QMessageBox::question(this, "Confirm Delete",
             "Are you sure you want to remove this scheduled session?",
             QMessageBox::Yes | QMessageBox::No) == QMessageBox::No) return;
 
-    if (m_appManager.removeClassSession(row)) {
+    if (m_appManager.removeClassSession(sessionId)) {
         saveToFile();
         refreshListsAndTables();
     } else {

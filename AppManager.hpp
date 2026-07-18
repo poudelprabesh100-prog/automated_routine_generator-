@@ -62,7 +62,7 @@ public:
     std::string validateAndAddClassSession(const ClassSession& session,
                                            const ConstraintSettings& cs = ConstraintSettings{});
 
-    bool removeClassSession(int index);
+    bool removeClassSession(const std::string& sessionId);
 
     Instructor*   findInstructorByName(const std::string& name);
     Instructor*   findInstructorById(const std::string& id);
