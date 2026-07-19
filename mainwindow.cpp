@@ -579,6 +579,8 @@ void MainWindow::setupUI()
 
     // 2. "Grid View" Tab
     QWidget *gridTab = new QWidget();
+    gridTab->setObjectName("gridTabContainer");
+    gridTab->setStyleSheet("QWidget#gridTabContainer { background-color: #1e1e2e; }");
     QVBoxLayout *gridLayout = new QVBoxLayout(gridTab);
     gridLayout->setContentsMargins(0, 8, 0, 0);
 
@@ -622,20 +624,20 @@ void MainWindow::setupUI()
             background-color: #1a2035;
             color: #89b4fa;
             font-weight: 500;
-            font-size: 13px;
-            padding: 6px;
+            font-size: 11px;
+            padding: 4px;
             border: none;
         }
         QHeaderView::section:vertical {
             background-color: #1a2035;
             color: #cdd6f4;
             font-weight: bold;
-            font-size: 13px;
-            padding: 6px;
+            font-size: 11px;
+            padding: 4px;
             border: none;
         }
         QTableWidget::item {
-            padding: 6px;
+            padding: 4px;
         }
     )");
     
@@ -1580,16 +1582,16 @@ void MainWindow::onViewBatchChanged()
 static QMap<QString, QColor> buildCourseColorMap(const std::vector<Course>& courses) {
     QMap<QString, QColor> colorMap;
     const std::vector<std::string> palette = {
-        "#cbb6c7", // muted mauve
-        "#b4c5b6", // sage green
-        "#d5b2a3", // dusty orange
-        "#a2c4c3", // muted teal
-        "#b2bccc", // soft blue-grey
-        "#d3c0b8", // dusty rose
-        "#b9ccb3", // pale sage
-        "#cbbdb4", // warm beige
-        "#a3bac2", // dusty blue
-        "#c2aeb3"  // muted pink
+        "#b56c80", // saturated dusty rose
+        "#8a9d7e", // sage/olive green
+        "#c97a63", // warm terracotta
+        "#4c9893", // medium teal-green
+        "#508bc9", // solid medium blue
+        "#ad748c", // rich mauve
+        "#92a884", // rich sage
+        "#c79075", // rich beige/copper
+        "#6798b3", // rich dusty blue
+        "#b87c97"  // rich muted pink
     };
     int index = 0;
     for (const auto& crs : courses) {
@@ -1731,11 +1733,11 @@ void MainWindow::refreshTimetableGrid()
         
         QFont font = item->font();
         font.setBold(true);
-        font.setPointSize(11);
+        font.setPointSize(10);
         item->setFont(font); // Bolds both lines, standard behavior
         
         QString cCode = QString::fromStdString(session.getSubjectId()->getCourseCode());
-        QColor bg = courseColors.value(cCode, QColor("#b2bccc")); // default fallback
+        QColor bg = courseColors.value(cCode, QColor("#6798b3")); // default fallback
         item->setBackground(bg);
         item->setForeground(QColor("#11111b")); // Dark text for legibility on pastel colors
         item->setData(Qt::UserRole, QString::fromStdString(session.getSessionId()));
