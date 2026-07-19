@@ -584,11 +584,16 @@ void MainWindow::setupUI()
 
     m_viewBatchCombo = new QComboBox();
     m_viewBatchCombo->addItem("-- Select Batch to View --", QVariant(""));
+    m_viewBatchCombo->setStyleSheet(R"(
+        QComboBox { background-color: #313244; color: #89b4fa; border: none; border-radius: 8px; padding: 4px 12px; font-weight: bold; }
+        QComboBox::drop-down { border: none; }
+        QComboBox:hover { background-color: #45475a; }
+    )");
     connect(m_viewBatchCombo, &QComboBox::currentIndexChanged, this, &MainWindow::onViewBatchChanged);
 
     m_btnRefreshGrid = new QPushButton("Refresh Grid");
     m_btnRefreshGrid->setStyleSheet(R"(
-        QPushButton { background-color: #313244; color: #89b4fa; border: none; border-radius: 4px; padding: 6px 12px; font-weight: bold; }
+        QPushButton { background-color: #313244; color: #89b4fa; border: none; border-radius: 8px; padding: 6px 12px; font-weight: bold; }
         QPushButton:hover { background-color: #45475a; }
     )");
     connect(m_btnRefreshGrid, &QPushButton::clicked, this, &MainWindow::onRefreshGridClicked);
@@ -603,6 +608,36 @@ void MainWindow::setupUI()
 
     m_timetableGrid = new QTableWidget();
     m_timetableGrid->setEditTriggers(QAbstractItemView::NoEditTriggers);
+    m_timetableGrid->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
+    m_timetableGrid->verticalHeader()->setSectionResizeMode(QHeaderView::Stretch);
+    m_timetableGrid->verticalHeader()->setMinimumWidth(80);
+    m_timetableGrid->setStyleSheet(R"(
+        QTableWidget {
+            gridline-color: #1e1e2e;
+            border: 2px solid #313244; 
+            border-radius: 8px;
+            background-color: #11111b;
+        }
+        QHeaderView::section:horizontal {
+            background-color: #1a2035;
+            color: #89b4fa;
+            font-weight: 500;
+            font-size: 13px;
+            padding: 6px;
+            border: none;
+        }
+        QHeaderView::section:vertical {
+            background-color: #1a2035;
+            color: #cdd6f4;
+            font-weight: bold;
+            font-size: 13px;
+            padding: 6px;
+            border: none;
+        }
+        QTableWidget::item {
+            padding: 6px;
+        }
+    )");
     
     gridLayout->addLayout(gridHeaderLayout);
     gridLayout->addWidget(m_timetableGrid);
@@ -1545,21 +1580,16 @@ void MainWindow::onViewBatchChanged()
 static QMap<QString, QColor> buildCourseColorMap(const std::vector<Course>& courses) {
     QMap<QString, QColor> colorMap;
     const std::vector<std::string> palette = {
-        "#89b4fa", // blue
-        "#f38ba8", // red
-        "#a6e3a1", // green
-        "#f9e2af", // yellow
-        "#cba6f7", // mauve
-        "#fab387", // peach
-        "#94e2d5", // teal
-        "#b4befe", // lavender
-        "#74c7ec", // sapphire
-        "#f5e0dc", // rosewater
-        "#f2cdcd", // flamingo
-        "#eba0ac", // maroon
-        "#f5c2e7", // pink
-        "#8caaee", // blue/lavender
-        "#a6d189"  // lighter green
+        "#cbb6c7", // muted mauve
+        "#b4c5b6", // sage green
+        "#d5b2a3", // dusty orange
+        "#a2c4c3", // muted teal
+        "#b2bccc", // soft blue-grey
+        "#d3c0b8", // dusty rose
+        "#b9ccb3", // pale sage
+        "#cbbdb4", // warm beige
+        "#a3bac2", // dusty blue
+        "#c2aeb3"  // muted pink
     };
     int index = 0;
     for (const auto& crs : courses) {
@@ -1661,6 +1691,9 @@ void MainWindow::refreshTimetableGrid()
             
             QTableWidgetItem *item = new QTableWidgetItem("-X-");
             item->setTextAlignment(Qt::AlignCenter);
+            QFont font = item->font();
+            font.setPointSize(11);
+            item->setFont(font);
             if (isLunch) {
                 item->setBackground(QColor("#313244"));
                 item->setForeground(QColor("#6c7086"));
@@ -1698,10 +1731,11 @@ void MainWindow::refreshTimetableGrid()
         
         QFont font = item->font();
         font.setBold(true);
+        font.setPointSize(11);
         item->setFont(font); // Bolds both lines, standard behavior
         
         QString cCode = QString::fromStdString(session.getSubjectId()->getCourseCode());
-        QColor bg = courseColors.value(cCode, QColor("#89b4fa")); // default fallback
+        QColor bg = courseColors.value(cCode, QColor("#b2bccc")); // default fallback
         item->setBackground(bg);
         item->setForeground(QColor("#11111b")); // Dark text for legibility on pastel colors
         item->setData(Qt::UserRole, QString::fromStdString(session.getSessionId()));
