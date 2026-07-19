@@ -725,33 +725,42 @@ void MainWindow::setupConstraintsTab()
     QGroupBox   *timeGroup  = new QGroupBox("Daily Time Window");
     QVBoxLayout *timeLayout = new QVBoxLayout(timeGroup);
 
-    QFormLayout *timeForm = new QFormLayout();
+    QHBoxLayout *timeRow = new QHBoxLayout();
+    
     m_dayStartEdit = new QTimeEdit(QTime(9, 0));
     m_dayEndEdit   = new QTimeEdit(QTime(17, 0));
     m_dayStartEdit->setDisplayFormat("HH:mm");
     m_dayEndEdit->setDisplayFormat("HH:mm");
     connect(m_dayStartEdit, &QTimeEdit::timeChanged, this, &MainWindow::onConstraintsChanged);
     connect(m_dayEndEdit,   &QTimeEdit::timeChanged, this, &MainWindow::onConstraintsChanged);
-    timeForm->addRow(new QLabel("Day Start:"), m_dayStartEdit);
-    timeForm->addRow(new QLabel("Day End:"),   m_dayEndEdit);
-    timeLayout->addLayout(timeForm);
 
-    // Lunch break sub-section
-    m_lunchEnabledCheck = new QCheckBox("Enable Lunch Break  (sessions blocked during this window)");
+    m_lunchEnabledCheck = new QCheckBox("Enable Lunch Break");
     m_lunchEnabledCheck->setChecked(true);
     connect(m_lunchEnabledCheck, &QCheckBox::toggled, this, &MainWindow::onConstraintsChanged);
-    timeLayout->addWidget(m_lunchEnabledCheck);
 
-    QFormLayout *lunchForm = new QFormLayout();
     m_lunchStartEdit = new QTimeEdit(QTime(13, 0));
     m_lunchEndEdit   = new QTimeEdit(QTime(14, 0));
     m_lunchStartEdit->setDisplayFormat("HH:mm");
     m_lunchEndEdit->setDisplayFormat("HH:mm");
     connect(m_lunchStartEdit, &QTimeEdit::timeChanged, this, &MainWindow::onConstraintsChanged);
     connect(m_lunchEndEdit,   &QTimeEdit::timeChanged, this, &MainWindow::onConstraintsChanged);
-    lunchForm->addRow(new QLabel("  Lunch Start:"), m_lunchStartEdit);
-    lunchForm->addRow(new QLabel("  Lunch End:"),   m_lunchEndEdit);
-    timeLayout->addLayout(lunchForm);
+
+    timeRow->addWidget(new QLabel("Day Start:"));
+    timeRow->addWidget(m_dayStartEdit);
+    timeRow->addSpacing(15);
+    timeRow->addWidget(new QLabel("Day End:"));
+    timeRow->addWidget(m_dayEndEdit);
+    timeRow->addSpacing(30);
+    timeRow->addWidget(m_lunchEnabledCheck);
+    timeRow->addSpacing(15);
+    timeRow->addWidget(new QLabel("Lunch Start:"));
+    timeRow->addWidget(m_lunchStartEdit);
+    timeRow->addSpacing(15);
+    timeRow->addWidget(new QLabel("Lunch End:"));
+    timeRow->addWidget(m_lunchEndEdit);
+    timeRow->addStretch();
+    
+    timeLayout->addLayout(timeRow);
 
     // Live capacity label
     m_capacityLabel = new QLabel("Available capacity: —");
@@ -765,67 +774,55 @@ void MainWindow::setupConstraintsTab()
 
     // ── Scheduling Rules ───────────────────────────────────────────────────
     QGroupBox   *rulesGroup  = new QGroupBox("Scheduling Rules");
-    QVBoxLayout *rulesLayout = new QVBoxLayout(rulesGroup);
+    QGridLayout *rulesLayout = new QGridLayout(rulesGroup);
     rulesLayout->setSpacing(10);
 
-    auto makeRuleRow = [&](QCheckBox*& chk, const QString& title, const QString& desc) {
+    auto makeRuleCheck = [&](QCheckBox*& chk, const QString& title, const QString& tooltip) {
         chk = new QCheckBox(title);
+        chk->setToolTip(tooltip);
         chk->setChecked(true);
         connect(chk, &QCheckBox::toggled, this, &MainWindow::onConstraintsChanged);
-        rulesLayout->addWidget(chk);
-        if (!desc.isEmpty()) {
-            QLabel *d = new QLabel("       " + desc);
-            d->setWordWrap(true);
-            d->setStyleSheet("font-size: 11px;");
-            rulesLayout->addWidget(d);
-        }
     };
 
-    makeRuleRow(m_ruleNoInstDoubleBook, "Prevent Instructor Double-Booking",
-        "The same instructor cannot be in two places at the same day/time.");
-    makeRuleRow(m_ruleNoRoomDoubleBook, "Prevent Room Double-Booking",
-        "The same room cannot hold two sessions at the same day/time.");
-    makeRuleRow(m_ruleNoBatchClash, "Prevent Student Batch Clash",
-        "The same batch cannot have two sessions at the same day/time.");
-    makeRuleRow(m_ruleInstDayGap, "Enforce Instructor Day Gap",
-        "An instructor should not teach on two immediately consecutive working days without at least one gap day.");
-    makeRuleRow(m_ruleNoSameSubjectConsec, "No Same Subject on Consecutive Days",
-        "A course cannot be scheduled on back-to-back working days for the same batch; at least one gap day required.");
-    makeRuleRow(m_ruleMaxWeeklyHours, "Respect Instructor Max Weekly Hours",
-        "No instructor will be assigned sessions that exceed their configured max weekly hours.");
+    makeRuleCheck(m_ruleNoInstDoubleBook, "No Instructor Clash", "Same instructor cannot be in two places at the same time");
+    makeRuleCheck(m_ruleNoRoomDoubleBook, "No Room Clash", "Same room cannot hold two sessions at the same time");
+    makeRuleCheck(m_ruleNoBatchClash, "No Batch Clash", "Same batch cannot have two sessions at the same time");
+    makeRuleCheck(m_ruleInstDayGap, "Instructor Day Gap", "Instructor needs at least one gap day between teaching days");
+    makeRuleCheck(m_ruleNoSameSubjectConsec, "Subject Day Gap", "A course can't repeat on back-to-back days for the same batch");
+    makeRuleCheck(m_ruleMaxWeeklyHours, "Max Weekly Hours", "No instructor exceeds their configured weekly hour limit");
+    makeRuleCheck(m_ruleMaxConsecHoursEnabled, "Max Daily Hours", "Caps consecutive teaching hours per instructor per day");
 
     // Max consecutive hours with spinner
-    m_ruleMaxConsecHoursEnabled = new QCheckBox("No Instructor Back-to-Back Beyond N Hours");
-    m_ruleMaxConsecHoursEnabled->setChecked(true);
-    connect(m_ruleMaxConsecHoursEnabled, &QCheckBox::toggled,
-            this, &MainWindow::onConstraintsChanged);
-    rulesLayout->addWidget(m_ruleMaxConsecHoursEnabled);
-
     QHBoxLayout *consecRow = new QHBoxLayout();
-    QLabel *consecLbl = new QLabel("       Max consecutive teaching hours per instructor per day:");
-    consecLbl->setStyleSheet("font-size: 11px;");
+    consecRow->setContentsMargins(0, 0, 0, 0);
+    consecRow->addWidget(m_ruleMaxConsecHoursEnabled);
     m_maxConsecHoursSpin = new QSpinBox();
     m_maxConsecHoursSpin->setRange(1, 12);
     m_maxConsecHoursSpin->setValue(3);
     m_maxConsecHoursSpin->setFixedWidth(70);
     connect(m_maxConsecHoursSpin, QOverload<int>::of(&QSpinBox::valueChanged),
             this, &MainWindow::onConstraintsChanged);
-    consecRow->addWidget(consecLbl);
     consecRow->addWidget(m_maxConsecHoursSpin);
     consecRow->addStretch();
-    rulesLayout->addLayout(consecRow);
 
     // Enforce Instructor Subject Lock — always on, read-only
-    m_ruleSubjectLock = new QCheckBox("Enforce Instructor Subject Lock  [always enabled]");
+    m_ruleSubjectLock = new QCheckBox("Subject Lock (Locked)");
     m_ruleSubjectLock->setChecked(true);
     m_ruleSubjectLock->setEnabled(false);   // greyed-out / read-only
-    rulesLayout->addWidget(m_ruleSubjectLock);
-    QLabel *lockDesc = new QLabel(
-        "       Instructors may only be assigned to courses in their locked subject list. "
-        "This is core to the data model and cannot be disabled.");
-    lockDesc->setWordWrap(true);
-    lockDesc->setStyleSheet("font-size: 11px;");
-    rulesLayout->addWidget(lockDesc);
+    m_ruleSubjectLock->setToolTip("Instructors only teach their assigned subject(s) — always on, core to the data model");
+
+    // Add everything to the grid (2 columns x 4 rows)
+    rulesLayout->addWidget(m_ruleNoInstDoubleBook, 0, 0);
+    rulesLayout->addWidget(m_ruleNoRoomDoubleBook, 0, 1);
+    
+    rulesLayout->addWidget(m_ruleNoBatchClash, 1, 0);
+    rulesLayout->addWidget(m_ruleInstDayGap, 1, 1);
+    
+    rulesLayout->addWidget(m_ruleNoSameSubjectConsec, 2, 0);
+    rulesLayout->addWidget(m_ruleMaxWeeklyHours, 2, 1);
+    
+    rulesLayout->addLayout(consecRow, 3, 0);
+    rulesLayout->addWidget(m_ruleSubjectLock, 3, 1);
 
     layout->addWidget(rulesGroup);
 
