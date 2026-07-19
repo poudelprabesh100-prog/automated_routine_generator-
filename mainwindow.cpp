@@ -649,7 +649,7 @@ void MainWindow::setupUI()
     m_timetableGrid->setEditTriggers(QAbstractItemView::NoEditTriggers);
     m_timetableGrid->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
     m_timetableGrid->verticalHeader()->setSectionResizeMode(QHeaderView::Stretch);
-    m_timetableGrid->verticalHeader()->setMinimumSectionSize(95);
+    m_timetableGrid->verticalHeader()->setMinimumSectionSize(115);
     m_timetableGrid->verticalHeader()->setMinimumWidth(80);
     m_timetableGrid->setStyleSheet(R"(
         QTableWidget {
@@ -1927,26 +1927,21 @@ void MainWindow::refreshTimetableGrid()
         if (startSlot < 0 || startSlot + spanSlots > cols) continue;
 
         QString fullInstName = QString::fromStdString(session.getTeacherId()->getName());
-        QStringList nameParts = fullInstName.split(' ', Qt::SkipEmptyParts);
-        QString shortInstName = fullInstName;
-        if (!nameParts.isEmpty()) {
-            shortInstName = nameParts.last();
-        }
 
         QString plainText = QString("%1\n%2\n%3")
             .arg(QString::fromStdString(session.getSubjectId()->getCourseCode()))
-            .arg(shortInstName)
+            .arg(fullInstName)
             .arg(QString::fromStdString(session.getRoomId()->getRoomId()));
 
         QString cellHtml = QString(
-            "<div style='text-align: center; color: #11111b; line-height: 1.2;'>"
+            "<div style='text-align: center; color: #11111b; line-height: 1.15;'>"
             "<div style='font-size: 11pt; font-weight: bold;'>%1</div>"
-            "<div style='font-size: 10pt; font-weight: 500; margin-top: 2px; margin-bottom: 2px;'>%2</div>"
-            "<div style='font-size: 9pt; font-weight: 300; color: #313244;'>%3</div>"
+            "<div style='font-size: 9.5pt; font-weight: 500; margin-top: 2px; margin-bottom: 2px;'>%2</div>"
+            "<div style='font-size: 8.5pt; font-weight: 300; color: #313244;'>%3</div>"
             "</div>"
         )
             .arg(QString::fromStdString(session.getSubjectId()->getCourseCode()))
-            .arg(shortInstName)
+            .arg(fullInstName)
             .arg(QString::fromStdString(session.getRoomId()->getRoomId()));
 
         QTableWidgetItem *item = new QTableWidgetItem();
@@ -1961,6 +1956,7 @@ void MainWindow::refreshTimetableGrid()
         
         QLabel *lbl = new QLabel(cellHtml);
         lbl->setAlignment(Qt::AlignCenter);
+        lbl->setWordWrap(true);
         lbl->setAttribute(Qt::WA_TransparentForMouseEvents);
         lbl->setStyleSheet("background: transparent;");
         m_timetableGrid->setCellWidget(r, startSlot, lbl);
