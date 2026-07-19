@@ -665,6 +665,7 @@ void MainWindow::setupConstraintsTab()
     // ── Left Panel (Scrollable) ────────────────────────────────────────────
     QScrollArea *scroll = new QScrollArea();
     scroll->setWidgetResizable(true);
+    scroll->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     scroll->setFrameShape(QFrame::NoFrame);
     scroll->setStyleSheet("QScrollArea { background-color: transparent; }");
 
@@ -687,8 +688,8 @@ void MainWindow::setupConstraintsTab()
 
     // ── Working Days ───────────────────────────────────────────────────────
     QGroupBox   *daysGroup  = new QGroupBox("Working Days  (unchecked = holiday, sessions never placed)");
-    QHBoxLayout *daysLayout = new QHBoxLayout(daysGroup);
-    daysLayout->setSpacing(12);
+    QGridLayout *daysLayout = new QGridLayout(daysGroup);
+    daysLayout->setSpacing(8);
 
     const char* dayNames[7] = {"Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"};
     // Defaults: Sun–Fri checked, Sat unchecked
@@ -720,16 +721,14 @@ void MainWindow::setupConstraintsTab()
         m_dayChecks[i]->setChecked(dayDefaults[i]);
         m_dayChecks[i]->setStyleSheet(chipStyle);
         connect(m_dayChecks[i], &QCheckBox::toggled, this, &MainWindow::onConstraintsChanged);
-        daysLayout->addWidget(m_dayChecks[i]);
+        daysLayout->addWidget(m_dayChecks[i], i / 4, i % 4);
     }
-    daysLayout->addStretch();
+    daysLayout->setColumnStretch(4, 1); // Add a stretch column at the end to keep chips from expanding too much
     layout->addWidget(daysGroup);
 
     // ── Daily Time Window ──────────────────────────────────────────────────
     QGroupBox   *timeGroup  = new QGroupBox("Daily Time Window");
     QVBoxLayout *timeLayout = new QVBoxLayout(timeGroup);
-
-    QHBoxLayout *timeRow = new QHBoxLayout();
     
     m_dayStartEdit = new QTimeEdit(QTime(9, 0));
     m_dayEndEdit   = new QTimeEdit(QTime(17, 0));
@@ -749,22 +748,26 @@ void MainWindow::setupConstraintsTab()
     connect(m_lunchStartEdit, &QTimeEdit::timeChanged, this, &MainWindow::onConstraintsChanged);
     connect(m_lunchEndEdit,   &QTimeEdit::timeChanged, this, &MainWindow::onConstraintsChanged);
 
-    timeRow->addWidget(new QLabel("Day Start:"));
-    timeRow->addWidget(m_dayStartEdit);
-    timeRow->addSpacing(15);
-    timeRow->addWidget(new QLabel("Day End:"));
-    timeRow->addWidget(m_dayEndEdit);
-    timeRow->addSpacing(30);
-    timeRow->addWidget(m_lunchEnabledCheck);
-    timeRow->addSpacing(15);
-    timeRow->addWidget(new QLabel("Lunch Start:"));
-    timeRow->addWidget(m_lunchStartEdit);
-    timeRow->addSpacing(15);
-    timeRow->addWidget(new QLabel("Lunch End:"));
-    timeRow->addWidget(m_lunchEndEdit);
-    timeRow->addStretch();
+    QHBoxLayout *timeRow1 = new QHBoxLayout();
+    timeRow1->addWidget(new QLabel("Day Start:"));
+    timeRow1->addWidget(m_dayStartEdit);
+    timeRow1->addSpacing(15);
+    timeRow1->addWidget(new QLabel("Day End:"));
+    timeRow1->addWidget(m_dayEndEdit);
+    timeRow1->addStretch();
     
-    timeLayout->addLayout(timeRow);
+    QHBoxLayout *timeRow2 = new QHBoxLayout();
+    timeRow2->addWidget(m_lunchEnabledCheck);
+    timeRow2->addSpacing(15);
+    timeRow2->addWidget(new QLabel("Lunch Start:"));
+    timeRow2->addWidget(m_lunchStartEdit);
+    timeRow2->addSpacing(15);
+    timeRow2->addWidget(new QLabel("Lunch End:"));
+    timeRow2->addWidget(m_lunchEndEdit);
+    timeRow2->addStretch();
+    
+    timeLayout->addLayout(timeRow1);
+    timeLayout->addLayout(timeRow2);
 
     // Live capacity label
     m_capacityLabel = new QLabel("Available capacity: —");
@@ -778,7 +781,7 @@ void MainWindow::setupConstraintsTab()
 
     // ── Scheduling Rules ───────────────────────────────────────────────────
     QGroupBox   *rulesGroup  = new QGroupBox("Scheduling Rules");
-    QGridLayout *rulesLayout = new QGridLayout(rulesGroup);
+    QVBoxLayout *rulesLayout = new QVBoxLayout(rulesGroup);
     rulesLayout->setSpacing(10);
 
     auto makeRuleCheck = [&](QCheckBox*& chk, const QString& title, const QString& tooltip) {
@@ -815,18 +818,15 @@ void MainWindow::setupConstraintsTab()
     m_ruleSubjectLock->setEnabled(false);   // greyed-out / read-only
     m_ruleSubjectLock->setToolTip("Instructors only teach their assigned subject(s) — always on, core to the data model");
 
-    // Add everything to the grid (2 columns x 4 rows)
-    rulesLayout->addWidget(m_ruleNoInstDoubleBook, 0, 0);
-    rulesLayout->addWidget(m_ruleNoRoomDoubleBook, 0, 1);
-    
-    rulesLayout->addWidget(m_ruleNoBatchClash, 1, 0);
-    rulesLayout->addWidget(m_ruleInstDayGap, 1, 1);
-    
-    rulesLayout->addWidget(m_ruleNoSameSubjectConsec, 2, 0);
-    rulesLayout->addWidget(m_ruleMaxWeeklyHours, 2, 1);
-    
-    rulesLayout->addLayout(consecRow, 3, 0);
-    rulesLayout->addWidget(m_ruleSubjectLock, 3, 1);
+    // Add everything to the vertical layout
+    rulesLayout->addWidget(m_ruleNoInstDoubleBook);
+    rulesLayout->addWidget(m_ruleNoRoomDoubleBook);
+    rulesLayout->addWidget(m_ruleNoBatchClash);
+    rulesLayout->addWidget(m_ruleInstDayGap);
+    rulesLayout->addWidget(m_ruleNoSameSubjectConsec);
+    rulesLayout->addWidget(m_ruleMaxWeeklyHours);
+    rulesLayout->addLayout(consecRow);
+    rulesLayout->addWidget(m_ruleSubjectLock);
 
     layout->addWidget(rulesGroup);
 
