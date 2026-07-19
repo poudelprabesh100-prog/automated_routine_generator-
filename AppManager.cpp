@@ -77,6 +77,67 @@ bool AppManager::removeClassSession(const std::string &sessionId) {
 }
 
 // ──────────────────────────────────────────────────────────────────────────────
+// In-place session update (Edit mode)
+// ──────────────────────────────────────────────────────────────────────────────
+
+std::string
+AppManager::validateAndUpdateClassSession(const std::string &editingSessionId,
+                                          const ClassSession &updatedSession,
+                                          const ConstraintSettings &cs) {
+  TimeSlot newSlot = updatedSession.getTimeSlot();
+
+  // Lunch break overlap check (same rule as Add)
+  if (cs.lunchBreakEnabled) {
+    if (newSlot.lunchBreakOverlapMinutes(cs.lunchStartMinutes,
+                                         cs.lunchEndMinutes) > 20) {
+      return "Cannot schedule: Class eats into the lunch break. "
+             "At least 40 minutes of break must remain.";
+    }
+  }
+
+  // Conflict checks — skip the session being edited to avoid self-clash
+  for (const auto &existing : m_timetable) {
+    if (existing.getSessionId() == editingSessionId)
+      continue; // never compare against self
+
+    if (!existing.getTimeSlot().overlapsWith(newSlot))
+      continue;
+
+    if (cs.ruleNoInstructorDoubleBook &&
+        existing.getTeacherId()->getId() == updatedSession.getTeacherId()->getId()) {
+      return "Teacher Conflict: Instructor is already teaching at this time.";
+    }
+    if (cs.ruleNoRoomDoubleBook &&
+        existing.getRoomId()->getRoomId() == updatedSession.getRoomId()->getRoomId()) {
+      return "Classroom Conflict: Room is already booked at this time.";
+    }
+    if (cs.ruleNoBatchClash &&
+        existing.getBatchId()->getBatchId() == updatedSession.getBatchId()->getBatchId()) {
+      return "Student Class Conflict: Batch already has a class at this time.";
+    }
+  }
+
+  // Find the existing session and update it in-place
+  for (auto &sess : m_timetable) {
+    if (sess.getSessionId() != editingSessionId)
+      continue;
+
+    // Unassign old course from old instructor (hour bookkeeping)
+    Instructor *oldInst = sess.getTeacherId();
+    Course     *oldCrs  = sess.getSubjectId();
+    if (oldInst && oldCrs)
+      oldInst->unassignCourse(oldCrs->getCourseCode());
+
+    // Replace the session with the updated one (preserves sessionId)
+    sess = updatedSession;
+    return "";
+  }
+
+  return "Session not found: the session to edit no longer exists.";
+}
+
+
+// ──────────────────────────────────────────────────────────────────────────────
 // Finders
 // ──────────────────────────────────────────────────────────────────────────────
 

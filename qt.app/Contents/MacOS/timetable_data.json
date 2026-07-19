@@ -56,6 +56,10 @@
     "instructors": [
         {
             "assignedCourses": [
+                "COMP-102",
+                "COMP-102",
+                "COMP-102",
+                "COMP-102"
             ],
             "id": "Dr. Niraj Sharma",
             "lockedSubjects": [
@@ -66,6 +70,8 @@
         },
         {
             "assignedCourses": [
+                "MATH-101",
+                "MATH-101"
             ],
             "id": "Prof. Ram Prasad",
             "lockedSubjects": [
@@ -90,5 +96,137 @@
         }
     ],
     "timetable": [
+        {
+            "batch": "BCT-2025-A",
+            "course": "COMP-102",
+            "day": 5,
+            "endH": 10,
+            "endM": 0,
+            "instructor": "Dr. Niraj Sharma",
+            "room": "Block-C-102",
+            "sessionId": "8467a8aad83cece28fad5c34c566874",
+            "startH": 9,
+            "startM": 0
+        },
+        {
+            "batch": "BCT-2025-A",
+            "course": "COMP-102",
+            "day": 1,
+            "endH": 10,
+            "endM": 0,
+            "instructor": "Dr. Niraj Sharma",
+            "room": "Block-C-102",
+            "sessionId": "f29bef20ff0ebb409e6770f0bfddc265",
+            "startH": 9,
+            "startM": 0
+        },
+        {
+            "batch": "BCT-2025-A",
+            "course": "COMP-102",
+            "day": 3,
+            "endH": 10,
+            "endM": 0,
+            "instructor": "Dr. Niraj Sharma",
+            "room": "Block-C-102",
+            "sessionId": "3434ccf50c289e5a46531f44d41b16c7",
+            "startH": 9,
+            "startM": 0
+        },
+        {
+            "batch": "BCT-2025-A",
+            "course": "MATH-101",
+            "day": 0,
+            "endH": 10,
+            "endM": 0,
+            "instructor": "Prof. Ram Prasad",
+            "room": "Block-C-102",
+            "sessionId": "fd973271babfc12ee94b1baa627e4f56",
+            "startH": 9,
+            "startM": 0
+        },
+        {
+            "batch": "BCT-2025-A",
+            "course": "MATH-101",
+            "day": 2,
+            "endH": 10,
+            "endM": 0,
+            "instructor": "Prof. Ram Prasad",
+            "room": "Block-C-102",
+            "sessionId": "6462061031263391921e25ed066ee732",
+            "startH": 9,
+            "startM": 0
+        },
+        {
+            "batch": "BCT-2025-A",
+            "course": "MATH-101",
+            "day": 4,
+            "endH": 10,
+            "endM": 0,
+            "instructor": "Prof. Ram Prasad",
+            "room": "Block-C-102",
+            "sessionId": "47d73c7b8f428eccc981340c66da20a5",
+            "startH": 9,
+            "startM": 0
+        },
+        {
+            "batch": "BIT-2025-B",
+            "course": "COMP-102",
+            "day": 1,
+            "endH": 11,
+            "endM": 0,
+            "instructor": "Dr. Niraj Sharma",
+            "room": "Block-C-102",
+            "sessionId": "e1e6874f2b9df09e5c098f748810dac5",
+            "startH": 10,
+            "startM": 0
+        },
+        {
+            "batch": "BIT-2025-B",
+            "course": "MATH-101",
+            "day": 2,
+            "endH": 11,
+            "endM": 0,
+            "instructor": "Prof. Ram Prasad",
+            "room": "Block-C-102",
+            "sessionId": "a5ad623d93f378c59ac8d13b4b5073d1",
+            "startH": 10,
+            "startM": 0
+        },
+        {
+            "batch": "BIT-2025-B",
+            "course": "MATH-101",
+            "day": 4,
+            "endH": 11,
+            "endM": 0,
+            "instructor": "Prof. Ram Prasad",
+            "room": "Block-C-102",
+            "sessionId": "77d1ee63c55c7520328197d4202628eb",
+            "startH": 10,
+            "startM": 0
+        },
+        {
+            "batch": "BIT-2025-B",
+            "course": "MATH-101",
+            "day": 0,
+            "endH": 12,
+            "endM": 0,
+            "instructor": "Prof. Ram Prasad",
+            "room": "Block-C-102",
+            "sessionId": "9ee970e383e40cecbb8bf4d95305b3d1",
+            "startH": 11,
+            "startM": 0
+        },
+        {
+            "batch": "BIT-2025-B",
+            "course": "MATH-101",
+            "day": 2,
+            "endH": 12,
+            "endM": 0,
+            "instructor": "Prof. Ram Prasad",
+            "room": "Block-C-102",
+            "sessionId": "4210c36e27efe4e1baeae073f9034f04",
+            "startH": 11,
+            "startM": 0
+        }
     ]
 }

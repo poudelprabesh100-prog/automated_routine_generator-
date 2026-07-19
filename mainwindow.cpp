@@ -458,10 +458,11 @@ void MainWindow::setupUI()
     dialogLayout->addLayout(sessionForm);
 
     QHBoxLayout *dialogBtnLayout = new QHBoxLayout();
-    QPushButton *btnDialogSchedule = new QPushButton("Schedule Class Session");
+    m_btnDialogSchedule = new QPushButton("Schedule Class Session");
     QPushButton *btnDialogCancel   = new QPushButton("Cancel");
+    m_btnDialogDelete   = new QPushButton("Delete This Session");
     
-    btnDialogSchedule->setStyleSheet(R"(
+    m_btnDialogSchedule->setStyleSheet(R"(
         QPushButton {
             background-color: #89b4fa;
             color: #11111b;
@@ -484,13 +485,46 @@ void MainWindow::setupUI()
         QPushButton:hover { background-color: #45475a; }
     )");
 
+    m_btnDialogDelete->setStyleSheet(R"(
+        QPushButton {
+            background-color: #f38ba8;
+            color: #11111b;
+            border: none;
+            border-radius: 4px;
+            padding: 8px 16px;
+            font-weight: bold;
+        }
+        QPushButton:hover { background-color: #eba0ac; }
+    )");
+    m_btnDialogDelete->setVisible(false); // Only shown in Edit mode
+
+    dialogBtnLayout->addWidget(m_btnDialogDelete);
     dialogBtnLayout->addStretch();
     dialogBtnLayout->addWidget(btnDialogCancel);
-    dialogBtnLayout->addWidget(btnDialogSchedule);
+    dialogBtnLayout->addWidget(m_btnDialogSchedule);
     dialogLayout->addLayout(dialogBtnLayout);
 
-    connect(btnDialogSchedule, &QPushButton::clicked, this, &MainWindow::onAddClassSession);
-    connect(btnDialogCancel, &QPushButton::clicked, m_addSessionDialog, &QDialog::reject);
+    connect(m_btnDialogSchedule, &QPushButton::clicked, this, &MainWindow::onAddClassSession);
+    connect(btnDialogCancel,     &QPushButton::clicked, this, [this]() {
+        resetSessionDialogToAddMode();
+        m_addSessionDialog->reject();
+    });
+    connect(m_btnDialogDelete,   &QPushButton::clicked, this, [this]() {
+        if (m_editingSessionId.isEmpty()) return;
+        if (QMessageBox::question(this, "Confirm Delete",
+                "Are you sure you want to remove this scheduled session?",
+                QMessageBox::Yes | QMessageBox::No) == QMessageBox::No) return;
+        if (m_appManager.removeClassSession(m_editingSessionId.toStdString())) {
+            resetSessionDialogToAddMode();
+            m_addSessionDialog->accept();
+            saveToFile();
+            refreshListsAndTables();
+        } else {
+            QMessageBox::warning(this, "Delete Failed",
+                "Unable to remove the selected session.");
+        }
+    });
+
 
     // -- Main layout buttons --
     QPushButton *btnOpenAddDialog = new QPushButton("+ Add Class Session");
@@ -507,7 +541,10 @@ void MainWindow::setupUI()
         }
         QPushButton:hover { background-color: #74c7ec; }
     )");
-    connect(btnOpenAddDialog, &QPushButton::clicked, m_addSessionDialog, &QDialog::exec);
+    connect(btnOpenAddDialog, &QPushButton::clicked, this, [this]() {
+        openSessionDialogForAdd();
+    });
+
 
     QPushButton *btnSessionDelete = new QPushButton("Delete Class Session");
     btnSessionDelete->setStyleSheet(R"(
@@ -641,9 +678,14 @@ void MainWindow::setupUI()
         }
     )");
     
+    // Connect grid cell click for edit-in-place
+    connect(m_timetableGrid, &QTableWidget::cellClicked,
+            this, &MainWindow::onGridCellClicked);
+
     gridLayout->addLayout(gridHeaderLayout);
     gridLayout->addWidget(m_timetableGrid);
     m_timetableSubTabs->addTab(gridTab, "Grid View");
+
 
     QVBoxLayout *tableLayout = new QVBoxLayout();
     tableLayout->addWidget(m_timetableSubTabs);
@@ -1658,6 +1700,144 @@ void MainWindow::onRefreshGridClicked()
     refreshTimetableGrid();
 }
 
+// ──────────────────────────────────────────────────────────────────────────────
+// Edit-in-place helpers
+// ──────────────────────────────────────────────────────────────────────────────
+
+void MainWindow::onGridCellClicked(int row, int col)
+{
+    QTableWidgetItem *item = m_timetableGrid->item(row, col);
+    if (!item) return;
+
+    QVariant sid = item->data(Qt::UserRole);
+    if (sid.isNull() || sid.toString().isEmpty()) {
+        // Empty cell — open Add dialog pre-filled with day/time from this cell
+        openSessionDialogForAdd(row, col);
+    } else {
+        // Occupied cell — open Edit dialog pre-filled with this session's data
+        openSessionDialogForEdit(sid.toString().toStdString());
+    }
+}
+
+void MainWindow::resetSessionDialogToAddMode()
+{
+    m_editingSessionId.clear();
+    m_addSessionDialog->setWindowTitle("Add Class Session");
+    m_btnDialogSchedule->setText("Schedule Class Session");
+    m_btnDialogDelete->setVisible(false);
+}
+
+void MainWindow::openSessionDialogForEdit(const std::string &sessionId)
+{
+    // Locate the session
+    const ClassSession *target = nullptr;
+    for (const auto &sess : m_appManager.getTimetable()) {
+        if (sess.getSessionId() == sessionId) {
+            target = &sess;
+            break;
+        }
+    }
+    if (!target) {
+        QMessageBox::warning(this, "Not Found",
+            "The selected session could not be found. Please refresh the grid.");
+        return;
+    }
+
+    // Refresh combo contents before pre-filling
+    populateCombos();
+
+    // Pre-fill Instructor
+    QString instName = QString::fromStdString(target->getTeacherId()->getName());
+    int instIdx = m_sessInstCombo->findText(instName);
+    if (instIdx != -1) m_sessInstCombo->setCurrentIndex(instIdx);
+
+    // Pre-fill Course
+    QString courseCode = QString::fromStdString(target->getSubjectId()->getCourseCode());
+    int crsIdx = m_sessCourseCombo->findData(QVariant(courseCode));
+    if (crsIdx != -1) m_sessCourseCombo->setCurrentIndex(crsIdx);
+
+    // Pre-fill Room
+    QString roomId = QString::fromStdString(target->getRoomId()->getRoomId());
+    int rmIdx = m_sessRoomCombo->findData(QVariant(roomId));
+    if (rmIdx != -1) m_sessRoomCombo->setCurrentIndex(rmIdx);
+
+    // Pre-fill Batch
+    QString batchId = QString::fromStdString(target->getBatchId()->getBatchId());
+    int batchIdx = m_sessBatchCombo->findData(QVariant(batchId));
+    if (batchIdx != -1) m_sessBatchCombo->setCurrentIndex(batchIdx);
+
+    // Pre-fill Day — map Day enum to combo index
+    // Combo order: Monday(0), Tuesday(1), Wednesday(2), Thursday(3), Friday(4), Sunday(5), Saturday(6)
+    const Day dayMap[] = {
+        Day::Monday, Day::Tuesday, Day::Wednesday, Day::Thursday,
+        Day::Friday, Day::Sunday, Day::Saturday
+    };
+    Day sessionDay = target->getTimeSlot().getDay();
+    for (int i = 0; i < 7; ++i) {
+        if (dayMap[i] == sessionDay) {
+            m_sessDayCombo->setCurrentIndex(i);
+            break;
+        }
+    }
+
+    // Pre-fill Start / End times
+    ClockTime st = target->getTimeSlot().getStartTime();
+    ClockTime et = target->getTimeSlot().getEndTime();
+    m_sessStartEdit->setTime(QTime(st.hours, st.minutes));
+    m_sessEndEdit->setTime(QTime(et.hours, et.minutes));
+
+    // Enter Edit mode
+    m_editingSessionId = QString::fromStdString(sessionId);
+    m_addSessionDialog->setWindowTitle("Edit Class Session");
+    m_btnDialogSchedule->setText("Save Changes");
+    m_btnDialogDelete->setVisible(true);
+
+    m_addSessionDialog->exec();
+
+    // Always reset to Add mode after dialog closes (accept or reject)
+    resetSessionDialogToAddMode();
+}
+
+void MainWindow::openSessionDialogForAdd(int prefillDayRow, int prefillColSlot)
+{
+    // Ensure we are in clean Add mode
+    resetSessionDialogToAddMode();
+    populateCombos();
+
+    if (prefillDayRow >= 0 && prefillColSlot >= 0) {
+        // Pre-fill Day from vertical header
+        QTableWidgetItem *vHeader = m_timetableGrid->verticalHeaderItem(prefillDayRow);
+        if (vHeader) {
+            QString dayText = vHeader->text();
+            // dayText is e.g. "Monday", "Tuesday" etc. — find matching combo entry
+            for (int i = 0; i < m_sessDayCombo->count(); ++i) {
+                if (m_sessDayCombo->itemText(i) == dayText) {
+                    m_sessDayCombo->setCurrentIndex(i);
+                    break;
+                }
+            }
+        }
+
+        // Pre-fill Start Time from horizontal header (format "HH:mm - HH:mm")
+        QTableWidgetItem *hHeader = m_timetableGrid->horizontalHeaderItem(prefillColSlot);
+        if (hHeader) {
+            QString headerText = hHeader->text().split("\n").first(); // strip "(Lunch)" if present
+            QStringList parts  = headerText.split(" - ");
+            if (parts.size() >= 2) {
+                QTime startT = QTime::fromString(parts[0].trimmed(), "HH:mm");
+                QTime endT   = QTime::fromString(parts[1].trimmed(), "HH:mm");
+                if (startT.isValid()) m_sessStartEdit->setTime(startT);
+                if (endT.isValid())   m_sessEndEdit->setTime(endT);
+            }
+        }
+    }
+
+    m_addSessionDialog->exec();
+
+    // Ensure clean state after dialog closes
+    resetSessionDialogToAddMode();
+}
+
 void MainWindow::refreshTimetableGrid()
 {
     m_timetableGrid->clear();
@@ -2286,7 +2466,9 @@ void MainWindow::onDeleteBatch()
 
 void MainWindow::onAddClassSession()
 {
-    QString instName   = m_sessInstCombo->currentText(); // Name works as ID for Instructor, though not ideal
+    bool isEditMode = !m_editingSessionId.isEmpty();
+
+    QString instName   = m_sessInstCombo->currentText();
     QString courseCode = m_sessCourseCombo->currentData().toString();
     QString roomId     = m_sessRoomCombo->currentData().toString();
     QString batchId    = m_sessBatchCombo->currentData().toString();
@@ -2310,7 +2492,7 @@ void MainWindow::onAddClassSession()
         return;
     }
 
-    // Subject qualification guard
+    // Subject qualification guard (applies in both Add and Edit modes)
     if (!inst->isQualifiedFor(crs->getCourseCode())) {
         QStringList lockedList;
         for (const auto& s : inst->getLockedSubjects())
@@ -2358,10 +2540,14 @@ void MainWindow::onAddClassSession()
     ClockTime ctEnd{   endTime.hour(),   endTime.minute()   };
     TimeSlot  slot(day, ctStart, ctEnd);
 
-    // Soft constraint: 1-hr break after every 2 back-to-back classes for the batch
+    // Soft constraint: 1-hr break after every 2 back-to-back classes for the batch.
+    // In Edit mode, exclude the session being edited from the existing-slots list
+    // (it will be replaced, so its old slot shouldn't count against the new one).
     std::vector<TimeSlot> batchDaySlots;
     batchDaySlots.push_back(slot);
     for (const auto& existing : m_appManager.getTimetable()) {
+        if (isEditMode && existing.getSessionId() == m_editingSessionId.toStdString())
+            continue; // skip self
         if (existing.getBatchId()->getBatchId() == btch->getBatchId() &&
             existing.getTimeSlot().getDay() == day)
             batchDaySlots.push_back(existing.getTimeSlot());
@@ -2393,38 +2579,116 @@ void MainWindow::onAddClassSession()
                 QMessageBox::Yes | QMessageBox::No) == QMessageBox::No) return;
     }
 
-    if (!inst->assignNewCourse(*crs)) {
-        QMessageBox::warning(this, "Workload Limit Exceeded",
-            QString("Cannot schedule: %1 would exceed weekly hour limit!\n\n"
-                    "Instructor: %2\nMax Weekly Limit: %3 hours\n"
-                    "Assigned so far: %4 hours\nCourse to assign: %5 (%6 hours)")
-            .arg(QString::fromStdString(crs->getCourseCode()))
-            .arg(QString::fromStdString(inst->getName()))
-            .arg(inst->getMaxLimitHours())
-            .arg(inst->calculateTotalAssignedHours())
-            .arg(QString::fromStdString(crs->getCourseCode()))
-            .arg(crs->getAllocatedHours()));
-        return;
-    }
+    if (isEditMode) {
+        // ── Edit mode ──────────────────────────────────────────────────────────
+        // Find the old session data for the workload check
+        std::string oldInstId, oldCrsCode;
+        for (const auto& sess : m_appManager.getTimetable()) {
+            if (sess.getSessionId() == m_editingSessionId.toStdString()) {
+                oldInstId  = sess.getTeacherId()->getId();
+                oldCrsCode = sess.getSubjectId()->getCourseCode();
+                break;
+            }
+        }
 
-    ClassSession session(slot, inst, crs, rm, btch);
-    std::string err = m_appManager.validateAndAddClassSession(session, cs);
-    if (!err.empty()) {
-        inst->unassignCourse(crs->getCourseCode());
-        QMessageBox::warning(this, "Scheduling Constraint Violation",
-            QString::fromStdString(err));
-        return;
-    }
+        bool instChanged = (oldInstId  != inst->getId());
+        bool crsChanged  = (oldCrsCode != crs->getCourseCode());
 
-    saveToFile();
-    refreshListsAndTables();
-    QMessageBox::information(this, "Schedule Succeeded",
-        "Class session scheduled successfully!");
+        // Prospective workload check: only needed when instructor or course changes.
+        // Simulate unassigning the old course, try assigning the new one, then restore.
+        if (instChanged || crsChanged) {
+            Instructor* oldInst = m_appManager.findInstructorById(oldInstId);
+            Course*     oldCrs  = m_appManager.findCourseByCode(oldCrsCode);
 
-    if (m_addSessionDialog) {
-        m_addSessionDialog->accept();
+            // Temporarily unassign old to get an accurate remaining-capacity count
+            if (oldInst && oldCrs) oldInst->unassignCourse(oldCrsCode);
+
+            bool fits = inst->assignNewCourse(*crs);
+
+            // Undo both sides of the simulation — backend will redo properly on commit
+            if (fits) inst->unassignCourse(crs->getCourseCode());
+            if (oldInst && oldCrs) oldInst->assignNewCourse(*oldCrs);
+
+            if (!fits) {
+                QMessageBox::warning(this, "Workload Limit Exceeded",
+                    QString("Cannot save: \"%1\" would exceed the weekly hour limit for \"%2\".\n\n"
+                            "Max Weekly Limit: %3 hours\n"
+                            "Course to assign: %4 (%5 hours)")
+                    .arg(QString::fromStdString(crs->getCourseCode()))
+                    .arg(QString::fromStdString(inst->getName()))
+                    .arg(inst->getMaxLimitHours())
+                    .arg(QString::fromStdString(crs->getCourseCode()))
+                    .arg(crs->getAllocatedHours()));
+                return;
+            }
+        }
+
+        // Build the updated session — pass the existing sessionId so it is preserved.
+        // The backend's validateAndUpdateClassSession will:
+        //   1. Validate (skip self-clash), 2. Unassign old instructor/course hours,
+        //   3. Replace the session in-place, 4. The new instructor gets assignNewCourse
+        //      called here so hours are tracked correctly going forward.
+        ClassSession updatedSession(slot, inst, crs, rm, btch,
+                                    m_editingSessionId.toStdString());
+
+        std::string err = m_appManager.validateAndUpdateClassSession(
+            m_editingSessionId.toStdString(), updatedSession, cs);
+
+        if (!err.empty()) {
+            QMessageBox::warning(this, "Scheduling Constraint Violation",
+                QString::fromStdString(err));
+            return;
+        }
+
+        // Re-assign on the new instructor now that the backend has committed.
+        // (The backend unassigned old; we assign new here to keep hours in sync.)
+        inst->assignNewCourse(*crs);
+
+        saveToFile();
+        refreshListsAndTables();
+        QMessageBox::information(this, "Save Succeeded",
+            "Class session updated successfully!");
+
+        if (m_addSessionDialog) {
+            m_addSessionDialog->accept();
+        }
+
+    } else {
+        // ── Add mode (original behavior, unchanged) ────────────────────────────
+        if (!inst->assignNewCourse(*crs)) {
+            QMessageBox::warning(this, "Workload Limit Exceeded",
+                QString("Cannot schedule: %1 would exceed weekly hour limit!\n\n"
+                        "Instructor: %2\nMax Weekly Limit: %3 hours\n"
+                        "Assigned so far: %4 hours\nCourse to assign: %5 (%6 hours)")
+                .arg(QString::fromStdString(crs->getCourseCode()))
+                .arg(QString::fromStdString(inst->getName()))
+                .arg(inst->getMaxLimitHours())
+                .arg(inst->calculateTotalAssignedHours())
+                .arg(QString::fromStdString(crs->getCourseCode()))
+                .arg(crs->getAllocatedHours()));
+            return;
+        }
+
+        ClassSession session(slot, inst, crs, rm, btch);
+        std::string err = m_appManager.validateAndAddClassSession(session, cs);
+        if (!err.empty()) {
+            inst->unassignCourse(crs->getCourseCode());
+            QMessageBox::warning(this, "Scheduling Constraint Violation",
+                QString::fromStdString(err));
+            return;
+        }
+
+        saveToFile();
+        refreshListsAndTables();
+        QMessageBox::information(this, "Schedule Succeeded",
+            "Class session scheduled successfully!");
+
+        if (m_addSessionDialog) {
+            m_addSessionDialog->accept();
+        }
     }
 }
+
 
 void MainWindow::onDeleteClassSession()
 {

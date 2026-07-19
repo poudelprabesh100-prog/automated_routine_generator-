@@ -62,6 +62,14 @@ public:
     std::string validateAndAddClassSession(const ClassSession& session,
                                            const ConstraintSettings& cs = ConstraintSettings{});
 
+    // Validates & updates an existing session in-place (keeps its sessionId).
+    // The session identified by editingSessionId is excluded from all clash checks
+    // so the session is not flagged as conflicting with its own old slot.
+    // Returns "" on success, or an error message on failure.
+    std::string validateAndUpdateClassSession(const std::string& editingSessionId,
+                                              const ClassSession& updatedSession,
+                                              const ConstraintSettings& cs = ConstraintSettings{});
+
     bool removeClassSession(const std::string& sessionId);
 
     Instructor*   findInstructorByName(const std::string& name);

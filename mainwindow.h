@@ -59,6 +59,7 @@ private slots:
     void onAutoGenerate();
     void onViewBatchChanged(); // Triggers a redraw of the timetable grid
     void onRefreshGridClicked(); // Manually refreshes the grid
+    void onGridCellClicked(int row, int col); // Edit-in-place: handles occupied/empty cell clicks
 
     // ── Constraints tab slots ────────────────────────────────────────────────
     void onValidateConstraints();
@@ -86,6 +87,16 @@ private:
     void markConstraintsDirty();       // sets m_constraintsValidated=false, disables generate btn
     void updateCapacityLabel();        // recomputes and updates the live capacity label
     ConstraintSettings readConstraintsFromUI() const;
+
+    // ── Edit-in-place helpers ─────────────────────────────────────────────────
+    // Opens the session dialog pre-filled with the session identified by sessionId (Edit mode).
+    void openSessionDialogForEdit(const std::string& sessionId);
+    // Opens the session dialog for a new session, optionally pre-filling day/time
+    // from the clicked empty grid cell (row = day index, col = time-slot index).
+    void openSessionDialogForAdd(int prefillDayRow = -1, int prefillColSlot = -1);
+    // Resets the session dialog to a clean Add-mode state (clears m_editingSessionId,
+    // restores button labels, hides Delete button).
+    void resetSessionDialogToAddMode();
 
     // ── Tab widget ────────────────────────────────────────────────────────────
     QTabWidget *m_tabWidget;
@@ -134,7 +145,14 @@ private:
     QTableWidget *m_timetableGrid;     // Visual grid
     QPushButton  *m_btnRefreshGrid;    // Refreshes visual grid
     QPushButton  *m_btnAutoGenerate;   // kept as member so we can enable/disable it
-    QDialog      *m_addSessionDialog;  // Dialog for adding class sessions
+    QDialog      *m_addSessionDialog;  // Dialog for adding/editing class sessions
+
+    // ── Session dialog buttons (promoted to members for Edit-mode toggling) ───
+    QPushButton  *m_btnDialogSchedule; // "Schedule Class Session" / "Save Changes"
+    QPushButton  *m_btnDialogDelete;   // "Delete This Session" — only visible in Edit mode
+
+    // ── Edit-in-place state ───────────────────────────────────────────────────
+    QString       m_editingSessionId;  // empty = Add mode, non-empty = Edit mode
 
     // ── Constraints tab UI ────────────────────────────────────────────────────
     // Working days
