@@ -659,17 +659,21 @@ void MainWindow::setupUI()
 
 void MainWindow::setupConstraintsTab()
 {
-    // Outer scroll area so the panel stays usable at smaller window sizes
+    QWidget *constraintsTab = new QWidget();
+    QHBoxLayout *mainLayout = new QHBoxLayout(constraintsTab);
+
+    // ── Left Panel (Scrollable) ────────────────────────────────────────────
     QScrollArea *scroll = new QScrollArea();
     scroll->setWidgetResizable(true);
     scroll->setFrameShape(QFrame::NoFrame);
+    scroll->setStyleSheet("QScrollArea { background-color: transparent; }");
 
     QWidget     *inner  = new QWidget();
     inner->setObjectName("constraintsInner");
     inner->setStyleSheet("#constraintsInner { background-color: transparent; }");
     QVBoxLayout *layout = new QVBoxLayout(inner);
     layout->setSpacing(16);
-    layout->setContentsMargins(20, 20, 20, 20);
+    layout->setContentsMargins(10, 10, 20, 10); // Some right margin before the splitter
 
     // ── Header ─────────────────────────────────────────────────────────────
     QLabel *headerLbl = new QLabel("⚙  Constraints & Rules");
@@ -831,22 +835,42 @@ void MainWindow::setupConstraintsTab()
     connect(btnValidate, &QPushButton::clicked, this, &MainWindow::onValidateConstraints);
     layout->addWidget(btnValidate);
 
-    // ── Validation output ──────────────────────────────────────────────────
+    layout->addStretch();
+    scroll->setWidget(inner);
+    
+    mainLayout->addWidget(scroll, 1); // Give left panel stretch factor 1
+
+    // ── Right Panel ────────────────────────────────────────────────────────
+    QWidget *rightPanel = new QWidget();
+    QVBoxLayout *rightLayout = new QVBoxLayout(rightPanel);
+    rightLayout->setContentsMargins(10, 10, 10, 10);
+
     QLabel *outLbl = new QLabel("Validation Results:");
     outLbl->setStyleSheet("font-size: 14px; font-weight: bold;");
-    layout->addWidget(outLbl);
+    rightLayout->addWidget(outLbl);
 
     m_validationOutput = new QTextEdit();
     m_validationOutput->setReadOnly(true);
-    m_validationOutput->setMinimumHeight(180);
     m_validationOutput->setPlaceholderText(
         "Click \"Validate Constraints\" to run a feasibility check...");
-    layout->addWidget(m_validationOutput);
+    
+    // Style text edit exactly like the list widgets in the other tabs
+    m_validationOutput->setStyleSheet(
+        "QTextEdit {"
+        "  background-color: #11111b;"
+        "  color: #cdd6f4;"
+        "  border: 1px solid #313244;"
+        "  border-radius: 8px;"
+        "  padding: 5px;"
+        "  font-family: 'Segoe UI', Helvetica, sans-serif;"
+        "}"
+    );
 
-    layout->addStretch();
-    scroll->setWidget(inner);
+    rightLayout->addWidget(m_validationOutput);
+    
+    mainLayout->addWidget(rightPanel, 2); // Give right panel stretch factor 2
 
-    m_tabWidget->addTab(scroll, "Constraints");
+    m_tabWidget->addTab(constraintsTab, "Constraints");
 
     // Compute initial capacity label
     updateCapacityLabel();
