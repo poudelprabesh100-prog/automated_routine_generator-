@@ -1188,9 +1188,13 @@ void MainWindow::onValidateConstraints()
 
 void MainWindow::rebuildSubjectCombos(int count)
 {
-    for (QComboBox* cb : m_instSubjectCombos) {
-        m_instSubjectLayout->removeWidget(cb);
-        delete cb;
+    // Clear out the previous layout completely before adding new ones
+    QLayoutItem *child;
+    while ((child = m_instSubjectLayout->takeAt(0)) != nullptr) {
+        if (QWidget *widget = child->widget()) {
+            widget->deleteLater();
+        }
+        delete child;
     }
     m_instSubjectCombos.clear();
 
