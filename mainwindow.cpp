@@ -14,6 +14,8 @@
 #include <QJsonObject>
 #include <QJsonArray>
 #include <QCoreApplication>
+#include <QMenu>
+#include <QAction>
 #include <algorithm>
 
 // ──────────────────────────────────────────────────────────────────────────────
@@ -1717,8 +1719,41 @@ void MainWindow::onGridCellClicked(int row, int col)
         // Empty cell — open Add dialog pre-filled with day/time from this cell
         openSessionDialogForAdd(row, col);
     } else {
-        // Occupied cell — open Edit dialog pre-filled with this session's data
-        openSessionDialogForEdit(sid.toString().toStdString());
+        QString sidStr = sid.toString();
+        if (sidStr.contains(",")) {
+            // It's a merged block. Show a menu.
+            QMenu menu(this);
+            QStringList sids = sidStr.split(",");
+            for (const QString& id : sids) {
+                const ClassSession* target = nullptr;
+                for (const auto& sess : m_appManager.getTimetable()) {
+                    if (sess.getSessionId() == id.toStdString()) {
+                        target = &sess;
+                        break;
+                    }
+                }
+                if (target) {
+                    int h1 = target->getTimeSlot().getStartTime().hours;
+                    int m1 = target->getTimeSlot().getStartTime().minutes;
+                    int h2 = (h1 * 60 + m1 + target->getTimeSlot().getDurationmin()) / 60;
+                    int m2 = (h1 * 60 + m1 + target->getTimeSlot().getDurationmin()) % 60;
+                    QString timeStr = QString("%1:%2 - %3:%4")
+                        .arg(h1, 2, 10, QChar('0'))
+                        .arg(m1, 2, 10, QChar('0'))
+                        .arg(h2, 2, 10, QChar('0'))
+                        .arg(m2, 2, 10, QChar('0'));
+                    
+                    QAction* action = menu.addAction("Edit Session: " + timeStr);
+                    connect(action, &QAction::triggered, this, [this, id]() {
+                        openSessionDialogForEdit(id.toStdString());
+                    });
+                }
+            }
+            menu.exec(QCursor::pos());
+        } else {
+            // Occupied cell — open Edit dialog pre-filled with this session's data
+            openSessionDialogForEdit(sidStr.toStdString());
+        }
     }
 }
 
@@ -1912,10 +1947,74 @@ void MainWindow::refreshTimetableGrid()
     }
 
     // Populate actual sessions
+    std::vector<ClassSession> batchSessions;
     for (const auto& session : m_appManager.getTimetable()) {
-        if (QString::fromStdString(session.getBatchId()->getBatchId()) != batchId) continue;
+        if (QString::fromStdString(session.getBatchId()->getBatchId()) == batchId) {
+            batchSessions.push_back(session);
+        }
+    }
 
-        TimeSlot ts = session.getTimeSlot();
+    std::sort(batchSessions.begin(), batchSessions.end(), [](const ClassSession& a, const ClassSession& b) {
+        if (a.getTimeSlot().getDay() != b.getTimeSlot().getDay()) {
+            return static_cast<int>(a.getTimeSlot().getDay()) < static_cast<int>(b.getTimeSlot().getDay());
+        }
+        int startA = a.getTimeSlot().getStartTime().hours * 60 + a.getTimeSlot().getStartTime().minutes;
+        int startB = b.getTimeSlot().getStartTime().hours * 60 + b.getTimeSlot().getStartTime().minutes;
+        return startA < startB;
+    });
+
+    std::vector<std::vector<ClassSession>> mergedGroups;
+    if (!batchSessions.empty()) {
+        std::vector<ClassSession> currentGroup;
+        currentGroup.push_back(batchSessions[0]);
+        
+        for (size_t i = 1; i < batchSessions.size(); ++i) {
+            const ClassSession& prev = currentGroup.back();
+            const ClassSession& curr = batchSessions[i];
+            
+            bool canMerge = true;
+            if (prev.getTimeSlot().getDay() != curr.getTimeSlot().getDay()) canMerge = false;
+            
+            if (canMerge) {
+                if (prev.getSubjectId()->getCourseCode() != curr.getSubjectId()->getCourseCode() ||
+                    prev.getTeacherId()->getId() != curr.getTeacherId()->getId() ||
+                    prev.getRoomId()->getRoomId() != curr.getRoomId()->getRoomId()) {
+                    canMerge = false;
+                }
+            }
+            
+            if (canMerge) {
+                int prevEnd = prev.getTimeSlot().getStartTime().hours * 60 + prev.getTimeSlot().getStartTime().minutes + prev.getTimeSlot().getDurationmin();
+                int currStart = curr.getTimeSlot().getStartTime().hours * 60 + curr.getTimeSlot().getStartTime().minutes;
+                if (prevEnd != currStart) canMerge = false;
+                
+                if (cs.lunchBreakEnabled) {
+                    if (prevEnd > cs.lunchStartMinutes && currStart < cs.lunchEndMinutes) {
+                        canMerge = false;
+                    } else if (prevEnd == cs.lunchStartMinutes && currStart == cs.lunchEndMinutes) {
+                        canMerge = false;
+                    } else if (prevEnd <= cs.lunchStartMinutes && currStart >= cs.lunchEndMinutes) {
+                        canMerge = false;
+                    }
+                }
+            }
+            
+            if (canMerge) {
+                currentGroup.push_back(curr);
+            } else {
+                mergedGroups.push_back(currentGroup);
+                currentGroup.clear();
+                currentGroup.push_back(curr);
+            }
+        }
+        mergedGroups.push_back(currentGroup);
+    }
+
+    for (const auto& group : mergedGroups) {
+        if (group.empty()) continue;
+        const ClassSession& firstSession = group.front();
+        TimeSlot ts = firstSession.getTimeSlot();
+        
         int r = -1;
         for (size_t i = 0; i < workDays.size(); ++i) {
             if (workDays[i] == ts.getDay()) { r = i; break; }
@@ -1924,16 +2023,22 @@ void MainWindow::refreshTimetableGrid()
 
         int startMin = ts.getStartTime().hours * 60 + ts.getStartTime().minutes;
         int startSlot = (startMin - cs.dayStartMinutes) / 60;
-        int spanSlots = ts.getDurationmin() / 60;
+        
+        int totalSpanSlots = 0;
+        QStringList sessionIds;
+        for (const auto& sess : group) {
+            totalSpanSlots += sess.getTimeSlot().getDurationmin() / 60;
+            sessionIds << QString::fromStdString(sess.getSessionId());
+        }
 
-        if (startSlot < 0 || startSlot + spanSlots > cols) continue;
+        if (startSlot < 0 || startSlot + totalSpanSlots > cols) continue;
 
-        QString fullInstName = QString::fromStdString(session.getTeacherId()->getName());
+        QString fullInstName = QString::fromStdString(firstSession.getTeacherId()->getName());
 
         QString plainText = QString("%1\n%2\n%3")
-            .arg(QString::fromStdString(session.getSubjectId()->getCourseCode()))
+            .arg(QString::fromStdString(firstSession.getSubjectId()->getCourseCode()))
             .arg(fullInstName)
-            .arg(QString::fromStdString(session.getRoomId()->getRoomId()));
+            .arg(QString::fromStdString(firstSession.getRoomId()->getRoomId()));
 
         QString cellHtml = QString(
             "<div style='text-align: center; color: #11111b; line-height: 1.15;'>"
@@ -1942,17 +2047,17 @@ void MainWindow::refreshTimetableGrid()
             "<div style='font-size: 8.5pt; font-weight: 300; color: #313244;'>%3</div>"
             "</div>"
         )
-            .arg(QString::fromStdString(session.getSubjectId()->getCourseCode()))
+            .arg(QString::fromStdString(firstSession.getSubjectId()->getCourseCode()))
             .arg(fullInstName)
-            .arg(QString::fromStdString(session.getRoomId()->getRoomId()));
+            .arg(QString::fromStdString(firstSession.getRoomId()->getRoomId()));
 
         QTableWidgetItem *item = new QTableWidgetItem();
         item->setToolTip(plainText);
         
-        QString cCode = QString::fromStdString(session.getSubjectId()->getCourseCode());
+        QString cCode = QString::fromStdString(firstSession.getSubjectId()->getCourseCode());
         QColor bg = courseColors.value(cCode, QColor("#6798b3")); // default fallback
         item->setBackground(bg);
-        item->setData(Qt::UserRole, QString::fromStdString(session.getSessionId()));
+        item->setData(Qt::UserRole, QVariant(sessionIds.join(",")));
 
         m_timetableGrid->setItem(r, startSlot, item);
         
@@ -1963,8 +2068,8 @@ void MainWindow::refreshTimetableGrid()
         lbl->setStyleSheet("background: transparent;");
         m_timetableGrid->setCellWidget(r, startSlot, lbl);
 
-        if (spanSlots > 1) {
-            m_timetableGrid->setSpan(r, startSlot, 1, spanSlots);
+        if (totalSpanSlots > 1) {
+            m_timetableGrid->setSpan(r, startSlot, 1, totalSpanSlots);
         }
     }
 }
