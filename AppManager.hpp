@@ -96,6 +96,10 @@ public:
     bool isRoomUsed(const std::string& id) const;
     bool isBatchUsed(const std::string& id) const;
 
+    // Helper to count how many sessions an instructor is currently assigned to (for manual editing checks)
+    // One session equals 1 allocated hour. skipSessionId ignores a specific session (useful when editing a session in-place).
+    int countInstructorScheduledHours(const std::string& instructorId, const std::string& skipSessionId = "") const;
+
     const std::vector<ClassSession>&   getTimetable()    const;
     const std::vector<Instructor>&     getInstructors()  const;
     const std::vector<Course>&         getCourses()      const;
@@ -104,7 +108,7 @@ public:
 
     // Auto-generation — now driven by ConstraintSettings
     void clearTimetable();
-    void autoGenerateTimetable(const ConstraintSettings& cs = ConstraintSettings{});
+    std::string autoGenerateTimetable(const ConstraintSettings& cs = ConstraintSettings{});
 
     // Busy-check helpers (used by generator and by the UI session form)
     bool isInstructorBusyAt(const std::string& id, const TimeSlot& slot) const;

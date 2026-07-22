@@ -68,7 +68,7 @@ bool AppManager::removeClassSession(const std::string &sessionId) {
     Instructor *teacher = it->getTeacherId();
     Course *course = it->getSubjectId();
     if (teacher && course) {
-      teacher->unassignCourse(course->getCourseCode());
+      // Legacy bookkeeping removed.
     }
     m_timetable.erase(it);
     return true;
@@ -122,11 +122,7 @@ AppManager::validateAndUpdateClassSession(const std::string &editingSessionId,
     if (sess.getSessionId() != editingSessionId)
       continue;
 
-    // Unassign old course from old instructor (hour bookkeeping)
-    Instructor *oldInst = sess.getTeacherId();
-    Course     *oldCrs  = sess.getSubjectId();
-    if (oldInst && oldCrs)
-      oldInst->unassignCourse(oldCrs->getCourseCode());
+    // Legacy bookkeeping removed.
 
     // Replace the session with the updated one (preserves sessionId)
     sess = updatedSession;
@@ -523,22 +519,32 @@ bool AppManager::instructorOnAdjacentDay(
 // ──────────────────────────────────────────────────────────────────────────────
 
 void AppManager::clearTimetable() {
-  // Reset runtime hour-tracking for all instructors (assigned courses),
-  // but do NOT clear m_lockedSubjects — those are permanent.
-  for (auto &inst : m_masterInstructors) {
-    while (!inst.getAssignedCourses().empty()) {
-      inst.unassignCourse(inst.getAssignedCourses().front().getCourseCode());
-    }
-  }
   m_timetable.clear();
+}
+
+int AppManager::countInstructorScheduledHours(const std::string& instructorId, const std::string& skipSessionId) const {
+    int count = 0;
+    for (const auto& sess : m_timetable) {
+        if (!skipSessionId.empty() && sess.getSessionId() == skipSessionId) {
+            continue;
+        }
+        if (sess.getTeacherId() && sess.getTeacherId()->getId() == instructorId) {
+            count++;
+        }
+    }
+    return count;
 }
 
 // ──────────────────────────────────────────────────────────────────────────────
 // autoGenerateTimetable — constraint-driven implementation
 // ──────────────────────────────────────────────────────────────────────────────
 
-void AppManager::autoGenerateTimetable(const ConstraintSettings &cs) {
+std::string AppManager::autoGenerateTimetable(const ConstraintSettings &cs) {
   clearTimetable();
+
+  for (auto& inst : m_masterInstructors) {
+      inst.resetWeeklyHours();
+  }
 
   // Build the ordered list of working Days
   // We iterate in a natural calendar order: Sun, Mon, Tue, Wed, Thu, Fri, Sat
@@ -553,12 +559,12 @@ void AppManager::autoGenerateTimetable(const ConstraintSettings &cs) {
   }
 
   if (workDays.empty())
-    return; // No working days — nothing to schedule
+    return ""; // No working days — nothing to schedule
 
   // Build slot definitions for one day
   std::vector<std::pair<int, int>> slotDefs = buildSlotDefs(cs);
   if (slotDefs.empty())
-    return; // No slots fit in the window
+    return ""; // No slots fit in the window
 
   int nextStartDay = 0;
 
@@ -615,7 +621,7 @@ void AppManager::autoGenerateTimetable(const ConstraintSettings &cs) {
 
               // Max weekly hours
               if (cs.ruleRespectMaxWeeklyHours) {
-                int cur = inst.calculateTotalAssignedHours();
+                int cur = inst.getHoursUsedThisWeek();
                 if (cur + 1 > inst.getMaxLimitHours())
                   continue;
               }
@@ -655,7 +661,7 @@ void AppManager::autoGenerateTimetable(const ConstraintSettings &cs) {
               continue;
 
             // ── All checks passed — schedule the session ─────────
-            freeInst->assignNewCourse(course);
+            freeInst->addWeeklyHours(1);
             m_timetable.push_back(
                 ClassSession(slot, freeInst, &course, freeRoom, &batch));
             ++hoursScheduled;
@@ -668,6 +674,21 @@ void AppManager::autoGenerateTimetable(const ConstraintSettings &cs) {
 
       // Stagger the start day for the next course
       nextStartDay = (nextStartDay + 1) % static_cast<int>(workDays.size());
+      
+      if (hoursScheduled < hoursNeeded) {
+          int remainingCapacity = 0;
+          int numQualified = 0;
+          for (auto& inst : m_masterInstructors) {
+              if (inst.isQualifiedFor(course.getCourseCode())) {
+                  remainingCapacity += inst.getRemainingWeeklyHours();
+                  numQualified++;
+              }
+          }
+          if (remainingCapacity == 0) {
+              return "Course " + course.getCourseCode() + " could not be fully scheduled — all " + std::to_string(numQualified) + " qualified instructors have reached their Max Weekly Hours. Consider adding another instructor qualified for " + course.getCourseCode() + " or increasing existing instructors' Max Weekly Hours.";
+          }
+      }
     }
   }
+  return "";
 }

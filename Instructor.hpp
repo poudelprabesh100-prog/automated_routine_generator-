@@ -10,8 +10,7 @@ private:
     std::string id;
     std::string name;
     int maxLimitHours;
-    std::vector<Course> assignedCourses; // Runtime hour-tracking (cleared on timetable reset)
-
+    int m_hoursUsedThisWeek = 0; // Runtime hour-tracking during generation
     // Permanent locked subjects — set once at creation time, never cleared.
     std::vector<std::string> m_lockedSubjects;
 
@@ -24,8 +23,10 @@ public:
     std::string getId() const;
     std::string getName() const;
     int getMaxLimitHours() const;
-    const std::vector<Course>& getAssignedCourses() const;
-
+    void resetWeeklyHours();
+    void addWeeklyHours(int hours);
+    int getHoursUsedThisWeek() const;
+    int getRemainingWeeklyHours() const;
     // Locked subjects — permanent list decided at instructor-creation time
     void setLockedSubjects(const std::vector<std::string>& subjects);
     const std::vector<std::string>& getLockedSubjects() const;
@@ -35,9 +36,7 @@ public:
     // the UI prevents creation without at least one subject, but legacy JSON may have none).
     bool isQualifiedFor(const std::string& courseCode) const;
 
-    int calculateTotalAssignedHours() const;
-    bool assignNewCourse(const Course& newCourse);
-    bool unassignCourse(const std::string& courseCode);
+
 };
 
 #endif

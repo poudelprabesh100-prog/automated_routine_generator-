@@ -1125,29 +1125,33 @@ void MainWindow::onValidateConstraints()
     // 7. Instructor workload vs their max hours
     output += "<br><b style='color:#cba6f7'>─── Instructor Workload ───</b><br>";
 
-    for (const auto& inst : instructors) {
-        // Sum allocated hours for all courses this instructor is qualified for
-        int qualifiedHours = 0;
-        for (const auto& crs : courses) {
-            if (inst.isQualifiedFor(crs.getCourseCode()))
-                qualifiedHours += crs.getAllocatedHours() * static_cast<int>(batches.size());
+    for (const auto& crs : courses) {
+        int courseHoursNeeded = crs.getAllocatedHours() * static_cast<int>(batches.size());
+        int totalCapacity = 0;
+        QStringList qualifiedInstNames;
+        
+        for (const auto& inst : instructors) {
+            if (inst.isQualifiedFor(crs.getCourseCode())) {
+                totalCapacity += inst.getMaxLimitHours();
+                qualifiedInstNames << QString("%1: %2 hrs")
+                                      .arg(QString::fromStdString(inst.getName()))
+                                      .arg(inst.getMaxLimitHours());
+            }
         }
-        int maxHrs = inst.getMaxLimitHours();
-        if (qualifiedHours == 0) {
-            info(QString("Instructor \"%1\" has no qualified courses assigned.")
-                 .arg(QString::fromStdString(inst.getName())));
-        } else if (qualifiedHours > maxHrs) {
-            fail(QString("Instructor \"%1\": potential load (%2 hrs across all batches) "
-                         "exceeds Max Weekly Hours (%3 hrs). "
-                         "Consider adding more instructors or reducing course load.")
-                 .arg(QString::fromStdString(inst.getName()))
-                 .arg(qualifiedHours)
-                 .arg(maxHrs));
+        
+        if (totalCapacity == 0) {
+            // Already handled by 'Instructor Qualification' check, but good to catch here too.
+        } else if (courseHoursNeeded > totalCapacity) {
+            fail(QString("Course %1 needs %2 hrs/week total across all batches, but qualified instructors (%3) only provide %4 hrs combined capacity — insufficient.")
+                 .arg(QString::fromStdString(crs.getCourseCode()))
+                 .arg(courseHoursNeeded)
+                 .arg(qualifiedInstNames.join(", "))
+                 .arg(totalCapacity));
         } else {
-            pass(QString("Instructor \"%1\": load OK (%2 hrs ≤ %3 hrs max).")
-                 .arg(QString::fromStdString(inst.getName()))
-                 .arg(qualifiedHours)
-                 .arg(maxHrs));
+            pass(QString("Course %1 capacity OK (%2 hrs needed ≤ %3 hrs combined capacity).")
+                 .arg(QString::fromStdString(crs.getCourseCode()))
+                 .arg(courseHoursNeeded)
+                 .arg(totalCapacity));
         }
     }
 
@@ -1316,8 +1320,6 @@ void MainWindow::saveToFile()
         instObj["lockedSubjects"] = lockedArray;
 
         QJsonArray assignedArray;
-        for (const auto& crs : inst.getAssignedCourses())
-            assignedArray.append(QString::fromStdString(crs.getCourseCode()));
         instObj["assignedCourses"] = assignedArray;
 
         instArray.append(instObj);
@@ -1473,11 +1475,7 @@ void MainWindow::loadFromFile()
                 inst.setLockedSubjects(locked);
             }
             if (instObj.contains("assignedCourses") && instObj["assignedCourses"].isArray()) {
-                for (const auto& cVal : instObj["assignedCourses"].toArray()) {
-                    Course* crs = m_appManager.findCourseByCode(
-                        cVal.toString().toStdString());
-                    if (crs) inst.assignNewCourse(*crs);
-                }
+                // Legacy field ignored — assigned hours are derived directly from the timetable at runtime.
             }
             m_appManager.addInstructor(inst);
         }
@@ -2031,10 +2029,7 @@ void MainWindow::onAddInstructor()
     inst.setLockedSubjects(lockedSubjects);
 
     if (isEditing) {
-        Instructor* existing = m_appManager.findInstructorById(m_editingInstId);
-        if (existing)
-            for (const auto& c : existing->getAssignedCourses())
-                inst.assignNewCourse(c);
+
         m_appManager.updateInstructor(inst);
         m_editingInstId = "";
         m_instIdEdit->setEnabled(true);
@@ -2616,39 +2611,23 @@ void MainWindow::onAddClassSession()
         bool crsChanged  = (oldCrsCode != crs->getCourseCode());
 
         // Prospective workload check: only needed when instructor or course changes.
-        // Simulate unassigning the old course, try assigning the new one, then restore.
         if (instChanged || crsChanged) {
-            Instructor* oldInst = m_appManager.findInstructorById(oldInstId);
-            Course*     oldCrs  = m_appManager.findCourseByCode(oldCrsCode);
-
-            // Temporarily unassign old to get an accurate remaining-capacity count
-            if (oldInst && oldCrs) oldInst->unassignCourse(oldCrsCode);
-
-            bool fits = inst->assignNewCourse(*crs);
-
-            // Undo both sides of the simulation — backend will redo properly on commit
-            if (fits) inst->unassignCourse(crs->getCourseCode());
-            if (oldInst && oldCrs) oldInst->assignNewCourse(*oldCrs);
-
-            if (!fits) {
+            int currentHours = m_appManager.countInstructorScheduledHours(inst->getId(), m_editingSessionId.toStdString());
+            
+            if (currentHours + 1 > inst->getMaxLimitHours()) {
                 QMessageBox::warning(this, "Workload Limit Exceeded",
                     QString("Cannot save: \"%1\" would exceed the weekly hour limit for \"%2\".\n\n"
                             "Max Weekly Limit: %3 hours\n"
-                            "Course to assign: %4 (%5 hours)")
+                            "Assigned so far: %4 hours\n")
                     .arg(QString::fromStdString(crs->getCourseCode()))
                     .arg(QString::fromStdString(inst->getName()))
                     .arg(inst->getMaxLimitHours())
-                    .arg(QString::fromStdString(crs->getCourseCode()))
-                    .arg(crs->getAllocatedHours()));
+                    .arg(currentHours));
                 return;
             }
         }
 
         // Build the updated session — pass the existing sessionId so it is preserved.
-        // The backend's validateAndUpdateClassSession will:
-        //   1. Validate (skip self-clash), 2. Unassign old instructor/course hours,
-        //   3. Replace the session in-place, 4. The new instructor gets assignNewCourse
-        //      called here so hours are tracked correctly going forward.
         ClassSession updatedSession(slot, inst, crs, rm, btch,
                                     m_editingSessionId.toStdString());
 
@@ -2661,10 +2640,6 @@ void MainWindow::onAddClassSession()
             return;
         }
 
-        // Re-assign on the new instructor now that the backend has committed.
-        // (The backend unassigned old; we assign new here to keep hours in sync.)
-        inst->assignNewCourse(*crs);
-
         saveToFile();
         refreshListsAndTables();
         QMessageBox::information(this, "Save Succeeded",
@@ -2676,24 +2651,22 @@ void MainWindow::onAddClassSession()
 
     } else {
         // ── Add mode (original behavior, unchanged) ────────────────────────────
-        if (!inst->assignNewCourse(*crs)) {
+        int currentHours = m_appManager.countInstructorScheduledHours(inst->getId());
+        if (currentHours + 1 > inst->getMaxLimitHours()) {
             QMessageBox::warning(this, "Workload Limit Exceeded",
                 QString("Cannot schedule: %1 would exceed weekly hour limit!\n\n"
                         "Instructor: %2\nMax Weekly Limit: %3 hours\n"
-                        "Assigned so far: %4 hours\nCourse to assign: %5 (%6 hours)")
+                        "Assigned so far: %4 hours\n")
                 .arg(QString::fromStdString(crs->getCourseCode()))
                 .arg(QString::fromStdString(inst->getName()))
                 .arg(inst->getMaxLimitHours())
-                .arg(inst->calculateTotalAssignedHours())
-                .arg(QString::fromStdString(crs->getCourseCode()))
-                .arg(crs->getAllocatedHours()));
+                .arg(currentHours));
             return;
         }
 
         ClassSession session(slot, inst, crs, rm, btch);
         std::string err = m_appManager.validateAndAddClassSession(session, cs);
         if (!err.empty()) {
-            inst->unassignCourse(crs->getCourseCode());
             QMessageBox::warning(this, "Scheduling Constraint Violation",
                 QString::fromStdString(err));
             return;
@@ -2779,7 +2752,16 @@ void MainWindow::onAutoGenerate()
             "based on your configured constraints.\n\nProceed?",
             QMessageBox::Yes | QMessageBox::No) == QMessageBox::No) return;
 
-    m_appManager.autoGenerateTimetable(cs);
+    std::string genError = m_appManager.autoGenerateTimetable(cs);
+    if (!genError.empty()) {
+        QMessageBox::warning(this, "Generation Failed", QString::fromStdString(genError));
+        // We still save to file so any partial changes/cleared timetables are synced?
+        // Actually, returning early without saving leaves the UI empty. Better to refresh UI
+        // and show the error.
+        saveToFile();
+        refreshListsAndTables();
+        return;
+    }
 
     // Post-generation validation: Ensure no invalid/truncated course codes bypassed generation constraints
     bool dataCorrupted = false;

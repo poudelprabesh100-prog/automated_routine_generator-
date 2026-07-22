@@ -1,16 +1,40 @@
 {
     "batches": [
         {
-            "batchId": "BCT-2025-A",
-            "department": "",
+            "batchId": "CE C",
+            "department": "DOCSE",
             "program": 1,
             "strength": 48
         },
         {
-            "batchId": "BIT-2025-B",
-            "department": "",
-            "program": 0,
-            "strength": 45
+            "batchId": "CE B",
+            "department": "DOSCE",
+            "program": 1,
+            "strength": 48
+        },
+        {
+            "batchId": "CE A",
+            "department": "DOCSE",
+            "program": 1,
+            "strength": 48
+        },
+        {
+            "batchId": "CE D",
+            "department": "DOSCE",
+            "program": 1,
+            "strength": 48
+        },
+        {
+            "batchId": "CS A",
+            "department": "DOCSE",
+            "program": 2,
+            "strength": 60
+        },
+        {
+            "batchId": "CS B",
+            "department": "DOSCE",
+            "program": 2,
+            "strength": 60
         }
     ],
     "constraints": {
@@ -39,193 +63,3015 @@
     },
     "courses": [
         {
+            "allocatedHours": 4,
+            "code": "COMP116",
+            "courseCode": "COMP116",
+            "creditHours": 4,
+            "name": "Object Oriented Programming"
+        },
+        {
             "allocatedHours": 3,
-            "code": "COMP-102",
-            "courseCode": "COMP-102",
+            "code": "PHYS102",
+            "courseCode": "PHYS102",
             "creditHours": 3,
-            "name": "Computer Programming"
+            "name": "Physics"
+        },
+        {
+            "allocatedHours": 3,
+            "code": "PHYS102P",
+            "courseCode": "PHYS102P",
+            "creditHours": 3,
+            "name": "Physics Practical"
         },
         {
             "allocatedHours": 4,
-            "code": "MATH-101",
-            "courseCode": "MATH-101",
+            "code": "Math106",
+            "courseCode": "Math106",
             "creditHours": 4,
-            "name": "Mathematics I"
+            "name": "Math"
+        },
+        {
+            "allocatedHours": 3,
+            "code": "ENVE101",
+            "courseCode": "ENVE101",
+            "creditHours": 3,
+            "name": "Enviromental Engineering"
+        },
+        {
+            "allocatedHours": 4,
+            "code": "ENGT",
+            "courseCode": "ENGT",
+            "creditHours": 4,
+            "name": "Technical Communication"
+        },
+        {
+            "allocatedHours": 4,
+            "code": "ENGG111",
+            "courseCode": "ENGG111",
+            "creditHours": 4,
+            "name": "Elements of Engineering"
+        },
+        {
+            "allocatedHours": 3,
+            "code": "EDRG102P",
+            "courseCode": "EDRG102P",
+            "creditHours": 3,
+            "name": "Engineering Drawing"
+        },
+        {
+            "allocatedHours": 1,
+            "code": "EDRG102",
+            "courseCode": "EDRG102",
+            "creditHours": 1,
+            "name": "Drawing Theory"
+        },
+        {
+            "allocatedHours": 6,
+            "code": "ENGG102",
+            "courseCode": "ENGG102",
+            "creditHours": 6,
+            "name": "Project Day"
         }
     ],
     "instructors": [
         {
             "assignedCourses": [
-                "COMP-102",
-                "COMP-102",
-                "COMP-102",
-                "COMP-102"
             ],
-            "id": "Dr. Niraj Sharma",
+            "id": "1",
             "lockedSubjects": [
-                "COMP-102"
+                "COMP116"
             ],
-            "maxLimitHours": 12,
-            "name": "Dr. Niraj Sharma"
+            "maxLimitHours": 10,
+            "name": "Rajani Chulyadyo"
         },
         {
             "assignedCourses": [
-                "MATH-101",
-                "MATH-101"
             ],
-            "id": "Prof. Ram Prasad",
+            "id": "2",
             "lockedSubjects": [
-                "MATH-101"
+                "ENGG102"
             ],
-            "maxLimitHours": 15,
-            "name": "Prof. Ram Prasad"
+            "maxLimitHours": 10,
+            "name": "Sagar Acharya"
+        },
+        {
+            "assignedCourses": [
+            ],
+            "id": "3",
+            "lockedSubjects": [
+                "COMP116"
+            ],
+            "maxLimitHours": 10,
+            "name": "Saugat Singh"
+        },
+        {
+            "assignedCourses": [
+            ],
+            "id": "4",
+            "lockedSubjects": [
+                "COMP116"
+            ],
+            "maxLimitHours": 10,
+            "name": "Nirajan Pant"
+        },
+        {
+            "assignedCourses": [
+            ],
+            "id": "5",
+            "lockedSubjects": [
+                "PHYS102",
+                "PHYS102P"
+            ],
+            "maxLimitHours": 11,
+            "name": "Sankhar Chimoriya"
+        },
+        {
+            "assignedCourses": [
+            ],
+            "id": "6",
+            "lockedSubjects": [
+                "PHYS102",
+                "PHYS102P"
+            ],
+            "maxLimitHours": 12,
+            "name": "Ganesh Chettri"
+        },
+        {
+            "assignedCourses": [
+            ],
+            "id": "7",
+            "lockedSubjects": [
+                "PHYS102P",
+                "PHYS102"
+            ],
+            "maxLimitHours": 11,
+            "name": "Roshni Shrestha"
+        },
+        {
+            "assignedCourses": [
+            ],
+            "id": "8",
+            "lockedSubjects": [
+                "PHYS102P",
+                "PHYS102"
+            ],
+            "maxLimitHours": 10,
+            "name": "Manoj Pandey"
+        },
+        {
+            "assignedCourses": [
+            ],
+            "id": "9",
+            "lockedSubjects": [
+                "PHYS102",
+                "PHYS102P"
+            ],
+            "maxLimitHours": 12,
+            "name": "Kastup Regmi"
+        },
+        {
+            "assignedCourses": [
+            ],
+            "id": "10",
+            "lockedSubjects": [
+                "ENGT"
+            ],
+            "maxLimitHours": 10,
+            "name": "Manuka Adhikari"
+        },
+        {
+            "assignedCourses": [
+            ],
+            "id": "11",
+            "lockedSubjects": [
+                "ENGT"
+            ],
+            "maxLimitHours": 8,
+            "name": "Bandana Dahar"
+        },
+        {
+            "assignedCourses": [
+            ],
+            "id": "12",
+            "lockedSubjects": [
+                "ENGT"
+            ],
+            "maxLimitHours": 8,
+            "name": "Santosh Timilsina"
+        },
+        {
+            "assignedCourses": [
+            ],
+            "id": "13",
+            "lockedSubjects": [
+                "ENGT"
+            ],
+            "maxLimitHours": 12,
+            "name": "Bhumi Devi"
+        },
+        {
+            "assignedCourses": [
+            ],
+            "id": "14",
+            "lockedSubjects": [
+                "ENVE101"
+            ],
+            "maxLimitHours": 12,
+            "name": "Sampada Shrestha"
+        },
+        {
+            "assignedCourses": [
+            ],
+            "id": "15",
+            "lockedSubjects": [
+                "ENVE101"
+            ],
+            "maxLimitHours": 10,
+            "name": "Hari Yadav"
+        },
+        {
+            "assignedCourses": [
+            ],
+            "id": "18",
+            "lockedSubjects": [
+                "Math106"
+            ],
+            "maxLimitHours": 8,
+            "name": "Dhaka Regmi"
+        },
+        {
+            "assignedCourses": [
+            ],
+            "id": "19",
+            "lockedSubjects": [
+                "Math106"
+            ],
+            "maxLimitHours": 12,
+            "name": "RK Prajapati"
+        },
+        {
+            "assignedCourses": [
+            ],
+            "id": "20",
+            "lockedSubjects": [
+                "Math106"
+            ],
+            "maxLimitHours": 8,
+            "name": "Santosh Regmi"
+        },
+        {
+            "assignedCourses": [
+            ],
+            "id": "21",
+            "lockedSubjects": [
+                "ENGG111"
+            ],
+            "maxLimitHours": 12,
+            "name": "Prashant Regmi"
+        },
+        {
+            "assignedCourses": [
+            ],
+            "id": "22",
+            "lockedSubjects": [
+                "ENGG111"
+            ],
+            "maxLimitHours": 10,
+            "name": "Santosh Parajuli"
+        },
+        {
+            "assignedCourses": [
+            ],
+            "id": "23",
+            "lockedSubjects": [
+                "ENGG111"
+            ],
+            "maxLimitHours": 12,
+            "name": "Om Nath"
+        },
+        {
+            "assignedCourses": [
+            ],
+            "id": "25",
+            "lockedSubjects": [
+                "EDRG102P",
+                "EDRG102"
+            ],
+            "maxLimitHours": 10,
+            "name": "Bibek Sha"
+        },
+        {
+            "assignedCourses": [
+            ],
+            "id": "26",
+            "lockedSubjects": [
+                "EDRG102P",
+                "EDRG102"
+            ],
+            "maxLimitHours": 10,
+            "name": "Sunam Amatya"
+        },
+        {
+            "assignedCourses": [
+            ],
+            "id": "27",
+            "lockedSubjects": [
+                "EDRG102P",
+                "EDRG102"
+            ],
+            "maxLimitHours": 10,
+            "name": "Sambhav Basnel"
+        },
+        {
+            "assignedCourses": [
+            ],
+            "id": "30",
+            "lockedSubjects": [
+                "ENGG102"
+            ],
+            "maxLimitHours": 12,
+            "name": "Supervisor1"
+        },
+        {
+            "assignedCourses": [
+            ],
+            "id": "32",
+            "lockedSubjects": [
+                "ENGG102"
+            ],
+            "maxLimitHours": 12,
+            "name": "Supervisor2"
+        },
+        {
+            "assignedCourses": [
+            ],
+            "id": "33",
+            "lockedSubjects": [
+                "ENGG102"
+            ],
+            "maxLimitHours": 10,
+            "name": "Supervisor3"
         }
     ],
     "rooms": [
         {
-            "building": "",
+            "building": "9",
             "capacity": 60,
-            "roomId": "Block-C-102",
+            "roomId": "9-310",
             "type": 0
         },
         {
-            "building": "",
-            "capacity": 40,
-            "roomId": "Lab-A-301",
+            "building": "9",
+            "capacity": 60,
+            "roomId": "9-304",
+            "type": 0
+        },
+        {
+            "building": "9",
+            "capacity": 60,
+            "roomId": "9-301",
+            "type": 0
+        },
+        {
+            "building": "TTC",
+            "capacity": 60,
+            "roomId": "TTC",
+            "type": 0
+        },
+        {
+            "building": "9",
+            "capacity": 60,
+            "roomId": "9-402",
+            "type": 0
+        },
+        {
+            "building": "9",
+            "capacity": 60,
+            "roomId": "9-403",
+            "type": 0
+        },
+        {
+            "building": "9",
+            "capacity": 60,
+            "roomId": "9-404",
+            "type": 0
+        },
+        {
+            "building": "6",
+            "capacity": 30,
+            "roomId": "6-201",
             "type": 1
+        },
+        {
+            "building": "6",
+            "capacity": 30,
+            "roomId": "6-202",
+            "type": 1
+        },
+        {
+            "building": "11",
+            "capacity": 60,
+            "roomId": "Drawing Hall",
+            "type": 1
+        },
+        {
+            "building": "10",
+            "capacity": 60,
+            "roomId": "10-310",
+            "type": 0
+        },
+        {
+            "building": "8",
+            "capacity": 60,
+            "roomId": "8-503",
+            "type": 0
+        },
+        {
+            "building": "8",
+            "capacity": 60,
+            "roomId": "8-502",
+            "type": 0
+        },
+        {
+            "building": "9",
+            "capacity": 60,
+            "roomId": "9-302",
+            "type": 1
+        },
+        {
+            "building": "8",
+            "capacity": 60,
+            "roomId": "8-505",
+            "type": 0
+        },
+        {
+            "building": "6",
+            "capacity": 60,
+            "roomId": "6-209",
+            "type": 0
+        },
+        {
+            "building": "6",
+            "capacity": 60,
+            "roomId": "6-208",
+            "type": 0
+        },
+        {
+            "building": "8",
+            "capacity": 60,
+            "roomId": "8-204",
+            "type": 0
+        },
+        {
+            "building": "10",
+            "capacity": 60,
+            "roomId": "10-106",
+            "type": 0
+        },
+        {
+            "building": "10",
+            "capacity": 60,
+            "roomId": "10-202",
+            "type": 0
+        },
+        {
+            "building": "11",
+            "capacity": 60,
+            "roomId": "11-104",
+            "type": 0
+        },
+        {
+            "building": "10",
+            "capacity": 60,
+            "roomId": "10-102",
+            "type": 0
+        },
+        {
+            "building": "11",
+            "capacity": 60,
+            "roomId": "11-102",
+            "type": 0
+        },
+        {
+            "building": "11",
+            "capacity": 60,
+            "roomId": "11-110",
+            "type": 0
+        },
+        {
+            "building": "11",
+            "capacity": 60,
+            "roomId": "11-105",
+            "type": 0
         }
     ],
     "timetable": [
         {
-            "batch": "BCT-2025-A",
-            "course": "COMP-102",
+            "batch": "CE C",
+            "course": "COMP116",
             "day": 5,
             "endH": 10,
             "endM": 0,
-            "instructor": "Dr. Niraj Sharma",
-            "room": "Block-C-102",
-            "sessionId": "8467a8aad83cece28fad5c34c566874",
+            "instructor": "1",
+            "room": "9-310",
+            "sessionId": "8120f299fcb80429a2141560b8a7239b",
             "startH": 9,
             "startM": 0
         },
         {
-            "batch": "BCT-2025-A",
-            "course": "COMP-102",
+            "batch": "CE C",
+            "course": "COMP116",
             "day": 1,
             "endH": 10,
             "endM": 0,
-            "instructor": "Dr. Niraj Sharma",
-            "room": "Block-C-102",
-            "sessionId": "f29bef20ff0ebb409e6770f0bfddc265",
+            "instructor": "1",
+            "room": "9-310",
+            "sessionId": "808620070a88810676ddd5fc07dcf169",
             "startH": 9,
             "startM": 0
         },
         {
-            "batch": "BCT-2025-A",
-            "course": "COMP-102",
+            "batch": "CE C",
+            "course": "COMP116",
             "day": 3,
             "endH": 10,
             "endM": 0,
-            "instructor": "Dr. Niraj Sharma",
-            "room": "Block-C-102",
-            "sessionId": "3434ccf50c289e5a46531f44d41b16c7",
+            "instructor": "1",
+            "room": "9-310",
+            "sessionId": "fb84179958a3dc7e577cbcbfd16ae8f3",
             "startH": 9,
             "startM": 0
         },
         {
-            "batch": "BCT-2025-A",
-            "course": "MATH-101",
+            "batch": "CE C",
+            "course": "COMP116",
+            "day": 5,
+            "endH": 11,
+            "endM": 0,
+            "instructor": "1",
+            "room": "9-310",
+            "sessionId": "229e65045269e8251e1affa6f2827ac7",
+            "startH": 10,
+            "startM": 0
+        },
+        {
+            "batch": "CE C",
+            "course": "PHYS102",
             "day": 0,
             "endH": 10,
             "endM": 0,
-            "instructor": "Prof. Ram Prasad",
-            "room": "Block-C-102",
-            "sessionId": "fd973271babfc12ee94b1baa627e4f56",
+            "instructor": "5",
+            "room": "9-310",
+            "sessionId": "ef1d3ff2414a630d69c13d4d20e2275f",
             "startH": 9,
             "startM": 0
         },
         {
-            "batch": "BCT-2025-A",
-            "course": "MATH-101",
+            "batch": "CE C",
+            "course": "PHYS102",
             "day": 2,
             "endH": 10,
             "endM": 0,
-            "instructor": "Prof. Ram Prasad",
-            "room": "Block-C-102",
-            "sessionId": "6462061031263391921e25ed066ee732",
+            "instructor": "5",
+            "room": "9-310",
+            "sessionId": "7c76d234dec969ca422b26fca1a3f44c",
             "startH": 9,
             "startM": 0
         },
         {
-            "batch": "BCT-2025-A",
-            "course": "MATH-101",
+            "batch": "CE C",
+            "course": "PHYS102",
             "day": 4,
             "endH": 10,
             "endM": 0,
-            "instructor": "Prof. Ram Prasad",
-            "room": "Block-C-102",
-            "sessionId": "47d73c7b8f428eccc981340c66da20a5",
+            "instructor": "5",
+            "room": "9-310",
+            "sessionId": "1b08c502a81b0d6ab2080925d1b3281b",
             "startH": 9,
             "startM": 0
         },
         {
-            "batch": "BIT-2025-B",
-            "course": "COMP-102",
+            "batch": "CE C",
+            "course": "PHYS102P",
             "day": 1,
             "endH": 11,
             "endM": 0,
-            "instructor": "Dr. Niraj Sharma",
-            "room": "Block-C-102",
-            "sessionId": "e1e6874f2b9df09e5c098f748810dac5",
+            "instructor": "6",
+            "room": "9-310",
+            "sessionId": "b6711efbcd748b17f1775c52e3efcf21",
             "startH": 10,
             "startM": 0
         },
         {
-            "batch": "BIT-2025-B",
-            "course": "MATH-101",
+            "batch": "CE C",
+            "course": "PHYS102P",
+            "day": 3,
+            "endH": 11,
+            "endM": 0,
+            "instructor": "6",
+            "room": "9-310",
+            "sessionId": "72ad8c1039df9301f88a17f38c1c40ea",
+            "startH": 10,
+            "startM": 0
+        },
+        {
+            "batch": "CE C",
+            "course": "PHYS102P",
+            "day": 5,
+            "endH": 12,
+            "endM": 0,
+            "instructor": "6",
+            "room": "9-310",
+            "sessionId": "f47b756983d0d4c293e94308e0c131f",
+            "startH": 11,
+            "startM": 0
+        },
+        {
+            "batch": "CE C",
+            "course": "Math106",
             "day": 2,
             "endH": 11,
             "endM": 0,
-            "instructor": "Prof. Ram Prasad",
-            "room": "Block-C-102",
-            "sessionId": "a5ad623d93f378c59ac8d13b4b5073d1",
+            "instructor": "18",
+            "room": "9-310",
+            "sessionId": "6c51f5a2281c4e7aa3df5ad0ec3c3673",
             "startH": 10,
             "startM": 0
         },
         {
-            "batch": "BIT-2025-B",
-            "course": "MATH-101",
+            "batch": "CE C",
+            "course": "Math106",
             "day": 4,
             "endH": 11,
             "endM": 0,
-            "instructor": "Prof. Ram Prasad",
-            "room": "Block-C-102",
-            "sessionId": "77d1ee63c55c7520328197d4202628eb",
+            "instructor": "18",
+            "room": "9-310",
+            "sessionId": "ff25930f1b8e723d524501eab9be1b13",
             "startH": 10,
             "startM": 0
         },
         {
-            "batch": "BIT-2025-B",
-            "course": "MATH-101",
-            "day": 0,
+            "batch": "CE C",
+            "course": "Math106",
+            "day": 5,
+            "endH": 13,
+            "endM": 0,
+            "instructor": "18",
+            "room": "9-310",
+            "sessionId": "bbb3311231536e028692de14151bb5ac",
+            "startH": 12,
+            "startM": 0
+        },
+        {
+            "batch": "CE C",
+            "course": "Math106",
+            "day": 2,
             "endH": 12,
             "endM": 0,
-            "instructor": "Prof. Ram Prasad",
-            "room": "Block-C-102",
-            "sessionId": "9ee970e383e40cecbb8bf4d95305b3d1",
+            "instructor": "18",
+            "room": "9-310",
+            "sessionId": "fc9f02e81ce4ecf9b64f56c03dd74790",
             "startH": 11,
             "startM": 0
         },
         {
-            "batch": "BIT-2025-B",
-            "course": "MATH-101",
+            "batch": "CE C",
+            "course": "ENVE101",
+            "day": 3,
+            "endH": 12,
+            "endM": 0,
+            "instructor": "14",
+            "room": "9-310",
+            "sessionId": "764bad756d9e07f0b84621c0cb9c2a67",
+            "startH": 11,
+            "startM": 0
+        },
+        {
+            "batch": "CE C",
+            "course": "ENVE101",
+            "day": 5,
+            "endH": 15,
+            "endM": 0,
+            "instructor": "14",
+            "room": "9-310",
+            "sessionId": "29e198ce0a205261c4108777836dd937",
+            "startH": 14,
+            "startM": 0
+        },
+        {
+            "batch": "CE C",
+            "course": "ENVE101",
+            "day": 1,
+            "endH": 12,
+            "endM": 0,
+            "instructor": "14",
+            "room": "9-310",
+            "sessionId": "cab2c6943a9edcaf5543483e2c06deef",
+            "startH": 11,
+            "startM": 0
+        },
+        {
+            "batch": "CE C",
+            "course": "ENGT",
+            "day": 4,
+            "endH": 12,
+            "endM": 0,
+            "instructor": "10",
+            "room": "9-310",
+            "sessionId": "b3a2986310b573e09a2bc7650b2e7e3a",
+            "startH": 11,
+            "startM": 0
+        },
+        {
+            "batch": "CE C",
+            "course": "ENGT",
+            "day": 5,
+            "endH": 16,
+            "endM": 0,
+            "instructor": "10",
+            "room": "9-310",
+            "sessionId": "34b77af5d1a2341135d5aabcc44bd9c8",
+            "startH": 15,
+            "startM": 0
+        },
+        {
+            "batch": "CE C",
+            "course": "ENGT",
+            "day": 1,
+            "endH": 13,
+            "endM": 0,
+            "instructor": "10",
+            "room": "9-310",
+            "sessionId": "ad760658513027aa2d62902a98c8c9ce",
+            "startH": 12,
+            "startM": 0
+        },
+        {
+            "batch": "CE C",
+            "course": "ENGT",
+            "day": 4,
+            "endH": 13,
+            "endM": 0,
+            "instructor": "10",
+            "room": "9-310",
+            "sessionId": "e047aeceb9e4a055a90514ba6c7d1c2e",
+            "startH": 12,
+            "startM": 0
+        },
+        {
+            "batch": "CE C",
+            "course": "ENGG111",
+            "day": 5,
+            "endH": 17,
+            "endM": 0,
+            "instructor": "21",
+            "room": "9-310",
+            "sessionId": "875a54495dfbed7eb2d2071a83af5361",
+            "startH": 16,
+            "startM": 0
+        },
+        {
+            "batch": "CE C",
+            "course": "ENGG111",
+            "day": 1,
+            "endH": 15,
+            "endM": 0,
+            "instructor": "21",
+            "room": "9-310",
+            "sessionId": "143c231cc26eb53da191f9469cb5a099",
+            "startH": 14,
+            "startM": 0
+        },
+        {
+            "batch": "CE C",
+            "course": "ENGG111",
+            "day": 3,
+            "endH": 13,
+            "endM": 0,
+            "instructor": "21",
+            "room": "9-310",
+            "sessionId": "b1e28a0d3a38b6942cb7a4a8903d3841",
+            "startH": 12,
+            "startM": 0
+        },
+        {
+            "batch": "CE C",
+            "course": "ENGG111",
+            "day": 1,
+            "endH": 16,
+            "endM": 0,
+            "instructor": "21",
+            "room": "9-310",
+            "sessionId": "a9f50fbfdeacbb1bac126238a79965eb",
+            "startH": 15,
+            "startM": 0
+        },
+        {
+            "batch": "CE C",
+            "course": "EDRG102P",
+            "day": 0,
+            "endH": 11,
+            "endM": 0,
+            "instructor": "25",
+            "room": "9-310",
+            "sessionId": "57ce4f2b6203008ace682862751b1ebf",
+            "startH": 10,
+            "startM": 0
+        },
+        {
+            "batch": "CE C",
+            "course": "EDRG102P",
+            "day": 2,
+            "endH": 13,
+            "endM": 0,
+            "instructor": "25",
+            "room": "9-310",
+            "sessionId": "bd9c29c52a77669612bc341d559c242b",
+            "startH": 12,
+            "startM": 0
+        },
+        {
+            "batch": "CE C",
+            "course": "EDRG102P",
+            "day": 4,
+            "endH": 15,
+            "endM": 0,
+            "instructor": "25",
+            "room": "9-310",
+            "sessionId": "a2bf4858fdb6a497cd72c2b007038d36",
+            "startH": 14,
+            "startM": 0
+        },
+        {
+            "batch": "CE C",
+            "course": "EDRG102",
+            "day": 1,
+            "endH": 17,
+            "endM": 0,
+            "instructor": "26",
+            "room": "9-310",
+            "sessionId": "4abb3e12df93ebd780fd63b2a6b4922d",
+            "startH": 16,
+            "startM": 0
+        },
+        {
+            "batch": "CE C",
+            "course": "ENGG102",
+            "day": 2,
+            "endH": 15,
+            "endM": 0,
+            "instructor": "2",
+            "room": "9-310",
+            "sessionId": "edd0de2fca6d6436881f685dd44920",
+            "startH": 14,
+            "startM": 0
+        },
+        {
+            "batch": "CE C",
+            "course": "ENGG102",
+            "day": 4,
+            "endH": 16,
+            "endM": 0,
+            "instructor": "2",
+            "room": "9-310",
+            "sessionId": "8e74db9de1533057a137147e46461777",
+            "startH": 15,
+            "startM": 0
+        },
+        {
+            "batch": "CE C",
+            "course": "ENGG102",
+            "day": 0,
+            "endH": 12,
+            "endM": 0,
+            "instructor": "2",
+            "room": "9-310",
+            "sessionId": "f1f87b7341d7e9a1d04c9c37aa7d94ae",
+            "startH": 11,
+            "startM": 0
+        },
+        {
+            "batch": "CE C",
+            "course": "ENGG102",
+            "day": 2,
+            "endH": 16,
+            "endM": 0,
+            "instructor": "2",
+            "room": "9-310",
+            "sessionId": "caa08ad3528c4ce8951f29be41afc6cb",
+            "startH": 15,
+            "startM": 0
+        },
+        {
+            "batch": "CE C",
+            "course": "ENGG102",
+            "day": 4,
+            "endH": 17,
+            "endM": 0,
+            "instructor": "2",
+            "room": "9-310",
+            "sessionId": "b61dbf8a8d3b1a362420e4515b143b4c",
+            "startH": 16,
+            "startM": 0
+        },
+        {
+            "batch": "CE C",
+            "course": "ENGG102",
+            "day": 0,
+            "endH": 13,
+            "endM": 0,
+            "instructor": "2",
+            "room": "9-310",
+            "sessionId": "384e93725119094849d241ab6d5300b9",
+            "startH": 12,
+            "startM": 0
+        },
+        {
+            "batch": "CE B",
+            "course": "COMP116",
+            "day": 3,
+            "endH": 10,
+            "endM": 0,
+            "instructor": "3",
+            "room": "9-304",
+            "sessionId": "735d277da848d010c226564f89a8754e",
+            "startH": 9,
+            "startM": 0
+        },
+        {
+            "batch": "CE B",
+            "course": "COMP116",
+            "day": 5,
+            "endH": 10,
+            "endM": 0,
+            "instructor": "3",
+            "room": "9-304",
+            "sessionId": "1664c51d70360dde443d8372520c7bad",
+            "startH": 9,
+            "startM": 0
+        },
+        {
+            "batch": "CE B",
+            "course": "COMP116",
+            "day": 1,
+            "endH": 10,
+            "endM": 0,
+            "instructor": "3",
+            "room": "9-304",
+            "sessionId": "231255176bbd5dfc41510610c2f4fa2",
+            "startH": 9,
+            "startM": 0
+        },
+        {
+            "batch": "CE B",
+            "course": "COMP116",
+            "day": 3,
+            "endH": 11,
+            "endM": 0,
+            "instructor": "1",
+            "room": "9-304",
+            "sessionId": "465174d242280027787bb2356aab7309",
+            "startH": 10,
+            "startM": 0
+        },
+        {
+            "batch": "CE B",
+            "course": "PHYS102",
+            "day": 4,
+            "endH": 10,
+            "endM": 0,
+            "instructor": "7",
+            "room": "9-304",
+            "sessionId": "85c5d0ed53013fd896dd13479bc76bea",
+            "startH": 9,
+            "startM": 0
+        },
+        {
+            "batch": "CE B",
+            "course": "PHYS102",
+            "day": 5,
+            "endH": 11,
+            "endM": 0,
+            "instructor": "6",
+            "room": "9-304",
+            "sessionId": "e5e22d89486d9adbb44a27e43bfdc61d",
+            "startH": 10,
+            "startM": 0
+        },
+        {
+            "batch": "CE B",
+            "course": "PHYS102",
+            "day": 1,
+            "endH": 11,
+            "endM": 0,
+            "instructor": "7",
+            "room": "9-304",
+            "sessionId": "181bd45403de7cca872c8dc5322a5291",
+            "startH": 10,
+            "startM": 0
+        },
+        {
+            "batch": "CE B",
+            "course": "PHYS102P",
+            "day": 5,
+            "endH": 12,
+            "endM": 0,
+            "instructor": "7",
+            "room": "9-304",
+            "sessionId": "53eab701f035237be9f469b3b6f5af6e",
+            "startH": 11,
+            "startM": 0
+        },
+        {
+            "batch": "CE B",
+            "course": "PHYS102P",
+            "day": 1,
+            "endH": 12,
+            "endM": 0,
+            "instructor": "6",
+            "room": "9-304",
+            "sessionId": "2e7899dde74a0c4fc1c594b7b0d58f81",
+            "startH": 11,
+            "startM": 0
+        },
+        {
+            "batch": "CE B",
+            "course": "PHYS102P",
+            "day": 3,
+            "endH": 12,
+            "endM": 0,
+            "instructor": "6",
+            "room": "9-304",
+            "sessionId": "1b8bca403301dfa5adf29c0c70d0c85a",
+            "startH": 11,
+            "startM": 0
+        },
+        {
+            "batch": "CE B",
+            "course": "Math106",
+            "day": 0,
+            "endH": 10,
+            "endM": 0,
+            "instructor": "19",
+            "room": "9-304",
+            "sessionId": "f43a6e680a59b055c017a8751e2c066c",
+            "startH": 9,
+            "startM": 0
+        },
+        {
+            "batch": "CE B",
+            "course": "Math106",
+            "day": 2,
+            "endH": 10,
+            "endM": 0,
+            "instructor": "18",
+            "room": "9-304",
+            "sessionId": "642e81859dfc810bdc568a94a5778eec",
+            "startH": 9,
+            "startM": 0
+        },
+        {
+            "batch": "CE B",
+            "course": "Math106",
+            "day": 4,
+            "endH": 11,
+            "endM": 0,
+            "instructor": "19",
+            "room": "9-304",
+            "sessionId": "8641cb03c8cd2b166a4267bbf40f7ceb",
+            "startH": 10,
+            "startM": 0
+        },
+        {
+            "batch": "CE B",
+            "course": "Math106",
+            "day": 0,
+            "endH": 11,
+            "endM": 0,
+            "instructor": "19",
+            "room": "9-304",
+            "sessionId": "b5db5a9e3ff054fb888f11dd4065730",
+            "startH": 10,
+            "startM": 0
+        },
+        {
+            "batch": "CE B",
+            "course": "ENVE101",
+            "day": 1,
+            "endH": 13,
+            "endM": 0,
+            "instructor": "14",
+            "room": "9-304",
+            "sessionId": "55c142f5e454343fcaad5590264670d",
+            "startH": 12,
+            "startM": 0
+        },
+        {
+            "batch": "CE B",
+            "course": "ENVE101",
+            "day": 3,
+            "endH": 13,
+            "endM": 0,
+            "instructor": "14",
+            "room": "9-304",
+            "sessionId": "601def0c04dfdd8eb71b55f003ef3608",
+            "startH": 12,
+            "startM": 0
+        },
+        {
+            "batch": "CE B",
+            "course": "ENVE101",
+            "day": 5,
+            "endH": 13,
+            "endM": 0,
+            "instructor": "14",
+            "room": "9-304",
+            "sessionId": "aac4744ebe5da5614c26e18b89e50a20",
+            "startH": 12,
+            "startM": 0
+        },
+        {
+            "batch": "CE B",
+            "course": "ENGT",
+            "day": 2,
+            "endH": 11,
+            "endM": 0,
+            "instructor": "11",
+            "room": "9-304",
+            "sessionId": "cf197abfa3a44d6ec85cdfab8ff6e0d4",
+            "startH": 10,
+            "startM": 0
+        },
+        {
+            "batch": "CE B",
+            "course": "ENGT",
+            "day": 4,
+            "endH": 12,
+            "endM": 0,
+            "instructor": "11",
+            "room": "9-304",
+            "sessionId": "ac132a1078147d2fd7f46f169b1532fd",
+            "startH": 11,
+            "startM": 0
+        },
+        {
+            "batch": "CE B",
+            "course": "ENGT",
+            "day": 5,
+            "endH": 15,
+            "endM": 0,
+            "instructor": "10",
+            "room": "9-304",
+            "sessionId": "c0741aae51083918610b9e5641d53c5a",
+            "startH": 14,
+            "startM": 0
+        },
+        {
+            "batch": "CE B",
+            "course": "ENGT",
             "day": 2,
             "endH": 12,
             "endM": 0,
-            "instructor": "Prof. Ram Prasad",
-            "room": "Block-C-102",
-            "sessionId": "4210c36e27efe4e1baeae073f9034f04",
+            "instructor": "11",
+            "room": "9-304",
+            "sessionId": "bd5c5eaede9506439ea0a28aa41efe8d",
             "startH": 11,
+            "startM": 0
+        },
+        {
+            "batch": "CE B",
+            "course": "ENGG111",
+            "day": 3,
+            "endH": 15,
+            "endM": 0,
+            "instructor": "21",
+            "room": "9-310",
+            "sessionId": "e43f566f60d5edfeef3db40c8aea738e",
+            "startH": 14,
+            "startM": 0
+        },
+        {
+            "batch": "CE B",
+            "course": "ENGG111",
+            "day": 5,
+            "endH": 16,
+            "endM": 0,
+            "instructor": "21",
+            "room": "9-304",
+            "sessionId": "f9f3bb9080e96a373a2292b552a5821b",
+            "startH": 15,
+            "startM": 0
+        },
+        {
+            "batch": "CE B",
+            "course": "ENGG111",
+            "day": 1,
+            "endH": 15,
+            "endM": 0,
+            "instructor": "22",
+            "room": "9-304",
+            "sessionId": "8411b1cfbe590968933d57845afc1941",
+            "startH": 14,
+            "startM": 0
+        },
+        {
+            "batch": "CE B",
+            "course": "ENGG111",
+            "day": 3,
+            "endH": 16,
+            "endM": 0,
+            "instructor": "21",
+            "room": "9-310",
+            "sessionId": "c2b85329b68470e266fad39b83c2056",
+            "startH": 15,
+            "startM": 0
+        },
+        {
+            "batch": "CE B",
+            "course": "EDRG102P",
+            "day": 4,
+            "endH": 13,
+            "endM": 0,
+            "instructor": "25",
+            "room": "9-304",
+            "sessionId": "20d0283b4b2b460b7b1bed0894e34da2",
+            "startH": 12,
+            "startM": 0
+        },
+        {
+            "batch": "CE B",
+            "course": "EDRG102P",
+            "day": 5,
+            "endH": 17,
+            "endM": 0,
+            "instructor": "26",
+            "room": "9-304",
+            "sessionId": "e75578fb4b71da0a5e22dfb0606b949",
+            "startH": 16,
+            "startM": 0
+        },
+        {
+            "batch": "CE B",
+            "course": "EDRG102P",
+            "day": 1,
+            "endH": 16,
+            "endM": 0,
+            "instructor": "26",
+            "room": "9-304",
+            "sessionId": "d651804a6f357e573e95143ca26994fc",
+            "startH": 15,
+            "startM": 0
+        },
+        {
+            "batch": "CE B",
+            "course": "EDRG102",
+            "day": 0,
+            "endH": 12,
+            "endM": 0,
+            "instructor": "25",
+            "room": "9-304",
+            "sessionId": "9a81011b24a80e0c3ff5c850845faa07",
+            "startH": 11,
+            "startM": 0
+        },
+        {
+            "batch": "CE B",
+            "course": "ENGG102",
+            "day": 0,
+            "endH": 13,
+            "endM": 0,
+            "instructor": "30",
+            "room": "9-304",
+            "sessionId": "143033e56df28919461e4423260f97fa",
+            "startH": 12,
+            "startM": 0
+        },
+        {
+            "batch": "CE B",
+            "course": "ENGG102",
+            "day": 2,
+            "endH": 13,
+            "endM": 0,
+            "instructor": "2",
+            "room": "9-304",
+            "sessionId": "861e329502e6bde07c26d16d198fa6ee",
+            "startH": 12,
+            "startM": 0
+        },
+        {
+            "batch": "CE B",
+            "course": "ENGG102",
+            "day": 4,
+            "endH": 15,
+            "endM": 0,
+            "instructor": "2",
+            "room": "9-304",
+            "sessionId": "124b4474b9906f9318d2b84e82006261",
+            "startH": 14,
+            "startM": 0
+        },
+        {
+            "batch": "CE B",
+            "course": "ENGG102",
+            "day": 0,
+            "endH": 15,
+            "endM": 0,
+            "instructor": "2",
+            "room": "9-310",
+            "sessionId": "f27c75fa577d3022d12d627450638224",
+            "startH": 14,
+            "startM": 0
+        },
+        {
+            "batch": "CE B",
+            "course": "ENGG102",
+            "day": 2,
+            "endH": 15,
+            "endM": 0,
+            "instructor": "30",
+            "room": "9-304",
+            "sessionId": "1d92543f13d032f3a87f7618f8e1c421",
+            "startH": 14,
+            "startM": 0
+        },
+        {
+            "batch": "CE B",
+            "course": "ENGG102",
+            "day": 4,
+            "endH": 16,
+            "endM": 0,
+            "instructor": "30",
+            "room": "9-304",
+            "sessionId": "b70c7fcdf2d153e9ded499dd0b0a5fd4",
+            "startH": 15,
+            "startM": 0
+        },
+        {
+            "batch": "CE A",
+            "course": "COMP116",
+            "day": 1,
+            "endH": 10,
+            "endM": 0,
+            "instructor": "4",
+            "room": "9-301",
+            "sessionId": "375940cc57f2993f6e8349eaa69b658",
+            "startH": 9,
+            "startM": 0
+        },
+        {
+            "batch": "CE A",
+            "course": "COMP116",
+            "day": 3,
+            "endH": 10,
+            "endM": 0,
+            "instructor": "4",
+            "room": "9-301",
+            "sessionId": "f5dcd100b32609034a328701ff80bd55",
+            "startH": 9,
+            "startM": 0
+        },
+        {
+            "batch": "CE A",
+            "course": "COMP116",
+            "day": 5,
+            "endH": 10,
+            "endM": 0,
+            "instructor": "4",
+            "room": "9-301",
+            "sessionId": "1bcdb3a0ce411b6f3378037e0f404208",
+            "startH": 9,
+            "startM": 0
+        },
+        {
+            "batch": "CE A",
+            "course": "COMP116",
+            "day": 1,
+            "endH": 11,
+            "endM": 0,
+            "instructor": "1",
+            "room": "9-301",
+            "sessionId": "3faaf22394572ce93ff139890dc7d284",
+            "startH": 10,
+            "startM": 0
+        },
+        {
+            "batch": "CE A",
+            "course": "PHYS102",
+            "day": 2,
+            "endH": 10,
+            "endM": 0,
+            "instructor": "8",
+            "room": "9-301",
+            "sessionId": "518ecee9d7296bcba52542b6118664d2",
+            "startH": 9,
+            "startM": 0
+        },
+        {
+            "batch": "CE A",
+            "course": "PHYS102",
+            "day": 4,
+            "endH": 10,
+            "endM": 0,
+            "instructor": "8",
+            "room": "9-301",
+            "sessionId": "1e12d30ceefa571f7d9c9975cb76f59f",
+            "startH": 9,
+            "startM": 0
+        },
+        {
+            "batch": "CE A",
+            "course": "PHYS102",
+            "day": 5,
+            "endH": 11,
+            "endM": 0,
+            "instructor": "7",
+            "room": "9-301",
+            "sessionId": "9fe246b11d11d7c9735eef130865823",
+            "startH": 10,
+            "startM": 0
+        },
+        {
+            "batch": "CE A",
+            "course": "PHYS102P",
+            "day": 3,
+            "endH": 11,
+            "endM": 0,
+            "instructor": "9",
+            "room": "9-301",
+            "sessionId": "77c8703cd78604118ef3f9624f5ccf95",
+            "startH": 10,
+            "startM": 0
+        },
+        {
+            "batch": "CE A",
+            "course": "PHYS102P",
+            "day": 5,
+            "endH": 12,
+            "endM": 0,
+            "instructor": "8",
+            "room": "9-301",
+            "sessionId": "54d1e735ace6b35a41ef9ce61995696a",
+            "startH": 11,
+            "startM": 0
+        },
+        {
+            "batch": "CE A",
+            "course": "PHYS102P",
+            "day": 1,
+            "endH": 12,
+            "endM": 0,
+            "instructor": "7",
+            "room": "9-301",
+            "sessionId": "a0fef5ca3c71c57bc56c062f516b6bd8",
+            "startH": 11,
+            "startM": 0
+        },
+        {
+            "batch": "CE A",
+            "course": "Math106",
+            "day": 4,
+            "endH": 11,
+            "endM": 0,
+            "instructor": "20",
+            "room": "9-301",
+            "sessionId": "65e36fe91a0f53ea4e53c3f9f5f88485",
+            "startH": 10,
+            "startM": 0
+        },
+        {
+            "batch": "CE A",
+            "course": "Math106",
+            "day": 5,
+            "endH": 13,
+            "endM": 0,
+            "instructor": "20",
+            "room": "9-301",
+            "sessionId": "c55acb7e07181bc95873c7f6aec3e431",
+            "startH": 12,
+            "startM": 0
+        },
+        {
+            "batch": "CE A",
+            "course": "Math106",
+            "day": 1,
+            "endH": 13,
+            "endM": 0,
+            "instructor": "20",
+            "room": "9-301",
+            "sessionId": "8bbb2fc540b5c96b3c265b6c588015d5",
+            "startH": 12,
+            "startM": 0
+        },
+        {
+            "batch": "CE A",
+            "course": "Math106",
+            "day": 4,
+            "endH": 12,
+            "endM": 0,
+            "instructor": "18",
+            "room": "9-301",
+            "sessionId": "31421adc74c74cded6992e18c3e4815",
+            "startH": 11,
+            "startM": 0
+        },
+        {
+            "batch": "CE A",
+            "course": "ENVE101",
+            "day": 5,
+            "endH": 15,
+            "endM": 0,
+            "instructor": "15",
+            "room": "9-301",
+            "sessionId": "9b7bb1cd73a31503a6728e62a1b80b4d",
+            "startH": 14,
+            "startM": 0
+        },
+        {
+            "batch": "CE A",
+            "course": "ENVE101",
+            "day": 1,
+            "endH": 15,
+            "endM": 0,
+            "instructor": "14",
+            "room": "9-301",
+            "sessionId": "ca23c18078b0d1352d2e2c01e7dd3d59",
+            "startH": 14,
+            "startM": 0
+        },
+        {
+            "batch": "CE A",
+            "course": "ENVE101",
+            "day": 3,
+            "endH": 12,
+            "endM": 0,
+            "instructor": "15",
+            "room": "9-301",
+            "sessionId": "9b305a510954f796a6cb5d8e1a36e6a0",
+            "startH": 11,
+            "startM": 0
+        },
+        {
+            "batch": "CE A",
+            "course": "ENGT",
+            "day": 0,
+            "endH": 10,
+            "endM": 0,
+            "instructor": "11",
+            "room": "9-301",
+            "sessionId": "d292ced3ca12e0994a809cf23b99ab4f",
+            "startH": 9,
+            "startM": 0
+        },
+        {
+            "batch": "CE A",
+            "course": "ENGT",
+            "day": 2,
+            "endH": 11,
+            "endM": 0,
+            "instructor": "12",
+            "room": "9-301",
+            "sessionId": "d28460bb064533fd428db1c843830a90",
+            "startH": 10,
+            "startM": 0
+        },
+        {
+            "batch": "CE A",
+            "course": "ENGT",
+            "day": 4,
+            "endH": 13,
+            "endM": 0,
+            "instructor": "11",
+            "room": "9-301",
+            "sessionId": "eae61084836c92a33ff87b91bde53f92",
+            "startH": 12,
+            "startM": 0
+        },
+        {
+            "batch": "CE A",
+            "course": "ENGT",
+            "day": 0,
+            "endH": 11,
+            "endM": 0,
+            "instructor": "11",
+            "room": "9-301",
+            "sessionId": "a266e2f7f9a386a699cdcb12a7a4c264",
+            "startH": 10,
+            "startM": 0
+        },
+        {
+            "batch": "CE A",
+            "course": "ENGG111",
+            "day": 1,
+            "endH": 16,
+            "endM": 0,
+            "instructor": "22",
+            "room": "9-301",
+            "sessionId": "8de60fea4d51b3ddf17ed1d5958595c",
+            "startH": 15,
+            "startM": 0
+        },
+        {
+            "batch": "CE A",
+            "course": "ENGG111",
+            "day": 3,
+            "endH": 13,
+            "endM": 0,
+            "instructor": "22",
+            "room": "9-301",
+            "sessionId": "8fd8e68af4dba236fdada31cb938f8e6",
+            "startH": 12,
+            "startM": 0
+        },
+        {
+            "batch": "CE A",
+            "course": "ENGG111",
+            "day": 5,
+            "endH": 16,
+            "endM": 0,
+            "instructor": "22",
+            "room": "9-301",
+            "sessionId": "d89d57bd5b879954cfc55ef59a431846",
+            "startH": 15,
+            "startM": 0
+        },
+        {
+            "batch": "CE A",
+            "course": "ENGG111",
+            "day": 1,
+            "endH": 17,
+            "endM": 0,
+            "instructor": "21",
+            "room": "9-304",
+            "sessionId": "ad3e90c0cfe99dd54f0d84a0b3a978de",
+            "startH": 16,
+            "startM": 0
+        },
+        {
+            "batch": "CE A",
+            "course": "EDRG102P",
+            "day": 2,
+            "endH": 12,
+            "endM": 0,
+            "instructor": "25",
+            "room": "9-301",
+            "sessionId": "120856ca2a1d346fad2057e11cb0fff",
+            "startH": 11,
+            "startM": 0
+        },
+        {
+            "batch": "CE A",
+            "course": "EDRG102P",
+            "day": 4,
+            "endH": 15,
+            "endM": 0,
+            "instructor": "26",
+            "room": "9-301",
+            "sessionId": "ce5d5298a4a8574b4ff71f04311d9b8f",
+            "startH": 14,
+            "startM": 0
+        },
+        {
+            "batch": "CE A",
+            "course": "EDRG102P",
+            "day": 5,
+            "endH": 17,
+            "endM": 0,
+            "instructor": "27",
+            "room": "9-301",
+            "sessionId": "a6f0a65368686e0a66eece27a5110cf0",
+            "startH": 16,
+            "startM": 0
+        },
+        {
+            "batch": "CE A",
+            "course": "EDRG102",
+            "day": 3,
+            "endH": 15,
+            "endM": 0,
+            "instructor": "27",
+            "room": "9-304",
+            "sessionId": "1214a745fe69fa90acd362f09af6fa44",
+            "startH": 14,
+            "startM": 0
+        },
+        {
+            "batch": "CE A",
+            "course": "ENGG102",
+            "day": 4,
+            "endH": 16,
+            "endM": 0,
+            "instructor": "32",
+            "room": "9-301",
+            "sessionId": "fd3f5046c9be0fcf70f6a5910cc66979",
+            "startH": 15,
+            "startM": 0
+        },
+        {
+            "batch": "CE A",
+            "course": "ENGG102",
+            "day": 0,
+            "endH": 12,
+            "endM": 0,
+            "instructor": "30",
+            "room": "9-301",
+            "sessionId": "5388535af134e4358b793701bb440cbb",
+            "startH": 11,
+            "startM": 0
+        },
+        {
+            "batch": "CE A",
+            "course": "ENGG102",
+            "day": 2,
+            "endH": 13,
+            "endM": 0,
+            "instructor": "30",
+            "room": "9-301",
+            "sessionId": "e44dbc2b6272e84e19f241ae070f5d3",
+            "startH": 12,
+            "startM": 0
+        },
+        {
+            "batch": "CE A",
+            "course": "ENGG102",
+            "day": 4,
+            "endH": 17,
+            "endM": 0,
+            "instructor": "30",
+            "room": "9-304",
+            "sessionId": "ad597961652b0bf361861632b2556705",
+            "startH": 16,
+            "startM": 0
+        },
+        {
+            "batch": "CE A",
+            "course": "ENGG102",
+            "day": 0,
+            "endH": 13,
+            "endM": 0,
+            "instructor": "32",
+            "room": "9-301",
+            "sessionId": "885441f97d225690220b91f4329bd6e6",
+            "startH": 12,
+            "startM": 0
+        },
+        {
+            "batch": "CE A",
+            "course": "ENGG102",
+            "day": 2,
+            "endH": 15,
+            "endM": 0,
+            "instructor": "32",
+            "room": "9-301",
+            "sessionId": "2b3b51deb1bc715a886bf7060377219e",
+            "startH": 14,
+            "startM": 0
+        },
+        {
+            "batch": "CE D",
+            "course": "COMP116",
+            "day": 5,
+            "endH": 11,
+            "endM": 0,
+            "instructor": "3",
+            "room": "TTC",
+            "sessionId": "a18b2f1a95fe086b565b07e06fcc0736",
+            "startH": 10,
+            "startM": 0
+        },
+        {
+            "batch": "CE D",
+            "course": "COMP116",
+            "day": 1,
+            "endH": 11,
+            "endM": 0,
+            "instructor": "3",
+            "room": "TTC",
+            "sessionId": "d0578d7113065f14a3e38af10a7418ea",
+            "startH": 10,
+            "startM": 0
+        },
+        {
+            "batch": "CE D",
+            "course": "COMP116",
+            "day": 3,
+            "endH": 11,
+            "endM": 0,
+            "instructor": "3",
+            "room": "TTC",
+            "sessionId": "9aa3a516778ec984b7d1d13929efc1a1",
+            "startH": 10,
+            "startM": 0
+        },
+        {
+            "batch": "CE D",
+            "course": "COMP116",
+            "day": 5,
+            "endH": 12,
+            "endM": 0,
+            "instructor": "1",
+            "room": "TTC",
+            "sessionId": "8f5ff7b92b23b4093dbfb96f21bafbe5",
+            "startH": 11,
+            "startM": 0
+        },
+        {
+            "batch": "CE D",
+            "course": "PHYS102",
+            "day": 0,
+            "endH": 10,
+            "endM": 0,
+            "instructor": "9",
+            "room": "TTC",
+            "sessionId": "f917604d3f41a9f8d30b6b776be9d96d",
+            "startH": 9,
+            "startM": 0
+        },
+        {
+            "batch": "CE D",
+            "course": "PHYS102",
+            "day": 2,
+            "endH": 11,
+            "endM": 0,
+            "instructor": "5",
+            "room": "TTC",
+            "sessionId": "4c8ec18e0e9e7379607e15d0a53a2025",
+            "startH": 10,
+            "startM": 0
+        },
+        {
+            "batch": "CE D",
+            "course": "PHYS102",
+            "day": 4,
+            "endH": 11,
+            "endM": 0,
+            "instructor": "5",
+            "room": "TTC",
+            "sessionId": "ba0538e87f273c381d656eb82231a4d2",
+            "startH": 10,
+            "startM": 0
+        },
+        {
+            "batch": "CE D",
+            "course": "PHYS102P",
+            "day": 1,
+            "endH": 10,
+            "endM": 0,
+            "instructor": "6",
+            "room": "TTC",
+            "sessionId": "aea063babce804db4fe4096d918a43bc",
+            "startH": 9,
+            "startM": 0
+        },
+        {
+            "batch": "CE D",
+            "course": "PHYS102P",
+            "day": 3,
+            "endH": 10,
+            "endM": 0,
+            "instructor": "6",
+            "room": "TTC",
+            "sessionId": "fa4d536d05dc5de3a7931f1513d87195",
+            "startH": 9,
+            "startM": 0
+        },
+        {
+            "batch": "CE D",
+            "course": "PHYS102P",
+            "day": 5,
+            "endH": 10,
+            "endM": 0,
+            "instructor": "6",
+            "room": "TTC",
+            "sessionId": "306445bcc364a278dc861244e7187545",
+            "startH": 9,
+            "startM": 0
+        },
+        {
+            "batch": "CE D",
+            "course": "Math106",
+            "day": 2,
+            "endH": 10,
+            "endM": 0,
+            "instructor": "19",
+            "room": "TTC",
+            "sessionId": "6f680e3e64530f02331f2710cbce2a70",
+            "startH": 9,
+            "startM": 0
+        },
+        {
+            "batch": "CE D",
+            "course": "Math106",
+            "day": 4,
+            "endH": 10,
+            "endM": 0,
+            "instructor": "18",
+            "room": "TTC",
+            "sessionId": "ee297510594e46ab85ad8de9c1fe747b",
+            "startH": 9,
+            "startM": 0
+        },
+        {
+            "batch": "CE D",
+            "course": "Math106",
+            "day": 5,
+            "endH": 15,
+            "endM": 0,
+            "instructor": "18",
+            "room": "TTC",
+            "sessionId": "92fb3895215b303140f97f6b7c954340",
+            "startH": 14,
+            "startM": 0
+        },
+        {
+            "batch": "CE D",
+            "course": "Math106",
+            "day": 2,
+            "endH": 12,
+            "endM": 0,
+            "instructor": "19",
+            "room": "TTC",
+            "sessionId": "f88c583d463992fd301bc4d6f63d6181",
+            "startH": 11,
+            "startM": 0
+        },
+        {
+            "batch": "CE D",
+            "course": "ENVE101",
+            "day": 3,
+            "endH": 13,
+            "endM": 0,
+            "instructor": "15",
+            "room": "TTC",
+            "sessionId": "85443a89af872de8b023962a4475b2ce",
+            "startH": 12,
+            "startM": 0
+        },
+        {
+            "batch": "CE D",
+            "course": "ENVE101",
+            "day": 5,
+            "endH": 13,
+            "endM": 0,
+            "instructor": "15",
+            "room": "TTC",
+            "sessionId": "37c7030d78eee91d25682a6399a15c8a",
+            "startH": 12,
+            "startM": 0
+        },
+        {
+            "batch": "CE D",
+            "course": "ENVE101",
+            "day": 1,
+            "endH": 12,
+            "endM": 0,
+            "instructor": "15",
+            "room": "TTC",
+            "sessionId": "3acd5fcca804e45830603dd034c9b7f",
+            "startH": 11,
+            "startM": 0
+        },
+        {
+            "batch": "CE D",
+            "course": "ENGT",
+            "day": 4,
+            "endH": 12,
+            "endM": 0,
+            "instructor": "12",
+            "room": "TTC",
+            "sessionId": "347596172749ecd5604067034d5b67cc",
+            "startH": 11,
+            "startM": 0
+        },
+        {
+            "batch": "CE D",
+            "course": "ENGT",
+            "day": 5,
+            "endH": 16,
+            "endM": 0,
+            "instructor": "12",
+            "room": "TTC",
+            "sessionId": "b7f40c7b84180210af6168eff566c44",
+            "startH": 15,
+            "startM": 0
+        },
+        {
+            "batch": "CE D",
+            "course": "ENGT",
+            "day": 1,
+            "endH": 13,
+            "endM": 0,
+            "instructor": "13",
+            "room": "TTC",
+            "sessionId": "10336d8e30f8d64957ebcf19807f8aa8",
+            "startH": 12,
+            "startM": 0
+        },
+        {
+            "batch": "CE D",
+            "course": "ENGT",
+            "day": 4,
+            "endH": 13,
+            "endM": 0,
+            "instructor": "12",
+            "room": "TTC",
+            "sessionId": "bf436ce41c5ab0fc60937874e0aeacaa",
+            "startH": 12,
+            "startM": 0
+        },
+        {
+            "batch": "CE D",
+            "course": "ENGG111",
+            "day": 5,
+            "endH": 17,
+            "endM": 0,
+            "instructor": "22",
+            "room": "TTC",
+            "sessionId": "8d74f07ce724a869d9c67e9862fa068c",
+            "startH": 16,
+            "startM": 0
+        },
+        {
+            "batch": "CE D",
+            "course": "ENGG111",
+            "day": 1,
+            "endH": 15,
+            "endM": 0,
+            "instructor": "23",
+            "room": "TTC",
+            "sessionId": "b82d3c1178048a5b6ae494292c81c785",
+            "startH": 14,
+            "startM": 0
+        },
+        {
+            "batch": "CE D",
+            "course": "ENGG111",
+            "day": 3,
+            "endH": 12,
+            "endM": 0,
+            "instructor": "21",
+            "room": "TTC",
+            "sessionId": "600df557007131fc7f415742a9f3af16",
+            "startH": 11,
+            "startM": 0
+        },
+        {
+            "batch": "CE D",
+            "course": "ENGG111",
+            "day": 1,
+            "endH": 16,
+            "endM": 0,
+            "instructor": "23",
+            "room": "TTC",
+            "sessionId": "3f1ea7089e6a286a2346fb72c911b92c",
+            "startH": 15,
+            "startM": 0
+        },
+        {
+            "batch": "CE D",
+            "course": "EDRG102P",
+            "day": 0,
+            "endH": 13,
+            "endM": 0,
+            "instructor": "25",
+            "room": "TTC",
+            "sessionId": "1e757874c562dc152a776c467cf282b5",
+            "startH": 12,
+            "startM": 0
+        },
+        {
+            "batch": "CE D",
+            "course": "EDRG102P",
+            "day": 2,
+            "endH": 15,
+            "endM": 0,
+            "instructor": "25",
+            "room": "TTC",
+            "sessionId": "33251919cf2e91cc39722ec1b8e6c75",
+            "startH": 14,
+            "startM": 0
+        },
+        {
+            "batch": "CE D",
+            "course": "EDRG102P",
+            "day": 4,
+            "endH": 16,
+            "endM": 0,
+            "instructor": "25",
+            "room": "TTC",
+            "sessionId": "925f9dd9a1eeda46f6af47afa44c2274",
+            "startH": 15,
+            "startM": 0
+        },
+        {
+            "batch": "CE D",
+            "course": "EDRG102",
+            "day": 1,
+            "endH": 17,
+            "endM": 0,
+            "instructor": "27",
+            "room": "9-301",
+            "sessionId": "e6921682ac7588eec2290ff5004bf5c9",
+            "startH": 16,
+            "startM": 0
+        },
+        {
+            "batch": "CE D",
+            "course": "ENGG102",
+            "day": 2,
+            "endH": 13,
+            "endM": 0,
+            "instructor": "32",
+            "room": "TTC",
+            "sessionId": "f9067be88a1f377d375e47849b3295f5",
+            "startH": 12,
+            "startM": 0
+        },
+        {
+            "batch": "CE D",
+            "course": "ENGG102",
+            "day": 4,
+            "endH": 15,
+            "endM": 0,
+            "instructor": "30",
+            "room": "TTC",
+            "sessionId": "f6f2f8d854bcb16c39090ec991e07a5",
+            "startH": 14,
+            "startM": 0
+        },
+        {
+            "batch": "CE D",
+            "course": "ENGG102",
+            "day": 0,
+            "endH": 11,
+            "endM": 0,
+            "instructor": "2",
+            "room": "TTC",
+            "sessionId": "cee38a54584c2faccf98995fb8d55953",
+            "startH": 10,
+            "startM": 0
+        },
+        {
+            "batch": "CE D",
+            "course": "ENGG102",
+            "day": 2,
+            "endH": 16,
+            "endM": 0,
+            "instructor": "30",
+            "room": "9-304",
+            "sessionId": "45ecc07e792178a21bb64f49ae9d38c9",
+            "startH": 15,
+            "startM": 0
+        },
+        {
+            "batch": "CE D",
+            "course": "ENGG102",
+            "day": 4,
+            "endH": 17,
+            "endM": 0,
+            "instructor": "32",
+            "room": "9-301",
+            "sessionId": "ee541814e03db2189a85db203a5facc7",
+            "startH": 16,
+            "startM": 0
+        },
+        {
+            "batch": "CE D",
+            "course": "ENGG102",
+            "day": 0,
+            "endH": 12,
+            "endM": 0,
+            "instructor": "32",
+            "room": "TTC",
+            "sessionId": "124a1951984ba3a5cfd2b57e10a10af5",
+            "startH": 11,
+            "startM": 0
+        },
+        {
+            "batch": "CS A",
+            "course": "COMP116",
+            "day": 3,
+            "endH": 11,
+            "endM": 0,
+            "instructor": "4",
+            "room": "9-402",
+            "sessionId": "ffb529ea2c0de078deaa97264fe467d0",
+            "startH": 10,
+            "startM": 0
+        },
+        {
+            "batch": "CS A",
+            "course": "COMP116",
+            "day": 5,
+            "endH": 11,
+            "endM": 0,
+            "instructor": "4",
+            "room": "9-402",
+            "sessionId": "8878946cd15e05e1fdcf802364906870",
+            "startH": 10,
+            "startM": 0
+        },
+        {
+            "batch": "CS A",
+            "course": "COMP116",
+            "day": 1,
+            "endH": 11,
+            "endM": 0,
+            "instructor": "4",
+            "room": "9-402",
+            "sessionId": "e5ce24661e74d15fe5a8088053271480",
+            "startH": 10,
+            "startM": 0
+        },
+        {
+            "batch": "CS A",
+            "course": "COMP116",
+            "day": 3,
+            "endH": 12,
+            "endM": 0,
+            "instructor": "1",
+            "room": "9-402",
+            "sessionId": "3b1eed4ba52a1e3fb287de54fc4987e2",
+            "startH": 11,
+            "startM": 0
+        },
+        {
+            "batch": "CS A",
+            "course": "PHYS102",
+            "day": 4,
+            "endH": 11,
+            "endM": 0,
+            "instructor": "7",
+            "room": "9-402",
+            "sessionId": "cd15d4001872fbf15441e342d70cb778",
+            "startH": 10,
+            "startM": 0
+        },
+        {
+            "batch": "CS A",
+            "course": "PHYS102",
+            "day": 5,
+            "endH": 10,
+            "endM": 0,
+            "instructor": "7",
+            "room": "9-402",
+            "sessionId": "7636af2178e425276f9d7b301481de6f",
+            "startH": 9,
+            "startM": 0
+        },
+        {
+            "batch": "CS A",
+            "course": "PHYS102",
+            "day": 1,
+            "endH": 10,
+            "endM": 0,
+            "instructor": "7",
+            "room": "9-402",
+            "sessionId": "3d0d35ddc8af6bd1adfec908449f3ce1",
+            "startH": 9,
+            "startM": 0
+        },
+        {
+            "batch": "CS A",
+            "course": "PHYS102P",
+            "day": 5,
+            "endH": 13,
+            "endM": 0,
+            "instructor": "8",
+            "room": "9-402",
+            "sessionId": "3b6234d0792847caafe419b3f8bf101",
+            "startH": 12,
+            "startM": 0
+        },
+        {
+            "batch": "CS A",
+            "course": "PHYS102P",
+            "day": 1,
+            "endH": 15,
+            "endM": 0,
+            "instructor": "6",
+            "room": "9-402",
+            "sessionId": "ad75872d508781a0d2d8c8a6d78481b5",
+            "startH": 14,
+            "startM": 0
+        },
+        {
+            "batch": "CS A",
+            "course": "PHYS102P",
+            "day": 3,
+            "endH": 10,
+            "endM": 0,
+            "instructor": "9",
+            "room": "9-402",
+            "sessionId": "fcf83b61ba510d7096ad53587ab3d782",
+            "startH": 9,
+            "startM": 0
+        },
+        {
+            "batch": "CS A",
+            "course": "Math106",
+            "day": 0,
+            "endH": 12,
+            "endM": 0,
+            "instructor": "19",
+            "room": "9-402",
+            "sessionId": "8cf7fad0159978872a835f99c4e21d",
+            "startH": 11,
+            "startM": 0
+        },
+        {
+            "batch": "CS A",
+            "course": "Math106",
+            "day": 2,
+            "endH": 11,
+            "endM": 0,
+            "instructor": "19",
+            "room": "9-402",
+            "sessionId": "55493656064fe91f68eb82b25fdbbd54",
+            "startH": 10,
+            "startM": 0
+        },
+        {
+            "batch": "CS A",
+            "course": "Math106",
+            "day": 4,
+            "endH": 10,
+            "endM": 0,
+            "instructor": "19",
+            "room": "9-402",
+            "sessionId": "952c5f0a11cb9e4450ac653d41ec7144",
+            "startH": 9,
+            "startM": 0
+        },
+        {
+            "batch": "CS A",
+            "course": "Math106",
+            "day": 0,
+            "endH": 15,
+            "endM": 0,
+            "instructor": "19",
+            "room": "9-304",
+            "sessionId": "54962ad43e6720dbda8c43ff784c039a",
+            "startH": 14,
+            "startM": 0
+        },
+        {
+            "batch": "CS A",
+            "course": "ENVE101",
+            "day": 1,
+            "endH": 13,
+            "endM": 0,
+            "instructor": "15",
+            "room": "9-402",
+            "sessionId": "1d77e1a6f2260aba188986233a16b815",
+            "startH": 12,
+            "startM": 0
+        },
+        {
+            "batch": "CS A",
+            "course": "ENVE101",
+            "day": 3,
+            "endH": 15,
+            "endM": 0,
+            "instructor": "14",
+            "room": "9-301",
+            "sessionId": "6a77416f66b102ff4a0a741053ce702d",
+            "startH": 14,
+            "startM": 0
+        },
+        {
+            "batch": "CS A",
+            "course": "ENVE101",
+            "day": 5,
+            "endH": 12,
+            "endM": 0,
+            "instructor": "14",
+            "room": "9-402",
+            "sessionId": "a8b35c160b03921c1b2095fa1cb4086a",
+            "startH": 11,
+            "startM": 0
+        },
+        {
+            "batch": "CS A",
+            "course": "ENGT",
+            "day": 2,
+            "endH": 10,
+            "endM": 0,
+            "instructor": "11",
+            "room": "9-402",
+            "sessionId": "cd1e4d5559305c7d17475e6ecd9b9508",
+            "startH": 9,
+            "startM": 0
+        },
+        {
+            "batch": "CS A",
+            "course": "ENGT",
+            "day": 4,
+            "endH": 12,
+            "endM": 0,
+            "instructor": "13",
+            "room": "9-402",
+            "sessionId": "b95a3842870829c89152d41a20bf36aa",
+            "startH": 11,
+            "startM": 0
+        },
+        {
+            "batch": "CS A",
+            "course": "ENGT",
+            "day": 5,
+            "endH": 15,
+            "endM": 0,
+            "instructor": "12",
+            "room": "9-402",
+            "sessionId": "77d3fcbdf9272de0d5c57d2cd9c67ba2",
+            "startH": 14,
+            "startM": 0
+        },
+        {
+            "batch": "CS A",
+            "course": "ENGT",
+            "day": 2,
+            "endH": 12,
+            "endM": 0,
+            "instructor": "12",
+            "room": "9-402",
+            "sessionId": "e268bfaed0a912ede3628940adf98927",
+            "startH": 11,
+            "startM": 0
+        },
+        {
+            "batch": "CS A",
+            "course": "ENGG111",
+            "day": 3,
+            "endH": 13,
+            "endM": 0,
+            "instructor": "23",
+            "room": "9-402",
+            "sessionId": "455f8739c5f24006739a4bd0813ec543",
+            "startH": 12,
+            "startM": 0
+        },
+        {
+            "batch": "CS A",
+            "course": "ENGG111",
+            "day": 5,
+            "endH": 16,
+            "endM": 0,
+            "instructor": "23",
+            "room": "9-402",
+            "sessionId": "aa97be295a0bbcc7cc701ecc38bee229",
+            "startH": 15,
+            "startM": 0
+        },
+        {
+            "batch": "CS A",
+            "course": "ENGG111",
+            "day": 1,
+            "endH": 12,
+            "endM": 0,
+            "instructor": "21",
+            "room": "9-402",
+            "sessionId": "69b71d134afdd906e780fb07a48109bc",
+            "startH": 11,
+            "startM": 0
+        },
+        {
+            "batch": "CS A",
+            "course": "ENGG111",
+            "day": 3,
+            "endH": 16,
+            "endM": 0,
+            "instructor": "22",
+            "room": "9-304",
+            "sessionId": "b8db5463de48cc5a827d94cff8bd8f7c",
+            "startH": 15,
+            "startM": 0
+        },
+        {
+            "batch": "CS A",
+            "course": "EDRG102P",
+            "day": 4,
+            "endH": 13,
+            "endM": 0,
+            "instructor": "26",
+            "room": "9-402",
+            "sessionId": "b5eefea2710fdb63829b13016344e7a3",
+            "startH": 12,
+            "startM": 0
+        },
+        {
+            "batch": "CS A",
+            "course": "EDRG102P",
+            "day": 0,
+            "endH": 10,
+            "endM": 0,
+            "instructor": "25",
+            "room": "9-402",
+            "sessionId": "47d73aff6c282ce3c304b84f2f041bf7",
+            "startH": 9,
+            "startM": 0
+        },
+        {
+            "batch": "CS A",
+            "course": "EDRG102P",
+            "day": 4,
+            "endH": 16,
+            "endM": 0,
+            "instructor": "26",
+            "room": "9-402",
+            "sessionId": "59fce05cd3baea24c1d37cc901d98ef8",
+            "startH": 15,
+            "startM": 0
+        },
+        {
+            "batch": "CS A",
+            "course": "EDRG102",
+            "day": 1,
+            "endH": 16,
+            "endM": 0,
+            "instructor": "27",
+            "room": "9-402",
+            "sessionId": "554393d4b324cab0160dec38235d8153",
+            "startH": 15,
+            "startM": 0
+        },
+        {
+            "batch": "CS A",
+            "course": "ENGG102",
+            "day": 0,
+            "endH": 11,
+            "endM": 0,
+            "instructor": "30",
+            "room": "9-402",
+            "sessionId": "83681d73be334e1ecc735ed833b8b10b",
+            "startH": 10,
+            "startM": 0
+        },
+        {
+            "batch": "CS A",
+            "course": "ENGG102",
+            "day": 2,
+            "endH": 13,
+            "endM": 0,
+            "instructor": "33",
+            "room": "9-402",
+            "sessionId": "dbf0c89daa0c4c2587f3318093806e6b",
+            "startH": 12,
+            "startM": 0
+        },
+        {
+            "batch": "CS A",
+            "course": "ENGG102",
+            "day": 4,
+            "endH": 15,
+            "endM": 0,
+            "instructor": "32",
+            "room": "9-402",
+            "sessionId": "eaf20ceed1ef8dbd69e8e1a24d858553",
+            "startH": 14,
+            "startM": 0
+        },
+        {
+            "batch": "CS A",
+            "course": "ENGG102",
+            "day": 0,
+            "endH": 13,
+            "endM": 0,
+            "instructor": "33",
+            "room": "9-402",
+            "sessionId": "924c0efe2e7d322e66a035c8cedf862d",
+            "startH": 12,
+            "startM": 0
+        },
+        {
+            "batch": "CS A",
+            "course": "ENGG102",
+            "day": 2,
+            "endH": 15,
+            "endM": 0,
+            "instructor": "33",
+            "room": "9-402",
+            "sessionId": "8e189f958972744031634665ae79496e",
+            "startH": 14,
+            "startM": 0
+        },
+        {
+            "batch": "CS A",
+            "course": "ENGG102",
+            "day": 4,
+            "endH": 17,
+            "endM": 0,
+            "instructor": "33",
+            "room": "TTC",
+            "sessionId": "e7f9ec30ea8dc983c03de6cc0d8b9359",
+            "startH": 16,
+            "startM": 0
+        },
+        {
+            "batch": "CS B",
+            "course": "COMP116",
+            "day": 1,
+            "endH": 12,
+            "endM": 0,
+            "instructor": "1",
+            "room": "9-403",
+            "sessionId": "d8989be9e9fb14163b8ff332a807d0d1",
+            "startH": 11,
+            "startM": 0
+        },
+        {
+            "batch": "CS B",
+            "course": "COMP116",
+            "day": 3,
+            "endH": 12,
+            "endM": 0,
+            "instructor": "3",
+            "room": "9-403",
+            "sessionId": "81e0e7474bd0f4b6d09845eb69ca2112",
+            "startH": 11,
+            "startM": 0
+        },
+        {
+            "batch": "CS B",
+            "course": "COMP116",
+            "day": 5,
+            "endH": 12,
+            "endM": 0,
+            "instructor": "3",
+            "room": "9-403",
+            "sessionId": "16683d93a1356d7827b335422d612314",
+            "startH": 11,
+            "startM": 0
+        },
+        {
+            "batch": "CS B",
+            "course": "COMP116",
+            "day": 1,
+            "endH": 13,
+            "endM": 0,
+            "instructor": "3",
+            "room": "9-403",
+            "sessionId": "af5489ba48ced163ce1304141bf1570f",
+            "startH": 12,
+            "startM": 0
+        },
+        {
+            "batch": "CS B",
+            "course": "PHYS102",
+            "day": 2,
+            "endH": 11,
+            "endM": 0,
+            "instructor": "8",
+            "room": "9-403",
+            "sessionId": "1f3c7a99ca1b6a944d02057f67eeeefc",
+            "startH": 10,
+            "startM": 0
+        },
+        {
+            "batch": "CS B",
+            "course": "PHYS102",
+            "day": 4,
+            "endH": 11,
+            "endM": 0,
+            "instructor": "8",
+            "room": "9-403",
+            "sessionId": "a898b64424fedb2df33971e8a28048e6",
+            "startH": 10,
+            "startM": 0
+        },
+        {
+            "batch": "CS B",
+            "course": "PHYS102",
+            "day": 5,
+            "endH": 10,
+            "endM": 0,
+            "instructor": "8",
+            "room": "9-403",
+            "sessionId": "bd2ed3dfeed439e5758cffa2acf83c8c",
+            "startH": 9,
+            "startM": 0
+        },
+        {
+            "batch": "CS B",
+            "course": "PHYS102P",
+            "day": 3,
+            "endH": 13,
+            "endM": 0,
+            "instructor": "9",
+            "room": "9-403",
+            "sessionId": "5d07c534218c190890720771a9391d1b",
+            "startH": 12,
+            "startM": 0
+        },
+        {
+            "batch": "CS B",
+            "course": "PHYS102P",
+            "day": 5,
+            "endH": 11,
+            "endM": 0,
+            "instructor": "8",
+            "room": "9-403",
+            "sessionId": "521eb1330a279b1f6b18775809fdbd23",
+            "startH": 10,
+            "startM": 0
+        },
+        {
+            "batch": "CS B",
+            "course": "PHYS102P",
+            "day": 1,
+            "endH": 15,
+            "endM": 0,
+            "instructor": "7",
+            "room": "9-403",
+            "sessionId": "d206e9f0e3fa24d6ff2c549d0988b7fe",
+            "startH": 14,
+            "startM": 0
+        },
+        {
+            "batch": "CS B",
+            "course": "Math106",
+            "day": 4,
+            "endH": 10,
+            "endM": 0,
+            "instructor": "20",
+            "room": "9-403",
+            "sessionId": "7939cf688800456acffcde740ac89142",
+            "startH": 9,
+            "startM": 0
+        },
+        {
+            "batch": "CS B",
+            "course": "Math106",
+            "day": 5,
+            "endH": 15,
+            "endM": 0,
+            "instructor": "20",
+            "room": "9-403",
+            "sessionId": "3f052aeea46f076542a5a531cb1a340",
+            "startH": 14,
+            "startM": 0
+        },
+        {
+            "batch": "CS B",
+            "course": "Math106",
+            "day": 1,
+            "endH": 10,
+            "endM": 0,
+            "instructor": "20",
+            "room": "9-403",
+            "sessionId": "eb0d8b5c99ddd5b420ec25600e5af39c",
+            "startH": 9,
+            "startM": 0
+        },
+        {
+            "batch": "CS B",
+            "course": "Math106",
+            "day": 4,
+            "endH": 12,
+            "endM": 0,
+            "instructor": "19",
+            "room": "9-403",
+            "sessionId": "b2a76a84e1102cbd7f1d2fb7d7087a02",
+            "startH": 11,
+            "startM": 0
+        },
+        {
+            "batch": "CS B",
+            "course": "ENVE101",
+            "day": 5,
+            "endH": 16,
+            "endM": 0,
+            "instructor": "14",
+            "room": "9-403",
+            "sessionId": "c1a32a20019ecb3a535e7c453b58e7b5",
+            "startH": 15,
+            "startM": 0
+        },
+        {
+            "batch": "CS B",
+            "course": "ENVE101",
+            "day": 1,
+            "endH": 11,
+            "endM": 0,
+            "instructor": "14",
+            "room": "9-403",
+            "sessionId": "73923841bd509be885751ded140c3592",
+            "startH": 10,
+            "startM": 0
+        },
+        {
+            "batch": "CS B",
+            "course": "ENVE101",
+            "day": 3,
+            "endH": 10,
+            "endM": 0,
+            "instructor": "14",
+            "room": "9-403",
+            "sessionId": "dbbdc246f05cfc64429d88e5b819cffb",
+            "startH": 9,
+            "startM": 0
+        },
+        {
+            "batch": "CS B",
+            "course": "ENGT",
+            "day": 0,
+            "endH": 12,
+            "endM": 0,
+            "instructor": "11",
+            "room": "9-403",
+            "sessionId": "5057ba25506b4873ea5ee895db9eda62",
+            "startH": 11,
+            "startM": 0
+        },
+        {
+            "batch": "CS B",
+            "course": "ENGT",
+            "day": 2,
+            "endH": 10,
+            "endM": 0,
+            "instructor": "12",
+            "room": "9-403",
+            "sessionId": "51c7c561dcbc88411ae4d6f544e3db29",
+            "startH": 9,
+            "startM": 0
+        },
+        {
+            "batch": "CS B",
+            "course": "ENGT",
+            "day": 4,
+            "endH": 13,
+            "endM": 0,
+            "instructor": "13",
+            "room": "9-403",
+            "sessionId": "af78b588fc28f943ac91ff357041db09",
+            "startH": 12,
+            "startM": 0
+        },
+        {
+            "batch": "CS B",
+            "course": "ENGT",
+            "day": 2,
+            "endH": 15,
+            "endM": 0,
+            "instructor": "12",
+            "room": "9-403",
+            "sessionId": "67317ea86a50be4792c43c05cbe6002a",
+            "startH": 14,
+            "startM": 0
+        },
+        {
+            "batch": "CS B",
+            "course": "ENGG111",
+            "day": 1,
+            "endH": 17,
+            "endM": 0,
+            "instructor": "22",
+            "room": "TTC",
+            "sessionId": "496d1e301a06946287697bba8790d659",
+            "startH": 16,
+            "startM": 0
+        },
+        {
+            "batch": "CS B",
+            "course": "ENGG111",
+            "day": 3,
+            "endH": 11,
+            "endM": 0,
+            "instructor": "21",
+            "room": "9-403",
+            "sessionId": "2f77f29689042684606dd94f44c933d0",
+            "startH": 10,
+            "startM": 0
+        },
+        {
+            "batch": "CS B",
+            "course": "ENGG111",
+            "day": 5,
+            "endH": 13,
+            "endM": 0,
+            "instructor": "21",
+            "room": "9-403",
+            "sessionId": "323925e504f5fafa6f24b79c964d3b16",
+            "startH": 12,
+            "startM": 0
+        },
+        {
+            "batch": "CS B",
+            "course": "ENGG111",
+            "day": 3,
+            "endH": 15,
+            "endM": 0,
+            "instructor": "22",
+            "room": "TTC",
+            "sessionId": "f26dc9b539229c55db5abbc69f80282a",
+            "startH": 14,
+            "startM": 0
+        },
+        {
+            "batch": "CS B",
+            "course": "EDRG102P",
+            "day": 3,
+            "endH": 16,
+            "endM": 0,
+            "instructor": "27",
+            "room": "9-301",
+            "sessionId": "6d2f0fc04903e3a0baa8ee41ec67fe71",
+            "startH": 15,
+            "startM": 0
+        },
+        {
+            "batch": "CS B",
+            "course": "EDRG102P",
+            "day": 3,
+            "endH": 17,
+            "endM": 0,
+            "instructor": "27",
+            "room": "9-310",
+            "sessionId": "f8f148f7e12462755828cfc42915061",
+            "startH": 16,
+            "startM": 0
+        },
+        {
+            "batch": "CS B",
+            "course": "EDRG102",
+            "day": 4,
+            "endH": 17,
+            "endM": 0,
+            "instructor": "26",
+            "room": "9-402",
+            "sessionId": "c3c8f1d6ad1da4923b1a9041cfff74a9",
+            "startH": 16,
+            "startM": 0
+        },
+        {
+            "batch": "CS B",
+            "course": "ENGG102",
+            "day": 4,
+            "endH": 15,
+            "endM": 0,
+            "instructor": "33",
+            "room": "9-403",
+            "sessionId": "a15badc401f251443f717faf74960bc0",
+            "startH": 14,
+            "startM": 0
+        },
+        {
+            "batch": "CS B",
+            "course": "ENGG102",
+            "day": 0,
+            "endH": 10,
+            "endM": 0,
+            "instructor": "30",
+            "room": "9-403",
+            "sessionId": "a1362545052fd54c8569640b1a3de2b2",
+            "startH": 9,
+            "startM": 0
+        },
+        {
+            "batch": "CS B",
+            "course": "ENGG102",
+            "day": 2,
+            "endH": 12,
+            "endM": 0,
+            "instructor": "30",
+            "room": "9-403",
+            "sessionId": "3f713ce7ff17d15fa1352e41d9c7b0f4",
+            "startH": 11,
+            "startM": 0
+        },
+        {
+            "batch": "CS B",
+            "course": "ENGG102",
+            "day": 4,
+            "endH": 16,
+            "endM": 0,
+            "instructor": "33",
+            "room": "9-403",
+            "sessionId": "5c6ef4cddf10f6be5b99b4f7e4959edc",
+            "startH": 15,
+            "startM": 0
+        },
+        {
+            "batch": "CS B",
+            "course": "ENGG102",
+            "day": 0,
+            "endH": 11,
+            "endM": 0,
+            "instructor": "32",
+            "room": "9-403",
+            "sessionId": "d4b573663aacc420c5296a899ff01538",
+            "startH": 10,
+            "startM": 0
+        },
+        {
+            "batch": "CS B",
+            "course": "ENGG102",
+            "day": 2,
+            "endH": 16,
+            "endM": 0,
+            "instructor": "32",
+            "room": "9-301",
+            "sessionId": "1149378c2151f0690bba5d321ed88e6",
+            "startH": 15,
             "startM": 0
         }
     ]
